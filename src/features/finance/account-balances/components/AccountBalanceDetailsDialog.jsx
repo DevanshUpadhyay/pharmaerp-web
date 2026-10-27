@@ -249,24 +249,6 @@ export const AccountBalanceDetailsDialog = ({
               </div>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <UIButton
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={isRecalculating || isLoading}
-              onClick={handleRecalculate}
-              startIcon={
-                <RefreshCw
-                  className={cn("size-3.5 text-primary", isRecalculating && "animate-spin")}
-                />
-              }
-              className="h-8 px-2.5 text-xs font-semibold"
-            >
-              {isRecalculating ? "Recalculating..." : "Recalculate"}
-            </UIButton>
-          </div>
         </div>
 
         {/* ── 2. Feedback Alert ─────────────────────────────────────────── */}
@@ -335,19 +317,36 @@ export const AccountBalanceDetailsDialog = ({
                   </p>
                 </div>
 
-                <div className="flex flex-col items-end justify-center">
+                <div className="flex flex-col items-end justify-between gap-3">
+                  <UIButton
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isRecalculating || isLoading}
+                    onClick={handleRecalculate}
+                    startIcon={
+                      <RefreshCw
+                        className={cn("size-3.5 text-primary", isRecalculating && "animate-spin")}
+                      />
+                    }
+                    className="h-8 px-3 text-xs font-semibold rounded-xl bg-surface/90 hover:bg-surface border-border shadow-2xs hover:shadow-xs transition-all active:scale-95 cursor-pointer"
+                    title="Recalculate ledger balance sheet from posted vouchers"
+                  >
+                    {isRecalculating ? "Recalculating..." : "Recalculate Balance"}
+                  </UIButton>
+
                   <div
                     className={cn(
-                      "size-12 rounded-2xl flex items-center justify-center shadow-xs",
+                      "size-11 rounded-2xl flex items-center justify-center shadow-xs self-end",
                       isDebit
                         ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                         : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
                     )}
                   >
                     {isDebit ? (
-                      <ArrowUpRight className="size-6 stroke-[2.2]" />
+                      <ArrowUpRight className="size-5.5 stroke-[2.2]" />
                     ) : (
-                      <ArrowDownRight className="size-6 stroke-[2.2]" />
+                      <ArrowDownRight className="size-5.5 stroke-[2.2]" />
                     )}
                   </div>
                 </div>

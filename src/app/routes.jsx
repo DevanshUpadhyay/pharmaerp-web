@@ -75,6 +75,7 @@ import financialPeriodRoutes from "@/features/finance/financial-periods/routes/f
 import ledgerRoutes from "@/features/finance/ledger/routes/ledgerRoutes";
 import gstLedgerRoutes from "@/features/finance/gst-ledger/routes/gstLedgerRoutes";
 import reportsRoutes from "@/features/finance/reports/routes/reportsRoutes";
+import { ReportsHubPage } from "@/features/reports";
 
 import salesRoutes from "@/features/sales/routes/salesRoutes";
 import billingRoutes from "@/features/billing/routes/billingRoutes";
@@ -318,6 +319,22 @@ export const router = createBrowserRouter([
               </PermissionGuard>
             ),
           })),
+          {
+            path: ROUTES.REPORTS_HUB,
+            element: (
+              <PermissionGuard permission="report:view">
+                <ReportsHubPage />
+              </PermissionGuard>
+            ),
+          },
+          {
+            path: "/reports/:reportKey",
+            element: (
+              <PermissionGuard permission="report:view">
+                <ReportsHubPage />
+              </PermissionGuard>
+            ),
+          },
 
               // ── Guarded by ActiveBranchGuard (Requires active branch selection) ──
               {

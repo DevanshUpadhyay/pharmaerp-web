@@ -6,6 +6,8 @@ import {
   getBankTransactions,
   getBankTransactionById,
   cancelBankTransaction,
+  depositBankTransaction,
+  withdrawBankTransaction,
 } from "./bankTransactionThunk";
 
 const initialState = {
@@ -20,6 +22,8 @@ const initialState = {
   getBankTransactionsStatus: API_STATUS.IDLE,
   getBankTransactionStatus: API_STATUS.IDLE,
   cancelBankTransactionStatus: API_STATUS.IDLE,
+  depositBankTransactionStatus: API_STATUS.IDLE,
+  withdrawBankTransactionStatus: API_STATUS.IDLE,
 };
 
 const setPending = (state) => {
@@ -126,6 +130,42 @@ const bankTransactionSlice = createSlice({
       .addCase(cancelBankTransaction.rejected, (state, action) => {
         state.cancelBankTransactionStatus = API_STATUS.ERROR;
         state.error = action.payload || "Bank transaction cancellation failed";
+      })
+
+      // DIRECT DEPOSIT
+      .addCase(depositBankTransaction.pending, (state) => {
+        state.depositBankTransactionStatus = API_STATUS.LOADING;
+        state.error = null;
+        state.message = null;
+      })
+      .addCase(depositBankTransaction.fulfilled, (state, action) => {
+        state.depositBankTransactionStatus = API_STATUS.SUCCESS;
+        if (action.payload) {
+          state.bankTransactions = [action.payload, ...state.bankTransactions];
+        }
+        state.message = "Direct bank deposit posted successfully";
+      })
+      .addCase(depositBankTransaction.rejected, (state, action) => {
+        state.depositBankTransactionStatus = API_STATUS.ERROR;
+        state.error = action.payload || "Direct deposit failed";
+      })
+
+      // DIRECT WITHDRAWAL
+      .addCase(withdrawBankTransaction.pending, (state) => {
+        state.withdrawBankTransactionStatus = API_STATUS.LOADING;
+        state.error = null;
+        state.message = null;
+      })
+      .addCase(withdrawBankTransaction.fulfilled, (state, action) => {
+        state.withdrawBankTransactionStatus = API_STATUS.SUCCESS;
+        if (action.payload) {
+          state.bankTransactions = [action.payload, ...state.bankTransactions];
+        }
+        state.message = "Direct bank withdrawal posted successfully";
+      })
+      .addCase(withdrawBankTransaction.rejected, (state, action) => {
+        state.withdrawBankTransactionStatus = API_STATUS.ERROR;
+        state.error = action.payload || "Direct withdrawal failed";
       });
   },
 });

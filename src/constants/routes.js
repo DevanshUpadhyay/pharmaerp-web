@@ -86,7 +86,11 @@ export const ROUTES = {
   GSTR2: "/finance/gst-ledger/gstr-2",
   GSTR3B: "/finance/gst-ledger/gstr-3b",
 
-  // Finance - Reports
+  // Reports & Analytics Hub
+  REPORTS_HUB: "/reports",
+  REPORTS_HUB_VIEWER: (reportKey = ":reportKey") => `/reports/${reportKey}`,
+
+  // Finance - Legacy Reports
   REPORTS: "/finance/reports",
   REPORT_VIEWER: "/finance/reports/:reportType",
 

@@ -27,3 +27,9 @@ export const selectGetBankTransactionStatus = (state) =>
 
 export const selectCancelBankTransactionStatus = (state) =>
   state.bankTransaction.cancelBankTransactionStatus;
+
+export const selectDepositBankTransactionStatus = (state) =>
+  state.bankTransaction.depositBankTransactionStatus;
+
+export const selectWithdrawBankTransactionStatus = (state) =>
+  state.bankTransaction.withdrawBankTransactionStatus;

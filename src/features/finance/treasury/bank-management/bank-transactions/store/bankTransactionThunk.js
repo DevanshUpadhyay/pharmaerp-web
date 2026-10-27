@@ -49,3 +49,29 @@ export const cancelBankTransaction = createAsyncThunk(
     }
   },
 );
+
+// Direct Deposit into Bank Account
+export const depositBankTransaction = createAsyncThunk(
+  "bankTransaction/depositBankTransaction",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await bankTransactionService.deposit(payload);
+      return response.data?.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  },
+);
+
+// Direct Withdrawal from Bank Account
+export const withdrawBankTransaction = createAsyncThunk(
+  "bankTransaction/withdrawBankTransaction",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await bankTransactionService.withdraw(payload);
+      return response.data?.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  },
+);

@@ -26,6 +26,8 @@ import {
   ArrowUpDown,
   ShieldCheck,
   Ban,
+  ArrowDownToLine,
+  ArrowUpFromLine,
 } from "lucide-react";
 import {
   UIButton,
@@ -50,6 +52,8 @@ import useBankAccount from "@/features/finance/treasury/bank-management/bank-acc
 import {
   BankTransactionDetailsDialog,
   BankTransactionsFilterModal,
+  BankDepositModal,
+  BankWithdrawModal,
 } from "../../components";
 
 const formatCurrency = (val) => {
@@ -65,6 +69,7 @@ const formatDate = (val) => {
   const d = new Date(val);
   if (Number.isNaN(d.getTime())) return "Today";
   return d.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -76,9 +81,28 @@ const formatTime = (val) => {
   const d = new Date(val);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
   });
+};
+
+const getTodayISTString = (date = new Date()) => {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+};
+
+const getISTStartOfDayISO = (dateStr) => {
+  return new Date(`${dateStr}T00:00:00.000+05:30`).toISOString();
+};
+
+const getISTEndOfDayISO = (dateStr) => {
+  return new Date(`${dateStr}T23:59:59.999+05:30`).toISOString();
 };
 
 const DATE_RANGE_OPTIONS = [
@@ -138,6 +162,8 @@ export const BankTransactionsDesktopPage = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [sortOption, setSortOption] = useState("date-desc");
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   // ── Inspection dialog & notification state ──
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -176,52 +202,46 @@ export const BankTransactionsDesktopPage = () => {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // Construct start and end dates from selected date range
+  // Construct start and end dates from selected date range strictly adhering to Indian Standard Time (IST)
   const buildDateParams = useCallback(() => {
-    const now = new Date();
     let startDate = null;
     let endDate = null;
 
     if (selectedDateRange === "today") {
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-      startDate = start.toISOString();
-      endDate = end.toISOString();
+      const todayIST = getTodayISTString();
+      startDate = getISTStartOfDayISO(todayIST);
+      endDate = getISTEndOfDayISO(todayIST);
     } else if (selectedDateRange === "yesterday") {
-      const yest = new Date(now);
-      yest.setDate(yest.getDate() - 1);
-      const start = new Date(yest.getFullYear(), yest.getMonth(), yest.getDate(), 0, 0, 0, 0);
-      const end = new Date(yest.getFullYear(), yest.getMonth(), yest.getDate(), 23, 59, 59, 999);
-      startDate = start.toISOString();
-      endDate = end.toISOString();
+      const yest = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const yestIST = getTodayISTString(yest);
+      startDate = getISTStartOfDayISO(yestIST);
+      endDate = getISTEndOfDayISO(yestIST);
     } else if (selectedDateRange === "last7days") {
-      const start = new Date(now);
-      start.setDate(start.getDate() - 7);
-      start.setHours(0, 0, 0, 0);
-      startDate = start.toISOString();
-      endDate = now.toISOString();
+      const todayIST = getTodayISTString();
+      const past7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const past7IST = getTodayISTString(past7);
+      startDate = getISTStartOfDayISO(past7IST);
+      endDate = getISTEndOfDayISO(todayIST);
     } else if (selectedDateRange === "thisWeek") {
-      const start = new Date(now);
-      const day = start.getDay();
-      const diff = start.getDate() - day + (day === 0 ? -6 : 1);
-      start.setDate(diff);
-      start.setHours(0, 0, 0, 0);
-      startDate = start.toISOString();
-      endDate = now.toISOString();
+      const todayIST = getTodayISTString();
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(d.setDate(diff));
+      const mondayIST = getTodayISTString(monday);
+      startDate = getISTStartOfDayISO(mondayIST);
+      endDate = getISTEndOfDayISO(todayIST);
     } else if (selectedDateRange === "thisMonth") {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-      startDate = start.toISOString();
-      endDate = now.toISOString();
+      const todayIST = getTodayISTString();
+      const [yyyy, mm] = todayIST.split("-");
+      startDate = getISTStartOfDayISO(`${yyyy}-${mm}-01`);
+      endDate = getISTEndOfDayISO(todayIST);
     } else if (selectedDateRange === "custom") {
       if (customStartDate) {
-        const s = new Date(customStartDate);
-        s.setHours(0, 0, 0, 0);
-        startDate = s.toISOString();
+        startDate = getISTStartOfDayISO(customStartDate);
       }
       if (customEndDate) {
-        const e = new Date(customEndDate);
-        e.setHours(23, 59, 59, 999);
-        endDate = e.toISOString();
+        endDate = getISTEndOfDayISO(customEndDate);
       }
     }
 
@@ -453,69 +473,100 @@ export const BankTransactionsDesktopPage = () => {
     return [parts[0] || "date", parts[1] || "desc"];
   }, [sortOption]);
 
-  const renderTransactionTypeBadge = (type) => {
+  const renderTransactionTypeBadge = (type, paymentMode, category) => {
+    let badgeNode;
     switch (type) {
       case "DEPOSIT":
-        return (
+        badgeNode = (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             Deposit
           </span>
         );
+        break;
       case "WITHDRAWAL":
-        return (
+        badgeNode = (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
             Withdrawal
           </span>
         );
+        break;
       case "NEFT":
-        return (
+        badgeNode = (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
             NEFT
           </span>
         );
+        break;
       case "RTGS":
-        return (
+        badgeNode = (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
             RTGS
           </span>
         );
+        break;
       case "IMPS":
-        return (
+        badgeNode = (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
             IMPS
           </span>
         );
+        break;
       case "UPI":
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-            UPI Pay
-          </span>
-        );
+        if (category === "UPI_SETTLEMENT") {
+          badgeNode = (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+              Shift Settlement
+            </span>
+          );
+        } else {
+          badgeNode = (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              UPI Pay
+            </span>
+          );
+        }
+        break;
       case "CHEQUE":
-        return (
+        badgeNode = (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
             Cheque
           </span>
         );
+        break;
       case "BANK_CHARGES":
-        return (
+        badgeNode = (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border border-neutral-500/20">
             Charges
           </span>
         );
+        break;
       case "INTEREST":
-        return (
+        badgeNode = (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
             Interest
           </span>
         );
+        break;
       default:
-        return (
+        badgeNode = (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-surface-alt border border-border/70 text-text">
             {type || "OTHER"}
           </span>
         );
+        break;
     }
+
+    if (paymentMode && (type === "DEPOSIT" || type === "WITHDRAWAL")) {
+      return (
+        <div className="flex items-center gap-1 flex-wrap">
+          {badgeNode}
+          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-semibold bg-surface-alt text-text-muted border border-border/80 uppercase">
+            {paymentMode}
+          </span>
+        </div>
+      );
+    }
+    return badgeNode;
   };
 
   const renderStatusBadge = (status) => {
@@ -767,6 +818,30 @@ export const BankTransactionsDesktopPage = () => {
         >
           <RefreshCw className={cn("size-4 text-text", isLoading && "animate-spin text-primary")} />
         </UIButton>
+
+        {/* Direct Deposit & Withdraw Actions */}
+        <div className="flex items-center gap-2 ml-auto">
+          <UIButton
+            variant="primary"
+            size="md"
+            onClick={() => setIsDepositModalOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 shadow-xs px-3.5 py-2 rounded-xl text-xs transition-transform active:scale-95 cursor-pointer"
+            title="Deposit funds or personal capital into bank account"
+          >
+            <ArrowDownToLine className="size-4 stroke-[2.2]" />
+            <span>Deposit</span>
+          </UIButton>
+          <UIButton
+            variant="primary"
+            size="md"
+            onClick={() => setIsWithdrawModalOpen(true)}
+            className="bg-rose-600 hover:bg-rose-700 text-white font-semibold flex items-center gap-1.5 shadow-xs px-3.5 py-2 rounded-xl text-xs transition-transform active:scale-95 cursor-pointer"
+            title="Withdraw funds or personal drawings from bank account"
+          >
+            <ArrowUpFromLine className="size-4 stroke-[2.2]" />
+            <span>Withdraw</span>
+          </UIButton>
+        </div>
       </div>
 
       {/* ── 3. Constrained-Height Table with Sticky Header & Infinite Scroll ────── */}
@@ -942,7 +1017,7 @@ export const BankTransactionsDesktopPage = () => {
                               )}
                             </div>
                             <div className="flex flex-col">
-                              {renderTransactionTypeBadge(txn.transactionType)}
+                              {renderTransactionTypeBadge(txn.transactionType, txn.paymentMode, txn.category)}
                               <span className="text-[10px] text-text-muted font-medium mt-0.5">
                                 {isCredit ? "Inward (+ CR)" : "Outward (- DR)"}
                               </span>
@@ -1073,6 +1148,28 @@ export const BankTransactionsDesktopPage = () => {
         isOpen={Boolean(selectedTransaction)}
         onClose={() => setSelectedTransaction(null)}
         transaction={selectedTransaction}
+      />
+
+      <BankDepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        onSuccess={() => {
+          fetchTransactions();
+          getBankAccounts({ all: true });
+          setToastMessage("Direct deposit posted successfully to ledger.");
+          setTimeout(() => setToastMessage(null), 3000);
+        }}
+      />
+
+      <BankWithdrawModal
+        isOpen={isWithdrawModalOpen}
+        onClose={() => setIsWithdrawModalOpen(false)}
+        onSuccess={() => {
+          fetchTransactions();
+          getBankAccounts({ all: true });
+          setToastMessage("Direct withdrawal posted successfully to ledger.");
+          setTimeout(() => setToastMessage(null), 3000);
+        }}
       />
     </div>
   );

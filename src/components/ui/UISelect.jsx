@@ -68,6 +68,7 @@ export const UISelect = forwardRef(
       triggerClassName,
       popoverClassName,
       renderOption,
+      searchPlaceholder = "Search options...",
       ...props
     },
     ref
@@ -416,7 +417,7 @@ export const UISelect = forwardRef(
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Search options..."
+                      placeholder={searchPlaceholder}
                       className="w-full bg-transparent border-0 outline-none text-xs text-text placeholder:text-text-muted/60"
                     />
                     {searchQuery && (

@@ -286,6 +286,10 @@ export const ENDPOINTS = {
   BANK_TRANSACTION: {
     LIST: "/finance/treasury/bank-transactions",
 
+    DEPOSIT: "/finance/treasury/bank-transactions/deposit",
+
+    WITHDRAW: "/finance/treasury/bank-transactions/withdraw",
+
     BY_ID: (bankTransactionId) =>
       `/finance/treasury/bank-transactions/${bankTransactionId}`,
 
@@ -562,6 +566,31 @@ export const ENDPOINTS = {
     BRANCH: "/dashboard/branch",
     COMPANY: "/dashboard/company",
     WORKSPACE: "/dashboard/workspace",
+  },
+
+  REPORTS: {
+    DAILY_SALES: "/reports/daily-sales",
+    NEAR_EXPIRY: "/reports/near-expiry",
+    LOW_STOCK_REORDER: "/reports/low-stock-reorder",
+    STOCK_VALUATION: "/reports/stock-valuation",
+    CUSTOMER_OUTSTANDING: "/reports/customer-outstanding",
+    SUPPLIER_PAYABLES: "/reports/supplier-payables",
+    PURCHASE_REGISTER: "/reports/purchase-register",
+    DOCTOR_REFERRAL: "/reports/doctor-referral",
+    SCHEDULE_H_REGISTER: "/reports/schedule-h-register",
+    UPI_SETTLEMENT: "/reports/upi-settlement",
+    CASH_REGISTER_TALLY: "/reports/cash-register-tally",
+
+    // Financial Statements
+    TRIAL_BALANCE: "/finance/reports/trial-balance",
+    GENERAL_LEDGER: "/finance/reports/general-ledger",
+    CUSTOMER_LEDGER: "/finance/reports/customer-ledger",
+    SUPPLIER_LEDGER: "/finance/reports/supplier-ledger",
+    CASH_BOOK: "/finance/reports/cash-book",
+    BANK_BOOK: "/finance/reports/bank-book",
+    PROFIT_LOSS: "/finance/reports/profit-loss",
+    BALANCE_SHEET: "/finance/reports/balance-sheet",
+    GST_REPORT: "/finance/reports/gst-report",
   },
 };
 

@@ -11,7 +11,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Scale,
-  Eye,
   CheckCircle2,
   AlertCircle,
   FileSpreadsheet,
@@ -122,9 +121,6 @@ export const AccountBalancesDesktopPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalBalances, setTotalBalances] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-
-  // Recalculating state per account ID
-  const [recalculatingId, setRecalculatingId] = useState(null);
 
   // Global Statistics (independent of pagination)
   const [stats, setStats] = useState({
@@ -341,35 +337,6 @@ export const AccountBalancesDesktopPage = () => {
     setSelectedNature("all");
     setSortOption("lastTransactionAt-desc");
     setAccountScope("company");
-  };
-
-  // Recalculate balance handler with toast feedback
-  const handleRecalculate = async (e, accountId) => {
-    e.stopPropagation();
-    if (!accountId || recalculatingId) return;
-
-    setRecalculatingId(accountId);
-    try {
-      const res = await accountBalanceService.recalculateAccountBalance(accountId);
-      const updatedBalance = res.data?.data;
-      if (updatedBalance) {
-        setBalances((prev) =>
-          prev.map((row) =>
-            row.accountId === accountId
-              ? formatBalanceRow({ ...row, ...updatedBalance })
-              : row
-          )
-        );
-      }
-      setToastMessage("✅ Account balance recalculated successfully.");
-    } catch (err) {
-      console.error(err);
-      const msg = err.response?.data?.message || "Failed to recalculate balance.";
-      setToastMessage(`❌ ${msg}`);
-    } finally {
-      setRecalculatingId(null);
-      setTimeout(() => setToastMessage(null), 3500);
-    }
   };
 
   // View Details in modal dialog (no page redirection)
@@ -648,16 +615,15 @@ export const AccountBalancesDesktopPage = () => {
                 <UITableHead sticky align="right" className="min-w-[140px]">Credit Total (Cr)</UITableHead>
                 <UITableHead sticky align="right" className="min-w-[170px]">Closing Balance</UITableHead>
                 <UITableHead sticky align="center" className="min-w-[130px]">Last Activity</UITableHead>
-                <UITableHead sticky align="right" className="w-28">Actions</UITableHead>
               </UITableRow>
             </UITableHeader>
 
             <UITableBody>
               {isLoading ? (
-                <UITableLoading colSpan={7} rows={8} />
+                <UITableLoading colSpan={6} rows={8} />
               ) : balances.length === 0 ? (
                 <UITableEmpty
-                  colSpan={7}
+                  colSpan={6}
                   title="No account balances found"
                   description={
                     debouncedSearch || selectedBalanceType !== "all" || selectedNature !== "all"
@@ -678,7 +644,6 @@ export const AccountBalancesDesktopPage = () => {
                 />
               ) : (
                 balances.map((b) => {
-                  const isRecalculatingThis = recalculatingId === b.accountId;
                   const isDebit = b.balanceType === "dr";
 
                   return (
@@ -739,38 +704,6 @@ export const AccountBalancesDesktopPage = () => {
                           <span className="text-[10.5px] font-mono text-text-muted/70">
                             {formatTime(b.lastTransactionAt)}
                           </span>
-                        </div>
-                      </UITableCell>
-
-                      {/* Actions */}
-                      <UITableCell align="right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <UIButton
-                            variant="ghost"
-                            size="xs"
-                            disabled={isRecalculatingThis}
-                            onClick={(e) => handleRecalculate(e, b.accountId)}
-                            className="text-text-muted hover:text-text px-2"
-                            title="Recalculate Balance Sheet"
-                          >
-                            <RefreshCw
-                              className={cn(
-                                "size-3.5",
-                                isRecalculatingThis && "animate-spin text-primary"
-                              )}
-                            />
-                          </UIButton>
-
-                          <UIButton
-                            variant="ghost"
-                            size="xs"
-                            onClick={() => handleViewDetails(b.accountId)}
-                            startIcon={<Eye className="size-3.5" />}
-                            className="text-text-muted hover:text-primary px-2"
-                            title="View Account Details"
-                          >
-                            View
-                          </UIButton>
                         </div>
                       </UITableCell>
                     </UITableRow>

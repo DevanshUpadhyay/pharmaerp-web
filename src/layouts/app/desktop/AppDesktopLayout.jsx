@@ -49,6 +49,7 @@ const AppDesktopLayout = () => {
     location.pathname.startsWith("/operations/shifts") ||
     (location.pathname === "/companies" || location.pathname === "/companies/") ||
     (location.pathname === "/branches" || location.pathname === "/branches/") ||
+    location.pathname.startsWith("/reports") ||
     location.pathname.startsWith("/finance");
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH;
 

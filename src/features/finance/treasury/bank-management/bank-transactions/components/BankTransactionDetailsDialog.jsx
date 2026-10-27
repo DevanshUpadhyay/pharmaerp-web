@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   Ban,
   Building2,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,7 @@ const formatDate = (val) => {
   const d = new Date(val);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -55,10 +57,13 @@ const formatTime = (val) => {
   const d = new Date(val);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
   });
 };
+
 
 export const BankTransactionDetailsDialog = ({
   isOpen,
@@ -251,8 +256,41 @@ export const BankTransactionDetailsDialog = ({
               <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-surface-alt border border-border/80 text-text">
                 {transactionType || "BANK"}
               </span>
+
+              {transaction.paymentMode && (
+                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                  Mode: {transaction.paymentMode}
+                </span>
+              )}
+
+              {transaction.category && (
+                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-surface-alt border border-border/80 text-text">
+                  {transaction.category.replace(/_/g, " ")}
+                </span>
+              )}
             </div>
           </div>
+
+          {/* Shift UPI Settlement Banner */}
+          {(transaction.category === "UPI_SETTLEMENT" || transaction.shiftId) && (
+            <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-purple-700 dark:text-purple-300">
+                  <Sparkles className="size-4" />
+                  Consolidated Shift Settlement
+                </div>
+                <Link
+                  to="/finance/treasury/upi-transactions"
+                  className="text-[11.5px] font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  View Granular UPI Bills <ExternalLink className="size-3" />
+                </Link>
+              </div>
+              <p className="text-xs text-text-muted leading-relaxed">
+                This transaction is an aggregated batch settlement from an active pharmacy shift. Individual UPI micro-transactions are held in the shift and released to your bank upon shift close to keep the bank ledger clean and audit-ready.
+              </p>
+            </div>
+          )}
 
           {/* Core Information Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

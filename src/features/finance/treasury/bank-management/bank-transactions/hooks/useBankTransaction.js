@@ -5,6 +5,8 @@ import {
   getBankTransactions,
   getBankTransactionById,
   cancelBankTransaction,
+  depositBankTransaction,
+  withdrawBankTransaction,
 } from "../store/bankTransactionThunk";
 
 import {
@@ -26,6 +28,8 @@ import {
   selectGetBankTransactionsStatus,
   selectGetBankTransactionStatus,
   selectCancelBankTransactionStatus,
+  selectDepositBankTransactionStatus,
+  selectWithdrawBankTransactionStatus,
 } from "../store/bankTransactionSelector";
 
 const useBankTransaction = () => {
@@ -53,6 +57,14 @@ const useBankTransaction = () => {
     selectCancelBankTransactionStatus,
   );
 
+  const depositBankTransactionStatus = useSelector(
+    selectDepositBankTransactionStatus,
+  );
+
+  const withdrawBankTransactionStatus = useSelector(
+    selectWithdrawBankTransactionStatus,
+  );
+
   const fetchBankTransactions = useCallback((params = {}) => {
     return dispatch(getBankTransactions(params)).unwrap();
   }, [dispatch]);
@@ -68,6 +80,14 @@ const useBankTransaction = () => {
         payload,
       }),
     ).unwrap();
+  }, [dispatch]);
+
+  const submitDepositBankTransaction = useCallback((payload) => {
+    return dispatch(depositBankTransaction(payload)).unwrap();
+  }, [dispatch]);
+
+  const submitWithdrawBankTransaction = useCallback((payload) => {
+    return dispatch(withdrawBankTransaction(payload)).unwrap();
   }, [dispatch]);
 
   const clearError = useCallback(() => {
@@ -106,10 +126,14 @@ const useBankTransaction = () => {
     getBankTransactionsStatus,
     getBankTransactionStatus,
     cancelBankTransactionStatus,
+    depositBankTransactionStatus,
+    withdrawBankTransactionStatus,
 
     getBankTransactions: fetchBankTransactions,
     getBankTransactionById: fetchBankTransactionById,
     cancelBankTransaction: submitCancelBankTransaction,
+    depositBankTransaction: submitDepositBankTransaction,
+    withdrawBankTransaction: submitWithdrawBankTransaction,
 
     clearError,
     clearMessage,

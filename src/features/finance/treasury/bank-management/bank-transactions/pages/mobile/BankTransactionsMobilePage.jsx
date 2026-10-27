@@ -11,6 +11,11 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { LuWallet } from "react-icons/lu";
+import { ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import {
+  BankDepositModal,
+  BankWithdrawModal,
+} from "../../components";
 
 import {
   AppBox,
@@ -72,6 +77,8 @@ const BankTransactionsMobilePage = ({
 }) => {
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   const bankAccountOptions = useMemo(() => {
     return [
@@ -134,6 +141,24 @@ const BankTransactionsMobilePage = ({
             </AppBox>
 
             <AppStack direction="row" gap={1} align="center" sx={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => setIsDepositModalOpen(true)}
+                className="px-2.5 py-1.5 rounded-lg bg-emerald-600 active:bg-emerald-700 text-white font-semibold text-[11px] flex items-center gap-1 shadow-xs cursor-pointer"
+                title="Deposit"
+              >
+                <ArrowDownToLine className="size-3.5" />
+                <span>Deposit</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsWithdrawModalOpen(true)}
+                className="px-2.5 py-1.5 rounded-lg bg-rose-600 active:bg-rose-700 text-white font-semibold text-[11px] flex items-center gap-1 shadow-xs cursor-pointer"
+                title="Withdraw"
+              >
+                <ArrowUpFromLine className="size-3.5" />
+                <span>Withdraw</span>
+              </button>
               <AppIconButton
                 icon={<FiRefreshCw className={isLoading ? "animate-spin" : ""} />}
                 variant="outlined"
@@ -300,7 +325,7 @@ const BankTransactionsMobilePage = ({
                             <span className="shrink-0">{getStatusBadge(tx.status)}</span>
                           </div>
                           <AppText variant="body2" sx={descriptionTextSx}>
-                            {tx.transactionType} ({bankLabel})
+                            {tx.transactionType}{tx.paymentMode ? ` • ${tx.paymentMode}` : ""} ({bankLabel})
                           </AppText>
                         </div>
                       </AppStack>
@@ -417,6 +442,23 @@ const BankTransactionsMobilePage = ({
             </AppBox>
           )}
         </div>
+
+        {/* Direct Deposit & Withdraw Modals */}
+        <BankDepositModal
+          isOpen={isDepositModalOpen}
+          onClose={() => setIsDepositModalOpen(false)}
+          onSuccess={() => {
+            if (handleRefresh) handleRefresh();
+          }}
+        />
+
+        <BankWithdrawModal
+          isOpen={isWithdrawModalOpen}
+          onClose={() => setIsWithdrawModalOpen(false)}
+          onSuccess={() => {
+            if (handleRefresh) handleRefresh();
+          }}
+        />
       </AppBox>
     </section>
   );

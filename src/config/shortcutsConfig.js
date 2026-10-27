@@ -27,6 +27,7 @@ import {
   Settings,
   HelpCircle,
   Sparkles,
+  BarChart3,
 } from "lucide-react";
 
 import { ROUTES } from "@/constants";
@@ -130,6 +131,18 @@ export const MARG_SHORTCUTS = [
     category: SHORTCUT_CATEGORIES.OPERATIONS,
     margLegacy: "Daily Accounting Date / Day Close in Marg",
     description: "Manage store open/close cycles and daily financial tallies",
+  },
+  {
+    id: "nav-reports-hub",
+    keyCombo: "Alt+KeyR",
+    displayKeys: ["Alt", "R"],
+    label: "Reports & Analytics Hub",
+    path: ROUTES.REPORTS_HUB,
+    icon: BarChart3,
+    category: SHORTCUT_CATEGORIES.OPERATIONS,
+    permission: "report:view",
+    margLegacy: "Reports & Registers (Alt + R in Pharma ERP)",
+    description: "Unified analytics for daily sales, expiry, stock valuation, and collections",
   },
 
   // ── 3. Inventory & Medicines ───────────────────────────────────────────

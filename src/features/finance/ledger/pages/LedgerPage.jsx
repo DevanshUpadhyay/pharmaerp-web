@@ -45,13 +45,15 @@ const LedgerPage = () => {
   const [actionError, setActionError] = useState("");
   // Fetch accounts dropdown list on mount
   useEffect(() => {
+    if (!isMobile) return;
     getAccounts({ all: true, excludeCategories: "CUSTOMER,SUPPLIER", branchId: currentBranch?._id }).catch((err) => {
       console.error("Failed to load accounts for ledger dropdown:", err);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentBranch?._id]);
+  }, [isMobile, currentBranch?._id]);
 
   const executeQuery = useCallback(async () => {
+    if (!isMobile) return;
     try {
       const query = {
         page: currentPage,
@@ -66,7 +68,7 @@ const LedgerPage = () => {
     } catch (err) {
       console.error("Failed to fetch ledger entries:", err);
     }
-  }, [currentPage, pageSize, filters, getLedger, currentBranch?._id]);
+  }, [isMobile, currentPage, pageSize, filters, getLedger, currentBranch?._id]);
 
   useEffect(() => {
     executeQuery();
@@ -170,11 +172,11 @@ const LedgerPage = () => {
     handleRefresh,
   };
 
-  return isMobile ? (
-    <LedgerMobilePage {...pageProps} />
-  ) : (
-    <LedgerDesktopPage {...pageProps} />
-  );
+  if (!isMobile) {
+    return <LedgerDesktopPage />;
+  }
+
+  return <LedgerMobilePage {...pageProps} />;
 };
 
 export default LedgerPage;

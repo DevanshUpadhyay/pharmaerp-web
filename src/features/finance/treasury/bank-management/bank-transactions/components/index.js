@@ -2,3 +2,5 @@
 
 export { default as BankTransactionsFilterModal } from "./BankTransactionsFilterModal";
 export { default as BankTransactionDetailsDialog } from "./BankTransactionDetailsDialog";
+export { default as BankDepositModal } from "./BankDepositModal";
+export { default as BankWithdrawModal } from "./BankWithdrawModal";

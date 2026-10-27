@@ -88,6 +88,11 @@ export const SalesCheckoutModal = ({
   const { fetchBranchCash, runningCash, runningDenominations } = useBranchCash();
   const reduxActiveShift = useSelector((state) => state.shift?.activeShift);
   const activeShift = activeShiftProp ?? reduxActiveShift;
+  const { openBusinessDay } = useSelector((state) => state.businessDay || {});
+
+  const isBusinessDayClosed = !openBusinessDay || openBusinessDay.status !== "open";
+  const isShiftClosed = !activeShift || activeShift.status !== "open";
+  const isSessionBlocked = isBusinessDayClosed || isShiftClosed;
 
   const hasReturnItems = useMemo(
     () => (cartSummary?.items || []).some((i) => i.isReturnItem),
@@ -529,6 +534,21 @@ export const SalesCheckoutModal = ({
   const [errorMessage, setErrorMessage] = useState(null);
 
   const handleProcessSale = async () => {
+    if (isBusinessDayClosed && isShiftClosed) {
+      setErrorMessage("Cannot create sale bill. The shift is closed, the business day is closed.");
+      return;
+    }
+
+    if (isBusinessDayClosed) {
+      setErrorMessage("Cannot create sale bill. The Business Day is closed for this branch.");
+      return;
+    }
+
+    if (isShiftClosed) {
+      setErrorMessage("Cannot create sale bill. The shift is closed. Please open a shift before billing.");
+      return;
+    }
+
     if (totalPaid < grandTotal) {
       setErrorMessage(
         isReturn
@@ -1265,6 +1285,27 @@ export const SalesCheckoutModal = ({
                     {errorMessage}
                   </span>
                 </div>
+              ) : isBusinessDayClosed && isShiftClosed ? (
+                <div className="flex items-center gap-1.5 text-error">
+                  <AlertCircle className="size-3.5 shrink-0 text-error" />
+                  <span className="text-[11px] font-bold truncate block">
+                    ⚠️ The shift is closed, the business day is closed
+                  </span>
+                </div>
+              ) : isBusinessDayClosed ? (
+                <div className="flex items-center gap-1.5 text-error">
+                  <AlertCircle className="size-3.5 shrink-0 text-error" />
+                  <span className="text-[11px] font-bold truncate block">
+                    ⚠️ The Business Day is closed for this branch
+                  </span>
+                </div>
+              ) : isShiftClosed ? (
+                <div className="flex items-center gap-1.5 text-error">
+                  <AlertCircle className="size-3.5 shrink-0 text-error" />
+                  <span className="text-[11px] font-bold truncate block">
+                    ⚠️ The shift is closed. Open a shift to bill
+                  </span>
+                </div>
               ) : hasUncapturedCash ? (
                 <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 truncate block">
                   ⚠️ Select cash denominations to continue
@@ -1294,11 +1335,17 @@ export const SalesCheckoutModal = ({
                   className="px-5 font-bold"
                   isLoading={isSubmitting}
                   loadingText={isReturn ? "Processing Return..." : "Processing..."}
-                  disabled={isSubmitting || shortfall > 0 || hasUncapturedCash}
+                  disabled={isSubmitting || shortfall > 0 || hasUncapturedCash || isSessionBlocked}
                   onClick={handleProcessSale}
                   startIcon={isReturn ? <RotateCcw className="size-4" /> : <CheckCircle2 className="size-4" />}
                 >
-                  {isReturn ? "Confirm Return & Refund" : "Confirm Sale"}
+                  {isBusinessDayClosed && isShiftClosed
+                    ? "Shift & Business Day Closed"
+                    : isBusinessDayClosed
+                    ? "Business Day Closed"
+                    : isShiftClosed
+                    ? "Shift Closed"
+                    : (isReturn ? "Confirm Return & Refund" : "Confirm Sale")}
                 </UIButton>
               </PermissionGate>
             </div>

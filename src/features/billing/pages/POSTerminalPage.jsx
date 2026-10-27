@@ -34,6 +34,7 @@ import {
   PauseCircle,
   Play,
   RotateCcw,
+  AlertCircle,
 } from "lucide-react";
 import CustomerDialog from "@/features/parties/customers/components/CustomerDialog";
 import { cn } from "@/lib/utils";
@@ -119,7 +120,11 @@ export const POSTerminalPage = () => {
   const dispatch = useDispatch();
   const { currentBranch } = useBranch();
   const { activeShift, status: shiftStatus } = useActiveShift(currentBranch?._id);
-  const { openBusinessDay } = useSelector((state) => state.businessDay);
+  const { openBusinessDay } = useSelector((state) => state.businessDay || {});
+
+  const isBusinessDayClosed = !openBusinessDay || openBusinessDay.status !== "open";
+  const isShiftClosed = !activeShift || activeShift.status !== "open";
+  const isSessionBlocked = isBusinessDayClosed || isShiftClosed;
   const navigate = useNavigate();
   const location = useLocation();
   const initialInvoice = location.state?.invoice;
@@ -676,6 +681,22 @@ export const POSTerminalPage = () => {
 
   /* ────────────────── SUBMIT BILL ────────────────── */
   const handleSubmitBill = () => {
+    if (isBusinessDayClosed && isShiftClosed) {
+      setToast({ type: "error", message: "❌ The shift is closed, the business day is closed." });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+    if (isBusinessDayClosed) {
+      setToast({ type: "error", message: "❌ Cannot create sale bill. The Business Day is closed for this branch." });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+    if (isShiftClosed) {
+      setToast({ type: "error", message: "❌ Cannot create sale bill. The shift is closed. Please open a new shift before billing." });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+
     if (cartItems.length === 0) {
       setToast({ type: "error", message: "Add at least one product to the cart." });
       setTimeout(() => setToast(null), 3000);
@@ -696,6 +717,21 @@ export const POSTerminalPage = () => {
     finalizeBill(denominations, returnedDenominations);
   };
   const finalizeBill = async (finalDenominations = [], finalReturnedDenominations = []) => {
+    if (isBusinessDayClosed && isShiftClosed) {
+      setToast({ type: "error", message: "❌ The shift is closed, the business day is closed." });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+    if (isBusinessDayClosed) {
+      setToast({ type: "error", message: "❌ Cannot create sale bill. The Business Day is closed for this branch." });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+    if (isShiftClosed) {
+      setToast({ type: "error", message: "❌ Cannot create sale bill. The shift is closed. Please open a new shift before billing." });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
 
     if (cartItems.length === 0) {
       setToast({ type: "error", message: "Add at least one product to the cart." });
@@ -852,8 +888,9 @@ export const POSTerminalPage = () => {
       setIsInvoicePreviewOpen(true);
     } catch (err) {
       console.error("Submit bill error:", err);
-      setToast({ type: "error", message: "❌ Failed to submit bill. Please try again." });
-      setTimeout(() => setToast(null), 4000);
+      const errorMsg = err?.response?.data?.message || err?.message || "Failed to submit bill. Please try again.";
+      setToast({ type: "error", message: `❌ ${errorMsg}` });
+      setTimeout(() => setToast(null), 4500);
     } finally {
       setSubmitting(false);
     }
@@ -1766,28 +1803,48 @@ export const POSTerminalPage = () => {
 
           {/* ─── Action Buttons (sticky bottom) ─── */}
           <div className="p-4 border-t border-border bg-surface/80 backdrop-blur-sm space-y-2 shrink-0">
+            {isSessionBlocked && (
+              <div className="px-3 py-2 rounded-xl bg-error/10 border border-error/25 text-error text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="size-4 shrink-0 text-error" />
+                <span>
+                  {isBusinessDayClosed && isShiftClosed
+                    ? "The shift is closed, the business day is closed."
+                    : isBusinessDayClosed
+                    ? "The Business Day is closed for this branch."
+                    : "The shift is closed. Please open a new shift."}
+                </span>
+              </div>
+            )}
             <button
               type="button"
               onClick={handleSubmitBill}
-              disabled={submitting || cartItems.length === 0}
+              disabled={submitting || cartItems.length === 0 || isSessionBlocked}
               className={cn(
                 "w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer",
-                cartItems.length > 0 && !submitting
+                cartItems.length > 0 && !submitting && !isSessionBlocked
                   ? "bg-gradient-to-r from-primary to-primary-hover text-primary-contrast shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
                   : "bg-surface-alt text-text-disabled border border-border cursor-not-allowed"
               )}
             >
               {submitting ? (
                 <Loader2 className="size-4 animate-spin" />
+              ) : isSessionBlocked ? (
+                <AlertCircle className="size-4 text-error" />
               ) : (
                 <Zap className="size-4" />
               )}
               <span>
                 {submitting
                   ? "Processing..."
+                  : isBusinessDayClosed && isShiftClosed
+                  ? "Shift & Business Day Closed"
+                  : isBusinessDayClosed
+                  ? "Business Day Closed"
+                  : isShiftClosed
+                  ? "Shift Closed"
                   : cartItems.length > 0
-                    ? `Bill ${formatCurrency(calculations.grandTotal)}`
-                    : "Add items to bill"}
+                  ? `Bill ${formatCurrency(calculations.grandTotal)}`
+                  : "Add items to bill"}
               </span>
             </button>
 

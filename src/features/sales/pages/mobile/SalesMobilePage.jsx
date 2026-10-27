@@ -308,6 +308,7 @@ export const SalesMobilePage = () => {
       }
     } catch (err) {
       console.warn("Mobile sale record/update error:", err);
+      throw err;
     }
 
     if (branchId) {

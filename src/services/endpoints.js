@@ -105,6 +105,7 @@ export const ENDPOINTS = {
 
   CUSTOMER: {
     CREATE: "/parties/customers",
+    WALK_IN: "/parties/customers/walk-in",
 
     LIST: "/parties/customers",
 
@@ -129,6 +130,7 @@ export const ENDPOINTS = {
     TRANSACTIONS: (customerId) => `/parties/customers/${customerId}/transactions`,
     STATEMENT: (customerId) => `/parties/customers/${customerId}/statement`,
     CREDITS_PENDING_ALL: "/parties/customers/credits/pending",
+    CREDIT_NOTES: (customerId) => `/parties/customers/${customerId}/credit-notes`,
     RELATIONSHIPS: (customerId) => `/parties/customers/${customerId}/relationships`,
     RELATIONSHIP_BY_TARGET: (customerId, targetCustomerId) =>
       `/parties/customers/${customerId}/relationships/${targetCustomerId}`,
@@ -146,6 +148,14 @@ export const ENDPOINTS = {
   },
 
   SALES: {
+    CREDIT_NOTES: {
+      LIST: "/sales/credit-notes",
+      STATS: "/sales/credit-notes/stats",
+      BY_ID: (id) => `/sales/credit-notes/${id}`,
+      BY_CUSTOMER: (customerId) => `/sales/credit-notes/customer/${customerId}`,
+      CREATE: "/sales/credit-notes",
+      CANCEL: (id) => `/sales/credit-notes/${id}/cancel`,
+    },
     INVOICES: {
       ALL: "/sales/invoices",
       BY_CUSTOMER: (customerId) => customerId ? `/sales/invoices/customer/${customerId}` : `/sales/invoices/customer`,

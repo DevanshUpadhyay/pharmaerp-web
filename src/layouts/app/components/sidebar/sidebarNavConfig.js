@@ -74,6 +74,14 @@ export const SIDEBAR_NAV_GROUPS = [
         keywords: ["sales returns", "credit notes", "returns", "refund", "return memo"],
       },
       {
+        id: "credit-notes",
+        label: "Credit Notes",
+        path: ROUTES.CREDIT_NOTES,
+        icon: Receipt,
+        permissions: ["bill:view", "sale:view"],
+        keywords: ["credit notes", "customer credit vouchers", "refund voucher", "credit note"],
+      },
+      {
         id: "purchases",
         label: "Purchases",
         path: ROUTES.PURCHASES,

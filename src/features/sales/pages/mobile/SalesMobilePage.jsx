@@ -49,6 +49,7 @@ import { CreateShiftDialog } from "@/features/operations/shifts/components/Creat
 import { API_STATUS } from "@/constants";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import invoiceService from "@/features/sales/services/invoiceService";
+import customerService from "@/features/parties/customers/services/customerService";
 import { fetchBranchCash } from "@/features/finance/treasury/cash-management/branch-cash/store/branchCashThunk";
 
 export const SalesMobilePage = () => {
@@ -63,13 +64,40 @@ export const SalesMobilePage = () => {
   const [activeTab, setActiveTab] = useState("catalog"); // "catalog" | "cart"
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedCustomer, setSelectedCustomer] = useState(POS_DEFAULT_CUSTOMERS[0]);
+  const [defaultWalkInCustomer, setDefaultWalkInCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [cart, setCart] = useState([]);
   const [isInvoicePreviewOpen, setIsInvoicePreviewOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [completedSale, setCompletedSale] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    customerService
+      .getWalkInCustomer()
+      .then((res) => {
+        if (!isMounted) return;
+        const wCust = res.data?.data || res.data;
+        if (wCust) {
+          const mapped = {
+            ...wCust,
+            id: wCust._id || wCust.id,
+            name: wCust.name || "Walk-in Customer",
+            phone: wCust.mobile || wCust.phone || "",
+            isWalkIn: true,
+          };
+          setDefaultWalkInCustomer(mapped);
+        }
+      })
+      .catch((err) => {
+        console.warn("Mobile walk-in customer fetch error:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [isEditMode]);
 
   const { currentBranch } = useBranch();
   const branchId = currentBranch?._id || currentBranch?.id || null;
@@ -319,6 +347,7 @@ export const SalesMobilePage = () => {
     setCompletedSale(finalData);
     setIsReceiptOpen(true);
     setCart([]);
+    setSelectedCustomer(null);
     setToastMessage(
       isEditMode
         ? `✅ Invoice updated (${finalData.invoiceNo || saleData.invoiceNo})`
@@ -382,7 +411,7 @@ export const SalesMobilePage = () => {
   }
 
   if (!activeShift) {
-    const isDayOpen = Boolean(openBusinessDay);
+    const isDayOpen = Boolean(openBusinessDay && String(openBusinessDay.status || "").toLowerCase() === "open");
 
     return (
       <div className="flex flex-col items-center justify-center min-h-[100dvh] p-4 bg-bg font-sans relative">

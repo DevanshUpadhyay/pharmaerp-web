@@ -329,6 +329,14 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: "/reports/:category/:subReport",
+            element: (
+              <PermissionGuard permission="report:view">
+                <ReportsHubPage />
+              </PermissionGuard>
+            ),
+          },
+          {
             path: "/reports/:reportKey",
             element: (
               <PermissionGuard permission="report:view">

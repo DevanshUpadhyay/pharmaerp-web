@@ -1415,14 +1415,6 @@ export const SalesDesktopPage = () => {
     setIsReturnInvoice(false);
     customerSearchBarRef.current?.clear?.();
     b2bCustomerSearchBarRef.current?.clear?.();
-    setToastMessage(
-      isEditMode
-        ? `✅ ${billingMode} Invoice ${actualInvoiceNo} updated successfully.`
-        : (isReturnInvoice || saleData.isReturn)
-        ? `✅ ${billingMode} Return Memo ${actualInvoiceNo} recorded & refunded successfully.`
-        : `✅ ${billingMode} Invoice ${actualInvoiceNo} created & saved in backend.`
-    );
-    setTimeout(() => setToastMessage(null), 4000);
   };
 
   if (isLoadingInvoice) {
@@ -1695,7 +1687,7 @@ export const SalesDesktopPage = () => {
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 
           {/* Customer Strip */}
-          <div className="relative z-10 shrink-0 border-b border-border bg-surface">
+          <div className="relative z-25 shrink-0 border-b border-border bg-surface">
             {billingMode === "B2C" ? (
               <div className="px-4 pt-3.5 pb-2.5">
                 <SalesCustomerDoctorInfo
@@ -1823,7 +1815,7 @@ export const SalesDesktopPage = () => {
           </div>
 
           {/* Product Search Bar */}
-          <div className="shrink-0 px-4 py-2 border-b border-border bg-surface-alt/30 flex items-center justify-between gap-4">
+          <div className="relative z-20 shrink-0 px-4 py-2 border-b border-border bg-surface-alt/30 flex items-center justify-between gap-4">
             <div className="w-full max-w-[540px]">
               <WorkspaceProductSearchBar
                 ref={searchBarRef}

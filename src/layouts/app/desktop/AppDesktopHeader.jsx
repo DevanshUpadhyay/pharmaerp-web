@@ -3,14 +3,16 @@
 import React, { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Sparkles, Plus, Layers, Command } from "lucide-react";
+import { ChevronRight, Sparkles, Plus, Layers, Command, Settings, HelpCircle } from "lucide-react";
 
 import { ROUTES } from "@/constants";
+import { useWorkMode } from "@/contexts";
 import { useSetupStatus } from "@/features/setup/hooks/useSetupStatus";
 import {
   HeaderSearchBar,
   HeaderNotifications,
   HeaderAppMenu,
+  HeaderWorkModeToggle,
 } from "@/layouts/app/components/header";
 
 /**
@@ -662,6 +664,7 @@ export const AppDesktopHeader = ({ sidebarCollapsed, sidebarWidth = 240, onOpenS
   const effectiveWidth = sidebarWidth ?? (sidebarCollapsed ? 68 : 240);
   const location = useLocation();
   const { isSetupComplete, completedCount } = useSetupStatus();
+  const { workMode, isOperationMode } = useWorkMode();
 
   // State for Stock Matrix dialog
   const [isStockMatrixOpen, setIsStockMatrixOpen] = React.useState(false);
@@ -698,9 +701,62 @@ export const AppDesktopHeader = ({ sidebarCollapsed, sidebarWidth = 240, onOpenS
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // ── Neutral Default Header (When workMode is null / Choose Mode screen) ──
+  if (!workMode) {
+    return (
+      <header
+        className="fixed top-0 z-[60] h-[62px] border-b border-border bg-surface/95 backdrop-blur-md transition-[left] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+        style={{
+          left: effectiveWidth,
+          right: 0,
+        }}
+      >
+        <div className="flex h-full w-full items-center justify-between px-6 gap-4">
+          {/* Brand Logo & Subtitle */}
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7.5V16.5L12 22L22 16.5V7.5L12 2ZM13 7V11H17V13H13V17H11V13H7V11H11V7H13Z" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-sm font-extrabold tracking-tight text-text leading-tight">
+                Pahuch <span className="text-primary font-bold">ERP</span>
+              </div>
+              <div className="text-[11px] font-medium text-text-muted leading-tight">
+                Pharmacy Management System
+              </div>
+            </div>
+          </div>
+
+          {/* Neutral Actions: Settings & Help & Support */}
+          <div className="flex shrink-0 items-center justify-end gap-3 w-auto">
+            <Link
+              to={ROUTES.SETTINGS}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-surface hover:bg-surface-hover text-xs font-semibold text-text shadow-2xs transition-all"
+              title="Settings"
+            >
+              <Settings className="size-3.5 text-text-muted" />
+              <span className="hidden sm:inline">Settings</span>
+            </Link>
+
+            <Link
+              to={ROUTES.HELP_CENTER}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-surface hover:bg-surface-hover text-xs font-semibold text-text shadow-2xs transition-all"
+              title="Help & Support"
+            >
+              <HelpCircle className="size-3.5 text-text-muted" />
+              <span className="hidden sm:inline">Help & Support</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header
-      className="fixed top-0 z-40 h-[62px] border-b border-border bg-surface/95 backdrop-blur-md transition-[left] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+      className="fixed top-0 z-[60] h-[62px] border-b border-border bg-surface/95 backdrop-blur-md transition-[left] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
       style={{
         left: effectiveWidth,
         right: 0,
@@ -776,6 +832,9 @@ export const AppDesktopHeader = ({ sidebarCollapsed, sidebarWidth = 240, onOpenS
             <span>Stock Matrix</span>
           </button>
 
+          {/* Work Mode Switcher (Operation vs View) */}
+          <HeaderWorkModeToggle />
+
           {/* Dotted Grid Quick App & Dashboard Menu */}
           <HeaderAppMenu />
 
@@ -798,14 +857,16 @@ export const AppDesktopHeader = ({ sidebarCollapsed, sidebarWidth = 240, onOpenS
             onClose={() => setIsStockMatrixOpen(false)}
           />
 
-          {/* POS Billing Plus Button */}
-          <Link
-            to="/sales"
-            className="flex items-center justify-center size-9 rounded-full bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 shadow-sm ring-2 ring-primary/20"
-            title="POS Billing (Alt + N)"
-          >
-            <Plus className="size-5 text-white dark:text-white" color="white" />
-          </Link>
+          {/* POS Billing Plus Button (Strictly Operation Mode) */}
+          {isOperationMode && (
+            <Link
+              to="/sales"
+              className="flex items-center justify-center size-9 rounded-full bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 shadow-sm ring-2 ring-primary/20"
+              title="POS Billing (Alt + N)"
+            >
+              <Plus className="size-5 text-white dark:text-white" color="white" />
+            </Link>
+          )}
 
         </div>
       </div>

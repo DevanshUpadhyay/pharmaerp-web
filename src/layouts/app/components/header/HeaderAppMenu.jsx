@@ -23,6 +23,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { ROUTES } from "@/constants";
+import { useWorkMode } from "@/contexts";
 import { cn } from "@/lib/utils";
 
 // 1. Dashboards Group (3 Levels)
@@ -177,6 +178,7 @@ export const HeaderAppMenu = ({ className = "" }) => {
   const containerRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isViewMode, isOperationMode } = useWorkMode();
 
   // Close on outside click
   useEffect(() => {
@@ -322,7 +324,8 @@ export const HeaderAppMenu = ({ className = "" }) => {
 
             {/* Scrollable Content Body */}
             <div className="flex-1 overflow-y-auto p-3.5 space-y-4 max-h-[calc(85vh-90px)]">
-              {/* ── SECTION 1: DASHBOARDS ─────────────────────────── */}
+              {/* ── SECTION 1: DASHBOARDS (Strictly View Mode) ─────────────────────────── */}
+              {!isOperationMode && (
               <div>
                 <div className="flex items-center justify-between mb-2 px-1">
                   <span className="text-[10px] font-bold tracking-wider uppercase text-text-muted">
@@ -371,8 +374,10 @@ export const HeaderAppMenu = ({ className = "" }) => {
                   })}
                 </div>
               </div>
+              )}
 
-              {/* ── SECTION 2: DAILY COUNTER & CASH ROUTINE ───────── */}
+              {/* ── SECTION 2: DAILY COUNTER & CASH ROUTINE (Strictly Operation Mode) ───────── */}
+              {!isViewMode && (
               <div>
                 <div className="flex items-center justify-between mb-2 px-1">
                   <span className="text-[10px] font-bold tracking-wider uppercase text-text-muted">
@@ -386,6 +391,7 @@ export const HeaderAppMenu = ({ className = "" }) => {
                   {DAILY_COUNTER_OPS.map(renderOpCard)}
                 </div>
               </div>
+              )}
 
               {/* ── SECTION 3: STOCK & PROCUREMENT ────────────────── */}
               <div>

@@ -1,10 +1,9 @@
 // src/features/reports/pages/desktop/ReportsHubDesktopPage.jsx
 
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ReportsOverviewStatCards,
-  ReportsDirectoryToolbar,
   ReportsDirectoryGrid,
   ReportDetailView,
 } from "../../components";
@@ -17,12 +16,6 @@ export const ReportsHubDesktopPage = () => {
   const navigate = useNavigate();
   const { category, subReport, reportKey: routeReportKey } = useParams();
   const [searchParams] = useSearchParams();
-
-  // Search & Filter state for the front page directory
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedStore, setSelectedStore] = useState("all");
-  const [selectedDateRange, setSelectedDateRange] = useState("this-month");
 
   // Determine if a specific category / report view is active
   const activeReportContext = useMemo(() => {
@@ -64,13 +57,6 @@ export const ReportsHubDesktopPage = () => {
     navigate("/reports");
   };
 
-  const handleResetFilters = () => {
-    setSearchQuery("");
-    setSelectedCategory("all");
-    setSelectedStore("all");
-    setSelectedDateRange("this-month");
-  };
-
   return (
     <div className="w-full h-full max-h-full flex-1 flex flex-col min-h-0 bg-bg px-3 sm:px-4 md:px-5 pt-0 pb-3 gap-3.5 text-text font-sans transition-colors overflow-hidden">
       {activeReportContext ? (
@@ -91,26 +77,9 @@ export const ReportsHubDesktopPage = () => {
             <ReportsOverviewStatCards stats={REPORTS_OVERVIEW_STATS} />
           </div>
 
-          {/* 2. Streamlined Single-Row Toolbar (Search, Date & Store Filters) */}
-          <div className="shrink-0">
-            <ReportsDirectoryToolbar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              selectedCategory={selectedCategory}
-              onCategoryChange={setSelectedCategory}
-              selectedStore={selectedStore}
-              onStoreChange={setSelectedStore}
-              selectedDateRange={selectedDateRange}
-              onDateRangeChange={setSelectedDateRange}
-              onResetFilters={handleResetFilters}
-            />
-          </div>
-
-          {/* 3. 3x3 Grid of 9 Category Cards (All 45 Reports) */}
+          {/* 2. 3x3 Grid of 9 Category Cards (All 45 Reports) - Filter Toolbar Removed */}
           <div className="flex-1 min-h-0 overflow-y-auto pr-1">
             <ReportsDirectoryGrid
-              searchQuery={searchQuery}
-              selectedCategory={selectedCategory}
               onSelectReport={handleSelectReport}
             />
           </div>

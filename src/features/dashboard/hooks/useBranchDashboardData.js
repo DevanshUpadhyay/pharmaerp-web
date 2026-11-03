@@ -13,16 +13,18 @@ export const useBranchDashboardData = (selectedDate = null) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const workspaceId = currentWorkspace?._id;
-  const companyId = currentCompany?._id;
-  const branchId = currentBranch?._id;
+  const workspaceId = currentWorkspace?._id || currentWorkspace?.id;
+  const companyId = currentCompany?._id || currentCompany?.id;
+  const branchId = currentBranch?._id || currentBranch?.id;
 
   const fetchBranchDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       const res = await dashboardService.getBranchDashboard({
-        date: selectedDate,
+        branchId: branchId || undefined,
+        companyId: companyId || undefined,
+        date: selectedDate && selectedDate !== "Today" ? selectedDate : undefined,
       });
       setData(res);
     } catch (err) {
@@ -30,15 +32,19 @@ export const useBranchDashboardData = (selectedDate = null) => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedDate]);
+  }, [branchId, companyId, selectedDate]);
 
   useEffect(() => {
     let active = true;
 
     const loadData = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
         const res = await dashboardService.getBranchDashboard({
-          date: selectedDate,
+          branchId: branchId || undefined,
+          companyId: companyId || undefined,
+          date: selectedDate && selectedDate !== "Today" ? selectedDate : undefined,
         });
         if (active) {
           setData(res);
@@ -64,9 +70,6 @@ export const useBranchDashboardData = (selectedDate = null) => {
     isLoading,
     error,
     refresh: fetchBranchDashboard,
-    currentWorkspace,
-    currentCompany,
-    currentBranch,
   };
 };
 

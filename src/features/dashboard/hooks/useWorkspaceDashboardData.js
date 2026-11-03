@@ -13,13 +13,17 @@ export const useWorkspaceDashboardData = (timeframe = "This Month", dateRange = 
 
   const workspaceId = currentWorkspace?._id;
 
+  const normalizedTimeframe = String(timeframe || "THIS_MONTH")
+    .toUpperCase()
+    .replace(/\s+/g, "_");
+
   const fetchWorkspaceDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       const res = await dashboardService.getWorkspaceDashboard({
-        timeframe,
-        dateRange,
+        timeframe: normalizedTimeframe,
+        dateRange: dateRange || undefined,
         workspaceId,
       });
       setData(res);
@@ -28,16 +32,18 @@ export const useWorkspaceDashboardData = (timeframe = "This Month", dateRange = 
     } finally {
       setIsLoading(false);
     }
-  }, [timeframe, dateRange, workspaceId]);
+  }, [normalizedTimeframe, dateRange, workspaceId]);
 
   useEffect(() => {
     let active = true;
 
     const loadData = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
         const res = await dashboardService.getWorkspaceDashboard({
-          timeframe,
-          dateRange,
+          timeframe: normalizedTimeframe,
+          dateRange: dateRange || undefined,
           workspaceId,
         });
         if (active) {
@@ -57,7 +63,7 @@ export const useWorkspaceDashboardData = (timeframe = "This Month", dateRange = 
     return () => {
       active = false;
     };
-  }, [workspaceId, timeframe, dateRange]);
+  }, [workspaceId, normalizedTimeframe, dateRange]);
 
   return {
     data,

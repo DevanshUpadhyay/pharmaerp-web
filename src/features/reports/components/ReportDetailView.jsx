@@ -20,12 +20,17 @@ import {
   Percent,
   ShoppingCart,
   BarChart2,
-  ArrowLeft,
   Eye,
   Check,
   AlertTriangle,
   RotateCcw,
   Boxes,
+  Wallet,
+  QrCode,
+  CreditCard,
+  UserCheck,
+  Receipt,
+  Users,
 } from "lucide-react";
 import {
   UIButton,
@@ -48,28 +53,37 @@ import {
   UIModalFooter,
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import useBranch from "@/features/branch/hooks/useBranch";
+import pharmacyReportsService from "../services/pharmacyReportsService";
 import {
   MASTER_CATEGORIES_DATA,
   resolveCategoryAndTab,
 } from "../constants/reportsHubData";
 
-const TIMEFRAME_OPTIONS = [
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
-  { value: "monthly", label: "Monthly" },
+const DATE_RANGE_OPTIONS = [
+  { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yesterday" },
+  { value: "last7days", label: "Last 7 Days" },
+  { value: "thisMonth", label: "This Month" },
+  { value: "custom", label: "Custom Range" },
 ];
 
 const FILTER_MODE_OPTIONS = [
-  { value: "all", label: "All Modes / Types" },
+  { value: "all", label: "All Payment Modes" },
   { value: "Cash", label: "Cash" },
   { value: "UPI", label: "UPI" },
+  { value: "Split", label: "Split" },
+  { value: "Credit", label: "Credit" },
   { value: "Card", label: "Card / Bank" },
 ];
 
 const STATUS_FILTER_OPTIONS = [
   { value: "all", label: "All Statuses" },
-  { value: "Completed", label: "Completed / Active" },
+  { value: "CONFIRMED", label: "Confirmed" },
+  { value: "RECEIVED", label: "Received / Verified" },
+  { value: "PAID", label: "Paid / Completed" },
   { value: "Pending", label: "Pending" },
+  { value: "Cancelled", label: "Cancelled / Returned" },
 ];
 
 const formatCurrency = (val) => {
@@ -80,75 +94,56 @@ const formatCurrency = (val) => {
   });
 };
 
-const BATCH_SIZE = 10;
-
-/**
- * Expands base records into a rich synthetic pool for infinite scrolling demo
- */
-const generateExpandedRows = (baseRows = [], categoryKey = "sales", tabSlug = "summary") => {
-  if (!baseRows || baseRows.length === 0) return [];
-  const pool = [];
-  const totalWanted = 40;
-  const dates = [
-    "31 Oct 2024", "30 Oct 2024", "29 Oct 2024", "28 Oct 2024", "27 Oct 2024",
-    "26 Oct 2024", "25 Oct 2024", "24 Oct 2024", "23 Oct 2024", "22 Oct 2024",
-    "21 Oct 2024", "20 Oct 2024", "19 Oct 2024", "18 Oct 2024", "17 Oct 2024"
-  ];
-  const customers = [
-    "Walk-in Customer", "Rakesh Sharma", "Neha Patel", "Amit Verma", "Sunita Jain",
-    "Vikram Singh", "Priya Nair", "Deepak Gupta", "Meena Iyer", "Kavita Rao",
-    "Anil Kapoor", "Sanjay Singhania", "Pooja Hegde", "Manoj Joshi", "Rajesh Khanna"
-  ];
-  const paymentModes = ["Cash", "UPI", "Card"];
-
-  for (let i = 0; i < totalWanted; i++) {
-    const template = baseRows[i % baseRows.length];
-    const itemNum = i + 1;
-    const date = dates[i % dates.length];
-    const customer = customers[i % customers.length];
-    const paymentMode = paymentModes[i % paymentModes.length];
-
-    const cloned = { ...template, id: `row-${categoryKey}-${tabSlug}-${itemNum}` };
-
-    if (cloned.invoiceNo) {
-      cloned.invoiceNo = `INV-${String(1482 - i).padStart(6, "0")}`;
-    }
-    if (cloned.billNo) {
-      cloned.billNo = `BILL-${String(9820 - i).padStart(5, "0")}`;
-    }
-    if (cloned.returnNo) {
-      cloned.returnNo = `RET-${String(340 - i).padStart(4, "0")}`;
-    }
-    if (cloned.date && cloned.date !== "—") {
-      cloned.date = date;
-    }
-    if (cloned.customer && cloned.customer !== "—" && !cloned.customer.includes("All")) {
-      cloned.customer = customer;
-    }
-    if (cloned.paymentMode) {
-      cloned.paymentMode = paymentMode;
-    }
-    if (typeof cloned.billAmount === "number") {
-      cloned.billAmount = Math.round((cloned.billAmount * (0.85 + ((i * 7) % 30) / 100)) * 100) / 100;
-      cloned.discount = Math.round((cloned.discount * (0.8 + ((i * 5) % 25) / 100)) * 100) / 100;
-      cloned.netAmount = Math.round((cloned.billAmount - cloned.discount) * 100) / 100;
-      if (typeof cloned.profit === "number") {
-        cloned.profit = Math.round(cloned.netAmount * 0.17 * 100) / 100;
-      }
-    }
-    if (typeof cloned.total === "number") {
-      cloned.total = Math.round((cloned.total * (0.9 + ((i * 6) % 25) / 100)) * 100) / 100;
-    }
-    pool.push(cloned);
-  }
-  return pool;
+const formatShortCurrency = (val) => {
+  const num = Number(val || 0);
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(2)}Cr`;
+  if (num >= 100000) return `₹${(num / 100000).toFixed(2)}L`;
+  if (num >= 1000) return `₹${(num / 1000).toFixed(1)}k`;
+  return `₹${Math.round(num)}`;
 };
 
+const BATCH_SIZE = 25;
+
 /**
- * ── General Purpose Report Subdivision & Detail View ────────────────────────
- * Used universally across all 9 report categories (Sales, Purchase, Inventory,
- * Customers, Suppliers, Financial, GST, Products, Custom Reports).
+ * Calculates start and end ISO strings based on calendar preset
  */
+const getCalendarDateRange = (preset, customStart, customEnd) => {
+  const now = new Date();
+  let start = new Date();
+  let end = new Date();
+
+  if (preset === "today") {
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+  } else if (preset === "yesterday") {
+    start.setDate(now.getDate() - 1);
+    start.setHours(0, 0, 0, 0);
+    end.setDate(now.getDate() - 1);
+    end.setHours(23, 59, 59, 999);
+  } else if (preset === "last7days") {
+    start.setDate(now.getDate() - 6);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+  } else if (preset === "thisMonth") {
+    start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  } else if (preset === "custom" && customStart && customEnd) {
+    start = new Date(customStart);
+    start.setHours(0, 0, 0, 0);
+    end = new Date(customEnd);
+    end.setHours(23, 59, 59, 999);
+  } else {
+    // Default fallback to this month
+    start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+  }
+
+  return {
+    startDate: start.toISOString(),
+    endDate: end.toISOString(),
+  };
+};
+
 export const ReportDetailView = ({
   categoryKey = "sales",
   initialTabKey = "summary",
@@ -156,6 +151,7 @@ export const ReportDetailView = ({
   onTabChange,
 }) => {
   const tableContainerRef = useRef(null);
+  const { currentBranch } = useBranch();
 
   // Resolve category and tab configuration dynamically
   const resolved = useMemo(
@@ -164,127 +160,217 @@ export const ReportDetailView = ({
   );
 
   const [activeTabSlug, setActiveTabSlug] = useState(resolved.tabKey);
+  const [selectedDateRange, setSelectedDateRange] = useState("thisMonth");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedModeFilter, setSelectedModeFilter] = useState("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("all");
-  const [selectedTimeframe, setSelectedTimeframe] = useState("daily");
   const [hoveredBarIndex, setHoveredBarIndex] = useState(null);
   const [previewRecord, setPreviewRecord] = useState(null);
 
-  // Infinite scroll pagination states
-  const [currentPage, setCurrentPage] = useState(1);
+  // Live API data state
+  const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [displayedRows, setDisplayedRows] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [liveRows, setLiveRows] = useState([]);
+  const [apiSummary, setApiSummary] = useState(null);
+  const [apiChart, setApiChart] = useState(null);
   const [hasMore, setHasMore] = useState(false);
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 350);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   // Sync state if categoryKey or initialTabKey changes from route params
   useEffect(() => {
     setActiveTabSlug(resolved.tabKey);
     setSearchQuery("");
+    setCurrentPage(1);
   }, [categoryKey, initialTabKey, resolved.tabKey]);
 
   const categoryData = resolved.categoryData;
 
-  // Active tab configuration
+  // Active tab configuration from static template
   const activeConfig = useMemo(() => {
     return (
       categoryData.tabs[activeTabSlug] ||
+      categoryData.tabs[categoryData.items.find((i) => i.slug === activeTabSlug || i.id === activeTabSlug)?.slug] ||
       Object.values(categoryData.tabs)[0]
     );
   }, [categoryData, activeTabSlug]);
 
   const CategoryIcon = categoryData.icon;
 
-  // Generate full expanded dataset for infinite scroll demonstration
-  const fullRowsPool = useMemo(() => {
-    return generateExpandedRows(activeConfig.rows, categoryKey, activeTabSlug);
-  }, [activeConfig.rows, categoryKey, activeTabSlug]);
+  // Date boundaries for active range
+  const { startDate, endDate } = useMemo(() => {
+    return getCalendarDateRange(selectedDateRange, customStartDate, customEndDate);
+  }, [selectedDateRange, customStartDate, customEndDate]);
+
+  // Main data fetching function for live reports
+  const fetchReportData = useCallback(
+    async (pageToLoad = 1, isAppend = false) => {
+      if (categoryKey !== "sales" && categoryKey !== "purchase") {
+        setIsLoading(false);
+        return;
+      }
+
+      if (isAppend) {
+        setIsLoadingMore(true);
+      } else {
+        setIsLoading(true);
+      }
+
+      try {
+        const params = {
+          startDate,
+          endDate,
+          branchId: currentBranch?._id || undefined,
+          search: debouncedSearch || undefined,
+          paymentMethod: selectedModeFilter !== "all" ? selectedModeFilter : undefined,
+          status: selectedStatusFilter !== "all" ? selectedStatusFilter : undefined,
+          page: pageToLoad,
+          limit: BATCH_SIZE,
+        };
+
+        const res = await pharmacyReportsService.getReport(activeTabSlug, params, categoryKey);
+        const data = res?.data?.data || res?.data || {};
+
+        if (isAppend) {
+          setLiveRows((prev) => [...prev, ...(data.rows || [])]);
+        } else {
+          setLiveRows(data.rows || []);
+          setApiSummary(data.summary || null);
+          setApiChart(data.chart || null);
+        }
+
+        const totalCount = Number(data.total || 0);
+        setTotalRecords(totalCount);
+
+        const currentLoaded = isAppend
+          ? liveRows.length + (data.rows || []).length
+          : (data.rows || []).length;
+        setHasMore(currentLoaded < totalCount);
+      } catch (err) {
+        console.error("Failed to load report data:", err);
+      } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [
+      categoryKey,
+      activeTabSlug,
+      startDate,
+      endDate,
+      currentBranch?._id,
+      debouncedSearch,
+      selectedModeFilter,
+      selectedStatusFilter,
+      liveRows.length,
+    ]
+  );
+
+  // Trigger fetch when tab, date range, filters, or search change
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchReportData(1, false);
+  }, [
+    categoryKey,
+    activeTabSlug,
+    startDate,
+    endDate,
+    currentBranch?._id,
+    debouncedSearch,
+    selectedModeFilter,
+    selectedStatusFilter,
+  ]);
+
+  // Infinite scroll load more handler
+  const handleLoadMore = useCallback(() => {
+    if (isLoading || isLoadingMore || !hasMore) return;
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    fetchReportData(nextPage, true);
+  }, [isLoading, isLoadingMore, hasMore, currentPage, fetchReportData]);
 
   // Tab switch handler
   const handleSelectTab = (tabItem) => {
     setActiveTabSlug(tabItem.slug);
     setSearchQuery("");
+    setCurrentPage(1);
     if (onTabChange) {
       onTabChange(tabItem.slug);
     }
   };
 
-  // Filtered rows for table
-  const filteredRows = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    const rows = fullRowsPool;
-
-    if (!q && selectedModeFilter === "all" && selectedStatusFilter === "all") {
-      return rows;
-    }
-
-    return rows.filter((r) => {
-      if (selectedModeFilter !== "all" && r.paymentMode && r.paymentMode !== selectedModeFilter) {
-        return false;
-      }
-      if (selectedStatusFilter !== "all" && r.status && r.status !== selectedStatusFilter) {
-        return false;
-      }
-      if (!q) return true;
-      return Object.values(r).some((val) =>
-        String(val).toLowerCase().includes(q)
-      );
-    });
-  }, [fullRowsPool, searchQuery, selectedModeFilter, selectedStatusFilter]);
-
-  // Sync displayed rows whenever filtered results change
-  useEffect(() => {
-    setCurrentPage(1);
-    const initialBatch = filteredRows.slice(0, BATCH_SIZE);
-    setDisplayedRows(initialBatch);
-    setHasMore(filteredRows.length > BATCH_SIZE);
-  }, [filteredRows]);
-
-  // Infinite scroll load more handler
-  const handleLoadMore = useCallback(() => {
-    if (isLoadingMore || !hasMore) return;
-    setIsLoadingMore(true);
-
-    setTimeout(() => {
-      setCurrentPage((prevPage) => {
-        const nextPage = prevPage + 1;
-        const nextBatch = filteredRows.slice(0, nextPage * BATCH_SIZE);
-        setDisplayedRows(nextBatch);
-        setHasMore(nextBatch.length < filteredRows.length);
-        setIsLoadingMore(false);
-        return nextPage;
-      });
-    }, 450);
-  }, [isLoadingMore, hasMore, filteredRows]);
-
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedModeFilter("all");
     setSelectedStatusFilter("all");
+    setSelectedDateRange("thisMonth");
+    setCustomStartDate("");
+    setCustomEndDate("");
   };
+
+  // Compute live 4 stat cards merging API summary with config metadata
+  const computedStatCards = useMemo(() => {
+    const baseStats = activeConfig.stats || [];
+    if (!apiSummary) return baseStats;
+
+    return baseStats.map((st) => {
+      if (!st.dataKey) return st;
+      const rawVal = apiSummary[st.dataKey];
+      let displayVal = "—";
+
+      if (rawVal !== undefined && rawVal !== null) {
+        if (st.isCurrency || typeof rawVal === "number" && (st.dataKey.includes("Sales") || st.dataKey.includes("Billing") || st.dataKey.includes("Revenue") || st.dataKey.includes("Spend") || st.dataKey.includes("Discounts") || st.dataKey.includes("Refund") || st.dataKey.includes("Value"))) {
+          displayVal = `₹${formatCurrency(rawVal)}`;
+        } else if (typeof rawVal === "number") {
+          displayVal = Number(rawVal).toLocaleString("en-IN");
+        } else {
+          displayVal = String(rawVal);
+        }
+      }
+
+      return {
+        ...st,
+        value: displayVal,
+      };
+    });
+  }, [activeConfig.stats, apiSummary]);
+
+  // Trend Chart data
+  const chartConfig = useMemo(() => {
+    const rawChart = apiChart || activeConfig.chart || {};
+    const chartData = rawChart.data || [];
+    const maxVal = Math.max(
+      ...chartData.map((d) =>
+        Math.max(Number(d.metric1 || d.sales || 0), Number(d.metric2 || d.profit || 0))
+      ),
+      100
+    );
+
+    return {
+      title: rawChart.title || activeConfig.chart.title,
+      metric1Label: rawChart.metric1Label || activeConfig.chart.metric1Label,
+      metric2Label: rawChart.metric2Label || activeConfig.chart.metric2Label,
+      metric1Color: activeConfig.chart.metric1Color || "#10b981",
+      metric2Color: activeConfig.chart.metric2Color || "#0284c7",
+      data: chartData,
+      maxVal,
+    };
+  }, [apiChart, activeConfig.chart]);
 
   return (
     <div className="flex-1 flex flex-col gap-3.5 sm:gap-4 min-h-0 text-text font-sans">
-      {/* ── 1. Top Navigation Bar (Clean: NO Header/Breadcrumbs/Filters) ──── */}
-      <div className="flex items-center justify-between shrink-0">
-        <button
-          type="button"
-          onClick={onBackToHub}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/70 bg-surface hover:bg-surface-hover/80 text-xs font-semibold text-text-muted hover:text-text transition-colors shadow-2xs cursor-pointer"
-        >
-          <ArrowLeft className="size-3.5" />
-          <span>Back to All Reports</span>
-        </button>
-
-        {/* Compact active report indicator pill */}
-        <div className="flex items-center gap-2 text-xs font-medium text-text-muted">
-          <span>{categoryData.title}</span>
-          <span className="text-text-muted/40">•</span>
-          <span className="font-bold text-text">{activeConfig.title}</span>
-        </div>
-      </div>
-
-      {/* ── 2. Upper Split Section: Left Tabs & Right Stats/Graph ─────────── */}
+      {/* ── 1. Upper Split Section: Left Tabs & Right Stats/Graph ─────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4 shrink-0 items-start">
         {/* Left Side: Category Card with 5 Tabs (~310px) */}
         <div className="lg:col-span-4 xl:col-span-3.5 flex flex-col">
@@ -326,9 +412,7 @@ export const ReportDetailView = ({
               {categoryData.items.map((item) => {
                 const ItemIcon = item.icon;
                 const isActive =
-                  item.slug === activeTabSlug ||
-                  item.id === activeTabSlug ||
-                  item.slug === activeConfig.slug;
+                  item.slug === activeTabSlug || item.id === activeTabSlug;
 
                 return (
                   <button
@@ -388,48 +472,52 @@ export const ReportDetailView = ({
         <div className="lg:col-span-8 xl:col-span-8.5 flex flex-col gap-3 sm:gap-3.5">
           {/* 4 Stat Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {activeConfig.stats.map((stat) => {
-              const Icon = stat.icon;
-              const isUp = stat.trendDirection === "up";
+            {computedStatCards.map((stat) => {
+              const Icon = stat.icon || Tag;
+              const valStr = String(stat.value || "");
+              const valLen = valStr.length;
+              const valSizeClass =
+                valLen > 14
+                  ? "text-[12px] sm:text-[13px]"
+                  : valLen > 11
+                  ? "text-[13px] sm:text-[14px]"
+                  : valLen > 8
+                  ? "text-sm sm:text-[15px]"
+                  : "text-base sm:text-[17px]";
 
               return (
                 <div
                   key={stat.id}
-                  className="bg-surface rounded-2xl border border-border/80 p-3.5 shadow-2xs flex items-center gap-3 transition-colors"
+                  className="bg-surface rounded-2xl border border-border/80 p-2.5 sm:p-3 shadow-2xs flex items-center gap-2.5 transition-colors min-w-0"
                 >
                   <div
                     className={cn(
-                      "size-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs",
+                      "size-8.5 sm:size-9 rounded-xl flex items-center justify-center shrink-0 shadow-2xs",
                       stat.iconBg
                     )}
                   >
-                    <Icon className="size-4.5 stroke-[2]" />
+                    <Icon className="size-4 stroke-[2]" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-medium text-text-muted truncate">
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <div className="text-[10.5px] sm:text-[11px] font-medium text-text-muted truncate">
                       {stat.title}
                     </div>
-                    <div className="text-lg sm:text-[20px] font-bold text-text font-mono tracking-tight leading-tight mt-0.5">
-                      {stat.value}
+                    <div
+                      title={valStr}
+                      className={cn(
+                        "font-bold text-text font-mono tabular-nums tracking-tight leading-tight mt-0.5 whitespace-nowrap",
+                        valSizeClass
+                      )}
+                    >
+                      {isLoading && !apiSummary ? (
+                        <span className="inline-block w-16 h-4 bg-border/40 rounded animate-pulse" />
+                      ) : (
+                        stat.value
+                      )}
                     </div>
-                    <div className="flex items-center gap-1 mt-0.5 text-[10.5px] truncate">
-                      <span
-                        className={cn(
-                          "font-semibold inline-flex items-center",
-                          isUp
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-rose-600 dark:text-rose-400"
-                        )}
-                      >
-                        {isUp ? (
-                          <ArrowUp className="size-2.5 stroke-[2.5] mr-0.5" />
-                        ) : (
-                          <ArrowDown className="size-2.5 stroke-[2.5] mr-0.5" />
-                        )}
-                        {stat.trend}
-                      </span>
+                    <div className="flex items-center gap-1 mt-0.5 text-[10px] truncate">
                       <span className="text-text-muted font-normal truncate">
-                        {stat.trendLabel}
+                        {stat.trendLabel || "for selected period"}
                       </span>
                     </div>
                   </div>
@@ -441,152 +529,164 @@ export const ReportDetailView = ({
           {/* Trend Bar Chart Card */}
           <div className="bg-surface rounded-2xl border border-border/80 p-4 shadow-2xs flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm sm:text-base font-bold text-text">
-                {activeConfig.chart.title}
+              <h3 className="text-sm sm:text-base font-bold text-text truncate">
+                {chartConfig.title}
               </h3>
 
-              <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                 {/* Legend */}
                 <div className="flex items-center gap-3 text-xs font-medium">
                   <div className="flex items-center gap-1.5">
                     <span
-                      style={{ backgroundColor: activeConfig.chart.metric1Color }}
+                      style={{ backgroundColor: chartConfig.metric1Color }}
                       className="size-2.5 rounded-full"
                     />
                     <span className="text-text-muted">
-                      {activeConfig.chart.metric1Label}
+                      {chartConfig.metric1Label}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span
-                      style={{ backgroundColor: activeConfig.chart.metric2Color }}
+                      style={{ backgroundColor: chartConfig.metric2Color }}
                       className="size-2.5 rounded-full"
                     />
                     <span className="text-text-muted">
-                      {activeConfig.chart.metric2Label}
+                      {chartConfig.metric2Label}
                     </span>
                   </div>
-                </div>
-
-                {/* Dropdown */}
-                <div className="w-[90px]">
-                  <UISelect
-                    value={selectedTimeframe}
-                    onChange={setSelectedTimeframe}
-                    options={TIMEFRAME_OPTIONS}
-                    size="sm"
-                  />
                 </div>
               </div>
             </div>
 
             {/* Interactive Bar Chart Visualization */}
             <div className="h-38 sm:h-42 w-full pt-1 flex flex-col justify-end">
-              {/* Y Axis grid & Bars */}
-              <div className="relative flex-1 flex items-end justify-between gap-1 sm:gap-1.5 px-4 sm:px-6 pb-2 border-b border-border/60">
+              <div className="relative flex-1 flex items-end justify-between gap-1 sm:gap-1.5 px-3 sm:px-6 pb-2 border-b border-border/60">
                 {/* Grid guidelines */}
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[9.5px] text-text-muted font-mono pr-2">
                   <div className="w-full flex items-center justify-between border-b border-border/30">
-                    <span className="-translate-y-2">1L</span>
+                    <span className="-translate-y-2">
+                      {formatShortCurrency(chartConfig.maxVal)}
+                    </span>
                   </div>
                   <div className="w-full flex items-center justify-between border-b border-border/30">
-                    <span className="-translate-y-2">75K</span>
+                    <span className="-translate-y-2">
+                      {formatShortCurrency(chartConfig.maxVal * 0.66)}
+                    </span>
                   </div>
                   <div className="w-full flex items-center justify-between border-b border-border/30">
-                    <span className="-translate-y-2">50K</span>
-                  </div>
-                  <div className="w-full flex items-center justify-between border-b border-border/30">
-                    <span className="-translate-y-2">25K</span>
+                    <span className="-translate-y-2">
+                      {formatShortCurrency(chartConfig.maxVal * 0.33)}
+                    </span>
                   </div>
                   <div className="w-full flex items-center justify-between">
                     <span className="-translate-y-2">0</span>
                   </div>
                 </div>
 
-                {/* Dual Bars for each day */}
-                {(activeConfig.chart.data || []).map((item, idx) => {
-                  const isHovered = hoveredBarIndex === idx;
-                  const m1Height = Math.min(100, Math.max(10, (item.sales / 100) * 100));
-                  const m2Height = Math.min(100, Math.max(8, (item.profit / 100) * 100));
+                {/* Dual Bars */}
+                {chartConfig.data.length === 0 ? (
+                  <div className="w-full h-full flex items-center justify-center text-xs text-text-muted italic">
+                    {isLoading ? "Loading trend data..." : "No trend data recorded for selected date range"}
+                  </div>
+                ) : (
+                  chartConfig.data.map((item, idx) => {
+                    const isHovered = hoveredBarIndex === idx;
+                    const val1 = Number(item.metric1 || item.sales || 0);
+                    const val2 = Number(item.metric2 || item.profit || 0);
 
-                  return (
-                    <div
-                      key={item.date}
-                      className="relative z-10 flex-1 flex items-end justify-center gap-0.5 sm:gap-1 h-full group cursor-pointer"
-                      onMouseEnter={() => setHoveredBarIndex(idx)}
-                      onMouseLeave={() => setHoveredBarIndex(null)}
-                    >
-                      {/* Tooltip */}
-                      {isHovered && (
-                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface text-text border border-border px-2 py-0.5 rounded-md shadow-md text-[10px] font-mono whitespace-nowrap z-20 pointer-events-none">
-                          <span
-                            style={{ color: activeConfig.chart.metric1Color }}
-                            className="font-bold"
-                          >
-                            ₹{(item.sales * 1000).toLocaleString()}
-                          </span>
-                          <span className="text-text-muted mx-1">|</span>
-                          <span
-                            style={{ color: activeConfig.chart.metric2Color }}
-                            className="font-bold"
-                          >
-                            ₹{(item.profit * 1000).toLocaleString()}
-                          </span>
-                        </div>
-                      )}
+                    const m1Height = Math.min(
+                      100,
+                      Math.max(6, (val1 / chartConfig.maxVal) * 100)
+                    );
+                    const m2Height = Math.min(
+                      100,
+                      Math.max(6, (val2 / chartConfig.maxVal) * 100)
+                    );
 
-                      {/* Metric 1 Bar */}
+                    return (
                       <div
-                        style={{
-                          height: `${m1Height}%`,
-                          backgroundColor: activeConfig.chart.metric1Color,
-                        }}
-                        className={cn(
-                          "w-1 sm:w-1.5 rounded-t-xs transition-all duration-150",
-                          isHovered && "brightness-110 scale-y-105"
+                        key={item.date || idx}
+                        className="relative z-10 flex-1 flex items-end justify-center gap-0.5 sm:gap-1 h-full group cursor-pointer"
+                        onMouseEnter={() => setHoveredBarIndex(idx)}
+                        onMouseLeave={() => setHoveredBarIndex(null)}
+                      >
+                        {/* Tooltip */}
+                        {isHovered && (
+                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface text-text border border-border px-2 py-0.5 rounded-md shadow-md text-[10px] font-mono whitespace-nowrap z-20 pointer-events-none">
+                            <span
+                              style={{ color: chartConfig.metric1Color }}
+                              className="font-bold"
+                            >
+                              ₹{formatCurrency(val1)}
+                            </span>
+                            <span className="text-text-muted mx-1">|</span>
+                            <span
+                              style={{ color: chartConfig.metric2Color }}
+                              className="font-bold"
+                            >
+                              {val2.toLocaleString("en-IN")}
+                            </span>
+                          </div>
                         )}
-                      />
 
-                      {/* Metric 2 Bar */}
-                      <div
-                        style={{
-                          height: `${m2Height}%`,
-                          backgroundColor: activeConfig.chart.metric2Color,
-                        }}
-                        className={cn(
-                          "w-1 sm:w-1.5 rounded-t-xs transition-all duration-150",
-                          isHovered && "brightness-110 scale-y-105"
-                        )}
-                      />
-                    </div>
-                  );
-                })}
+                        {/* Metric 1 Bar */}
+                        <div
+                          style={{
+                            height: `${m1Height}%`,
+                            backgroundColor: chartConfig.metric1Color,
+                          }}
+                          className={cn(
+                            "w-1 sm:w-1.5 rounded-t-xs transition-all duration-150",
+                            isHovered && "brightness-110 scale-y-105"
+                          )}
+                        />
+
+                        {/* Metric 2 Bar */}
+                        <div
+                          style={{
+                            height: `${m2Height}%`,
+                            backgroundColor: chartConfig.metric2Color,
+                          }}
+                          className={cn(
+                            "w-1 sm:w-1.5 rounded-t-xs transition-all duration-150",
+                            isHovered && "brightness-110 scale-y-105"
+                          )}
+                        />
+                      </div>
+                    );
+                  })
+                )}
               </div>
 
               {/* X Axis Date Labels */}
-              <div className="flex items-center justify-between px-4 sm:px-6 pt-1 text-[10px] text-text-muted font-mono">
-                <span>01 Oct</span>
-                <span>04 Oct</span>
-                <span>07 Oct</span>
-                <span>10 Oct</span>
-                <span>13 Oct</span>
-                <span>16 Oct</span>
-                <span>19 Oct</span>
-                <span>22 Oct</span>
-                <span>25 Oct</span>
-                <span>28 Oct</span>
-                <span>31 Oct</span>
+              <div className="flex items-center justify-between px-3 sm:px-6 pt-1 text-[10px] text-text-muted font-mono overflow-hidden">
+                {chartConfig.data.length > 0 ? (
+                  <>
+                    <span>{chartConfig.data[0]?.date}</span>
+                    {chartConfig.data.length > 2 && (
+                      <span>
+                        {chartConfig.data[Math.floor(chartConfig.data.length / 2)]?.date}
+                      </span>
+                    )}
+                    <span>
+                      {chartConfig.data[chartConfig.data.length - 1]?.date}
+                    </span>
+                  </>
+                ) : (
+                  <span>Selected Date Range</span>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── 3. Lower Section: FULL WIDTH (Starts from left under tabs!) ────── */}
+      {/* ── 2. Lower Section: FULL WIDTH Toolbar & Data Table ─────────────────── */}
       <div className="w-full flex flex-col gap-3 shrink-0">
         {/* Full-width Filter Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex-1 min-w-[260px] sm:min-w-[320px]">
+          {/* Search Bar */}
+          <div className="flex-1 min-w-[260px] sm:min-w-[300px]">
             <UIInput
               type="text"
               value={searchQuery}
@@ -600,6 +700,36 @@ export const ReportDetailView = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {/* Calendar Date Range Dropdown */}
+            <div className="w-[140px]">
+              <UISelect
+                value={selectedDateRange}
+                onChange={setSelectedDateRange}
+                options={DATE_RANGE_OPTIONS}
+                size="md"
+              />
+            </div>
+
+            {/* Custom Date Inputs if Custom selected */}
+            {selectedDateRange === "custom" && (
+              <div className="flex items-center gap-1.5 bg-surface rounded-xl border border-border px-2 py-1 shadow-2xs">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="bg-transparent text-xs text-text border-none focus:outline-none"
+                />
+                <span className="text-text-muted text-xs">to</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="bg-transparent text-xs text-text border-none focus:outline-none"
+                />
+              </div>
+            )}
+
+            {/* Payment Mode Filter */}
             <div className="w-[160px]">
               <UISelect
                 value={selectedModeFilter}
@@ -609,6 +739,7 @@ export const ReportDetailView = ({
               />
             </div>
 
+            {/* Status Filter */}
             <div className="w-[150px]">
               <UISelect
                 value={selectedStatusFilter}
@@ -618,7 +749,10 @@ export const ReportDetailView = ({
               />
             </div>
 
-            {(searchQuery || selectedModeFilter !== "all" || selectedStatusFilter !== "all") && (
+            {(searchQuery ||
+              selectedModeFilter !== "all" ||
+              selectedStatusFilter !== "all" ||
+              selectedDateRange !== "thisMonth") && (
               <UIButton
                 type="button"
                 variant="ghost"
@@ -632,28 +766,17 @@ export const ReportDetailView = ({
               </UIButton>
             )}
 
-            <UIButton
-              type="button"
-              variant="outline"
-              size="md"
-              className="h-10 px-3 text-xs font-semibold gap-1.5"
-            >
-              <SlidersHorizontal className="size-3.5 text-text-muted" />
-              <span>More Filters</span>
-            </UIButton>
-
-            {/* Subtle record counter badge */}
+            {/* Record Counter Badge */}
             <div className="px-2.5 py-2 rounded-xl bg-surface-alt/70 border border-border/60 text-[11px] font-mono text-text-muted select-none flex items-center gap-1.5 shadow-2xs">
-              <span className="font-bold text-text">{displayedRows.length}</span>
+              <span className="font-bold text-text">{liveRows.length}</span>
               <span className="text-text-muted/60">/</span>
-              <span>{filteredRows.length} loaded</span>
+              <span>{totalRecords} records</span>
             </div>
           </div>
         </div>
 
-        {/* Full-width Data Table with Infinite Scrolling (Same design as Sales Invoice & Account Balances) */}
+        {/* Full-width Data Table with Infinite Scrolling */}
         <div className="w-full bg-surface rounded-2xl border border-border/80 shadow-2xs overflow-hidden flex flex-col">
-          {/* Scrollable Container with Sticky Header */}
           <div
             ref={tableContainerRef}
             className="relative max-h-[520px] overflow-y-auto overflow-x-auto flex-1 min-h-0 divide-y divide-border/60"
@@ -685,13 +808,21 @@ export const ReportDetailView = ({
               </UITableHeader>
 
               <UITableBody className="divide-y divide-border/40 text-[12.5px]">
-                {displayedRows.length === 0 ? (
+                {isLoading && liveRows.length === 0 ? (
+                  <UITableLoading
+                    columns={(activeConfig.columns?.length || 5) + 1}
+                    rows={6}
+                  />
+                ) : liveRows.length === 0 ? (
                   <UITableEmpty
                     colSpan={(activeConfig.columns?.length || 5) + 1}
                     title="No records found in this report"
-                    description="No entries matched your search query or filters. Try clearing filters to see all entries."
+                    description="No entries matched your search query or filters for the selected date range. Try clearing filters."
                     action={
-                      searchQuery || selectedModeFilter !== "all" || selectedStatusFilter !== "all" ? (
+                      searchQuery ||
+                      selectedModeFilter !== "all" ||
+                      selectedStatusFilter !== "all" ||
+                      selectedDateRange !== "thisMonth" ? (
                         <UIButton
                           variant="secondary"
                           size="sm"
@@ -703,20 +834,43 @@ export const ReportDetailView = ({
                     }
                   />
                 ) : (
-                  displayedRows.map((row) => (
+                  liveRows.map((row) => (
                     <UITableRow
-                      key={row.id}
+                      key={row.id || row._id}
                       className="hover:bg-surface-hover/70 transition-colors"
                     >
                       {(activeConfig.columns || []).map((col) => {
                         const val = row[col.key];
 
                         if (col.isStatus) {
+                          const s = String(val || "").toLowerCase();
+                          const isSuccess =
+                            s === "paid" ||
+                            s === "completed" ||
+                            s === "confirmed" ||
+                            s === "passed" ||
+                            s === "verified";
+                          const isInfo = s === "received";
+                          const isDanger = s === "cancelled" || s === "rejected";
                           return (
-                            <UITableCell key={col.key} align={col.align || "center"}>
+                            <UITableCell
+                              key={col.key}
+                              align={col.align || "center"}
+                            >
                               <span className="inline-flex items-center gap-1.5 text-xs text-text font-medium">
-                                <span className="size-2 rounded-full bg-[#10b981]" />
-                                <span>{String(val || "Active")}</span>
+                                <span
+                                  className={cn(
+                                    "size-2 rounded-full",
+                                    isSuccess
+                                      ? "bg-[#10b981]"
+                                      : isInfo
+                                      ? "bg-[#0284c7]"
+                                      : isDanger
+                                      ? "bg-rose-500"
+                                      : "bg-amber-500"
+                                  )}
+                                />
+                                <span>{String(val || "Completed")}</span>
                               </span>
                             </UITableCell>
                           );
@@ -729,7 +883,9 @@ export const ReportDetailView = ({
                               align={col.align || "right"}
                               className={cn(
                                 "font-mono tabular-nums",
-                                col.highlight ? "font-bold text-text" : "text-text"
+                                col.highlight
+                                  ? "font-bold text-text"
+                                  : "text-text"
                               )}
                             >
                               ₹{formatCurrency(val)}
@@ -743,7 +899,9 @@ export const ReportDetailView = ({
                             align={col.align || "left"}
                             className={cn(
                               "whitespace-nowrap px-3.5 py-2.5",
-                              col.highlight ? "font-bold text-text" : "text-text"
+                              col.highlight
+                                ? "font-bold text-text"
+                                : "text-text"
                             )}
                           >
                             {String(val ?? "—")}
@@ -752,25 +910,15 @@ export const ReportDetailView = ({
                       })}
 
                       <UITableCell align="center">
-                        <div className="flex items-center justify-center gap-1">
-                          <UIButton
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPreviewRecord(row)}
-                            className="h-7 px-2 text-xs font-semibold text-text hover:bg-surface-alt"
-                          >
-                            View
-                          </UIButton>
-                          <UIButton
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 text-text-muted hover:text-text"
-                          >
-                            <MoreVertical className="size-3.5" />
-                          </UIButton>
-                        </div>
+                        <UIButton
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPreviewRecord(row)}
+                          className="h-7 px-2 text-xs font-semibold text-text hover:bg-surface-alt"
+                        >
+                          View
+                        </UIButton>
                       </UITableCell>
                     </UITableRow>
                   ))
@@ -778,8 +926,8 @@ export const ReportDetailView = ({
               </UITableBody>
             </UITable>
 
-            {/* Reusable UIInfiniteScroll Component (Same as Invoice & Account Balances pages) */}
-            {displayedRows.length > 0 && (
+            {/* Infinite Scroll trigger */}
+            {liveRows.length > 0 && (
               <UIInfiniteScroll
                 onLoadMore={handleLoadMore}
                 hasMore={hasMore}
@@ -788,10 +936,10 @@ export const ReportDetailView = ({
                 scrollContainerRef={tableContainerRef}
                 rootMargin="160px"
                 endMessage={
-                  !hasMore && displayedRows.length > 0 ? (
+                  !hasMore && liveRows.length > 0 ? (
                     <div className="py-3 text-center border-t border-border/40 bg-surface-alt/30 select-none">
                       <span className="font-mono text-[11px] text-text-muted">
-                        ✓ All {filteredRows.length} report records loaded
+                        ✓ All {totalRecords} report records loaded
                       </span>
                     </div>
                   ) : null
@@ -812,26 +960,25 @@ export const ReportDetailView = ({
           <UIModalHeader>
             <UIModalTitle>
               {previewRecord.invoiceNo ||
-                previewRecord.billNo ||
                 previewRecord.returnNo ||
                 previewRecord.customer ||
                 previewRecord.name ||
-                previewRecord.brand ||
-                previewRecord.reportName ||
                 "Report Record Details"}
             </UIModalTitle>
           </UIModalHeader>
           <UIModalBody className="space-y-3 font-sans text-sm">
             <div className="grid grid-cols-2 gap-2 text-xs">
               {Object.entries(previewRecord)
-                .filter(([k]) => k !== "id")
+                .filter(([k]) => k !== "id" && k !== "_id" && k !== "invoiceId")
                 .map(([k, v]) => (
                   <div key={k} className="p-2 rounded-lg bg-surface-alt/50">
                     <span className="text-text-muted capitalize block text-[11px]">
                       {k.replace(/([A-Z])/g, " $1")}:
                     </span>
                     <span className="font-semibold text-text mt-0.5 block">
-                      {String(v)}
+                      {typeof v === "number" && (k.toLowerCase().includes("amount") || k.toLowerCase().includes("price") || k.toLowerCase().includes("total") || k.toLowerCase().includes("discount") || k.toLowerCase().includes("tax") || k.toLowerCase().includes("revenue"))
+                        ? `₹${formatCurrency(v)}`
+                        : String(v ?? "—")}
                     </span>
                   </div>
                 ))}
@@ -854,4 +1001,3 @@ export const ReportDetailView = ({
 };
 
 export default ReportDetailView;
-

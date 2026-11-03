@@ -19,9 +19,15 @@ export const setupInterceptors = (apiClient, store) => {
       if (store) {
         const state = store.getState();
 
-        const workspaceId = state.workspace?.currentWorkspace?._id;
-        const companyId = state.company?.currentCompany?._id;
-        const branchId = state.branch?.currentBranch?._id;
+        const workspaceId =
+          state.workspace?.currentWorkspace?._id ||
+          state.workspace?.currentWorkspace?.id;
+        const companyId =
+          state.company?.currentCompany?._id ||
+          state.company?.currentCompany?.id;
+        const branchId =
+          state.branch?.currentBranch?._id ||
+          state.branch?.currentBranch?.id;
 
         if (workspaceId) {
           config.headers["x-workspace-id"] = workspaceId;

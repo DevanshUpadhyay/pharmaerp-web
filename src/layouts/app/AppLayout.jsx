@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { useIsMobile } from "@/hooks";
+import { useIsMobile, useWorkModeDeepLinkSync } from "@/hooks";
 import useWorkspace from "@/features/workspace/hooks/useWorkspace";
 import useCompany from "@/features/company/hooks/useCompany";
 import useBranch from "@/features/branch/hooks/useBranch";
 import useUser from "@/features/user/hooks/useUser";
 import useAccessControl from "@/features/access-control/hooks/useAccessControl";
+import { useWorkMode } from "@/contexts";
+import { ChooseWorkModeModal } from "@/features/operations/components/ChooseWorkModeModal";
 import { ScrollToTop } from "@/components";
 import { UIToastContainer } from "@/components/ui";
 import { AnimatePresence } from "framer-motion";
@@ -22,6 +24,7 @@ const getWorkspaceFromItem = (item) => {
 
 const AppLayout = () => {
   const isMobile = useIsMobile();
+  useWorkModeDeepLinkSync();
 
   const { user, getActiveContext } = useUser();
   const { workspaces, currentWorkspace, getMyWorkspaces, setCurrentWorkspace } =
@@ -41,6 +44,7 @@ const AppLayout = () => {
     clearCurrentBranch,
   } = useBranch();
   const { getMyAccess } = useAccessControl();
+  const { hasSelectedMode, openModeModal } = useWorkMode();
 
   // STRATEGY: If Redux is populated, we are routing (skip loading). If empty, we are reloading (show loader).
   const isHardRefresh = !currentWorkspace?._id || !currentCompany?._id;

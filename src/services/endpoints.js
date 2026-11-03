@@ -579,6 +579,18 @@ export const ENDPOINTS = {
   },
 
   REPORTS: {
+    SALES_SUMMARY: "/reports/sales/summary",
+    SALES_DETAIL: "/reports/sales/detail",
+    SALES_CUSTOMER: "/reports/sales/customer",
+    SALES_PRODUCT: "/reports/sales/product",
+    SALES_RETURN: "/reports/sales/return",
+
+    PURCHASE_SUMMARY: "/reports/purchase/summary",
+    PURCHASE_DETAIL: "/reports/purchase/detail",
+    PURCHASE_SUPPLIER: "/reports/purchase/supplier",
+    PURCHASE_RETURN: "/reports/purchase/return",
+    PURCHASE_GRN: "/reports/purchase/grn",
+
     DAILY_SALES: "/reports/daily-sales",
     NEAR_EXPIRY: "/reports/near-expiry",
     LOW_STOCK_REORDER: "/reports/low-stock-reorder",

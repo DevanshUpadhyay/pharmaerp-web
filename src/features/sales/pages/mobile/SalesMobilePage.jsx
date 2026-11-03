@@ -348,14 +348,6 @@ export const SalesMobilePage = () => {
     setIsReceiptOpen(true);
     setCart([]);
     setSelectedCustomer(null);
-    setToastMessage(
-      isEditMode
-        ? `✅ Invoice updated (${finalData.invoiceNo || saleData.invoiceNo})`
-        : saleData.isReturn
-        ? `✅ Return recorded (${finalData.invoiceNo || saleData.invoiceNo})`
-        : `✅ Sale completed (${finalData.invoiceNo || saleData.invoiceNo})`
-    );
-    setTimeout(() => setToastMessage(null), 3500);
   };
 
   const handleSelectWorkspaceProduct = (prod, details) => {

@@ -175,7 +175,7 @@ export const SalesReceiptModal = ({ isOpen, onClose, saleData }) => {
                   <div className="text-[10.5px] text-text-muted space-y-0.5 mt-1 font-mono">
                     {saleData.payments.map((p, idx) => (
                       <div key={idx} className="flex justify-end gap-1.5">
-                        <span className="capitalize">{p.paymentType || p.mode}:</span>
+                        <span className="text-text-muted">{formatPaymentMode(p.paymentType || p.mode)}:</span>
                         <span className="font-semibold text-text">₹{Number(p.amount || 0).toFixed(2)}</span>
                       </div>
                     ))}

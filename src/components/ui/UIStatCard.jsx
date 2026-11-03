@@ -51,6 +51,7 @@ export const UIStatCard = forwardRef(
       isLoading = false,
       onClick,
       className,
+      valueClassName,
       ...props
     },
     ref
@@ -185,7 +186,12 @@ export const UIStatCard = forwardRef(
                 {prefix}
               </span>
             )}
-            <span className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-text tabular-nums">
+            <span
+              className={cn(
+                "text-xl sm:text-2xl font-bold font-mono tracking-tight text-text tabular-nums",
+                valueClassName
+              )}
+            >
               {value}
             </span>
             {suffix && (

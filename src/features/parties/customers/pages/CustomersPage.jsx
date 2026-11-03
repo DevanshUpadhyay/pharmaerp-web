@@ -138,6 +138,7 @@ const CustomersPage = () => {
         search: filters.search || undefined,
         status: filters.status !== "all" ? filters.status : undefined,
         customerType: apiCustomerType,
+        sort: "-updatedAt",
       });
     } catch {
       // Regulated by store selectors
@@ -204,7 +205,7 @@ const CustomersPage = () => {
       return matchesSearch && matchesStatus && matchesType && matchesSegment;
     });
 
-    // Prioritize Walk-in customer first
+    // Prioritize Walk-in customer first, then sort by recently updated descending
     list.sort((a, b) => {
       const aIsWalk = Boolean(
         a.isWalkIn ||
@@ -222,7 +223,10 @@ const CustomersPage = () => {
       );
       if (aIsWalk && !bIsWalk) return -1;
       if (!aIsWalk && bIsWalk) return 1;
-      return 0;
+      return (
+        new Date(b.updatedAt || b.createdAt || 0) -
+        new Date(a.updatedAt || a.createdAt || 0)
+      );
     });
 
     return list;

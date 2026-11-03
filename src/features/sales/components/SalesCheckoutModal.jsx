@@ -26,7 +26,7 @@ import { useBranchCash } from "@/features/finance/treasury/cash-management/branc
 import useBranch from "@/features/branch/hooks/useBranch";
 import { ROUTES } from "@/constants";
 import { cn } from "@/lib/utils";
-import { CashBreakdownModal } from "./CashBreakdownModal";
+import { CashBreakdownModal, decomposeAmount } from "./CashBreakdownModal";
 import { getBranchInitials } from "@/utils";
 import invoiceService from "../services/invoiceService";
 import customerService from "@/features/parties/customers/services/customerService";
@@ -57,7 +57,60 @@ const computeSchemeDiscount = (qty, schemePercent) => {
   return { schemeApply: false, finalDiscountPercent: 0 };
 };
 
+/**
+ * Intelligently balances payments so that total equals grandTotal.
+ * When `targetIndex` is set to `desiredAmount`, any excess over grandTotal
+ * is deducted from other payment legs (prioritizing the row directly above, then cash/upi/card).
+ */
+const rebalancePaymentsOnUpdate = (currentPayments, targetIndex, desiredAmount, targetGrandTotal) => {
+  const next = currentPayments.map((p) => ({ ...p }));
+  const clampedDesired = Math.max(0, Number(desiredAmount) || 0);
+  next[targetIndex].amount = clampedDesired;
+  if (next[targetIndex].paymentType === "Cash") {
+    next[targetIndex].cashDetails = null;
+  }
 
+  // Calculate total across all rows
+  let currentTotal = next.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  let excess = Math.round((currentTotal - targetGrandTotal) * 100) / 100;
+
+  if (excess > 0.005) {
+    // Priority for reduction:
+    // 1. First look at row directly above targetIndex
+    // 2. Then other non-target rows
+    const otherIndices = [];
+    if (targetIndex > 0) otherIndices.push(targetIndex - 1);
+    for (let i = 0; i < next.length; i++) {
+      if (i !== targetIndex && !otherIndices.includes(i)) {
+        otherIndices.push(i);
+      }
+    }
+
+    for (const idx of otherIndices) {
+      if (excess <= 0.005) break;
+      const availableInRow = Number(next[idx].amount) || 0;
+      if (availableInRow <= 0) continue;
+
+      const deduction = Math.min(availableInRow, excess);
+      next[idx].amount = Math.round((availableInRow - deduction) * 100) / 100;
+      if (next[idx].paymentType === "Cash") {
+        next[idx].cashDetails = null;
+      }
+      excess = Math.round((excess - deduction) * 100) / 100;
+    }
+
+    // If there is still excess (i.e. even reducing all other rows to 0 wasn't enough),
+    // clamp the target row itself to targetGrandTotal!
+    if (excess > 0.005) {
+      next[targetIndex].amount = Math.max(0, Math.round((next[targetIndex].amount - excess) * 100) / 100);
+      if (next[targetIndex].paymentType === "Cash") {
+        next[targetIndex].cashDetails = null;
+      }
+    }
+  }
+
+  return next;
+};
 
 const PAYMENT_TYPE_OPTIONS = [
   { value: "Cash", label: "Cash", icon: <Banknote className="size-4 text-emerald-600" /> },
@@ -384,8 +437,46 @@ export const SalesCheckoutModal = ({
 
   const [cashBreakdownTarget, setCashBreakdownTarget] = useState(null); // index of row
 
-  const totalPaid = useMemo(() => payments.reduce((sum, p) => sum + Number(p.amount || 0), 0), [payments]);
-  const shortfall = Math.max(0, grandTotal - totalPaid);
+  const totalPaid = useMemo(
+    () => Math.round(payments.reduce((sum, p) => sum + Number(p.amount || 0), 0) * 100) / 100,
+    [payments]
+  );
+  const balanceDiff = Math.round((grandTotal - totalPaid) * 100) / 100;
+  const shortfall = Math.max(0, balanceDiff);
+  const overpayment = Math.max(0, -balanceDiff);
+  const isExactBalance = Math.abs(balanceDiff) <= 0.01;
+
+  const handleAddOrFillPayment = (paymentType, fillAmount) => {
+    setIsSplitMode(true);
+    const existingIdx = payments.findIndex((p) => p.paymentType === paymentType);
+    if (existingIdx >= 0) {
+      const updatedPayments = [...payments];
+      updatedPayments[existingIdx] = {
+        ...updatedPayments[existingIdx],
+        amount: Math.round(((Number(updatedPayments[existingIdx].amount) || 0) + fillAmount) * 100) / 100,
+      };
+      if (paymentType === "Cash") updatedPayments[existingIdx].cashDetails = null;
+      setPayments(updatedPayments);
+    } else {
+      const newRow = {
+        id: Date.now(),
+        paymentType,
+        amount: fillAmount,
+        branchId: branchId || "",
+      };
+      if (paymentType === "UPI" && primaryQr?._id) {
+        newRow.paymentQrId = String(primaryQr._id);
+      }
+      if (paymentType === "Credit") {
+        const baseDate = saleDate ? new Date(saleDate) : new Date();
+        const defaultDueDate = new Date(baseDate);
+        defaultDueDate.setDate(defaultDueDate.getDate() + (creditDays || 15));
+        newRow.creditDueDate = defaultDueDate.toISOString().split("T")[0];
+      }
+      setPayments([...payments, newRow]);
+    }
+    setErrorMessage(null);
+  };
 
 
   const paymentTypeOptions = useMemo(() => {
@@ -414,6 +505,7 @@ export const SalesCheckoutModal = ({
       delete updated.paymentQrId;
       delete updated.creditDueDate;
       delete updated.creditNoteAllocations;
+      updated.cashDetails = null;
     }
     // Auto-select primary QR when switching to UPI
     if (field === "paymentType" && value === "UPI") {
@@ -437,6 +529,30 @@ export const SalesCheckoutModal = ({
       delete updated.paymentQrId;
       delete updated.creditDueDate;
       delete updated.creditNoteAllocations;
+      delete updated.cashDetails;
+      if (!effectiveCustomer?._id && !effectiveCustomer?.id) {
+        setErrorMessage("Advance payment requires selecting a registered customer profile with available deposit.");
+      } else {
+        const available = Number(advanceBalance || 0);
+        if (available <= 0) {
+          setErrorMessage(`Customer "${effectiveCustomer?.name || "Customer"}" has no advance deposit available (Balance: ₹0.00).`);
+        } else if (next.length === 1 && available < grandTotal) {
+          // Smart auto-split: Maximum possible from advance deposit, remainder in cash
+          setIsSplitMode(true);
+          const remainder = Math.round((grandTotal - available) * 100) / 100;
+          updated.amount = available;
+          next[index] = updated;
+          next.push({
+            id: Date.now() + 1,
+            paymentType: "Cash",
+            amount: remainder,
+            branchId: branchId || "",
+            cashDetails: null,
+          });
+          setPayments(next);
+          return;
+        }
+      }
     }
     if (field === "paymentType" && value === "Card") {
       delete updated.paymentQrId;
@@ -478,10 +594,8 @@ export const SalesCheckoutModal = ({
     if (field === "paymentType" && value !== "Cash") {
       delete updated.cashDetails;
     }
-    if (field === "amount" && updated.paymentType === "Cash" && updated.cashDetails) {
-      if (Number(value) !== Number(next[index].amount)) {
-        updated.cashDetails = null;
-      }
+    if (field === "amount" && updated.paymentType === "Cash") {
+      updated.cashDetails = null;
     }
     next[index] = updated;
     setPayments(next);
@@ -548,11 +662,20 @@ export const SalesCheckoutModal = ({
       return;
     }
 
-    if (totalPaid < grandTotal) {
+    if (shortfall > 0.01) {
       setErrorMessage(
         isReturn
           ? `Cannot process return. Settled refund amount (₹${totalPaid.toFixed(2)}) is less than total refund due (₹${grandTotal.toFixed(2)}).`
-          : `Cannot process sale. Collected amount (₹${totalPaid.toFixed(2)}) is less than Grand Total (₹${grandTotal.toFixed(2)}).`
+          : `Cannot process sale. Collected amount (₹${totalPaid.toFixed(2)}) is less than Grand Total (₹${grandTotal.toFixed(2)}). Allocate any remaining balance to Credit (Udhar) or another payment mode.`
+      );
+      return;
+    }
+
+    if (overpayment > 0.01) {
+      setErrorMessage(
+        isReturn
+          ? `Cannot process return. Settled refund amount (₹${totalPaid.toFixed(2)}) exceeds total refund due (₹${grandTotal.toFixed(2)}).`
+          : `Cannot process sale. Total payment amount (₹${totalPaid.toFixed(2)}) exceeds Grand Total (₹${grandTotal.toFixed(2)}). Customer cannot pay more than the bill amount.`
       );
       return;
     }
@@ -655,22 +778,39 @@ export const SalesCheckoutModal = ({
         cashTendered: payments.reduce((sum, p) => p.paymentType === "Cash" ? sum + (p.cashDetails?.receivedTotal || Number(p.amount)) : sum, 0),
         changeDue: payments.reduce((sum, p) => p.paymentType === "Cash" ? sum + (p.cashDetails?.returnedTotal || 0) : sum, 0),
         denominations: [],
-        payments: payments.map(p => ({
-          paymentType: p.paymentType,
-          amount: Number(p.amount),
-          paymentQrId: p.paymentQrId,
-          txnRefNo: p.txnRefNo,
-          creditDueDate: p.paymentType === "Credit" ? p.creditDueDate : undefined,
-          creditNoteAllocations: p.paymentType === "CreditNote" ? (p.creditNoteAllocations || []) : undefined,
-          branchId: p.paymentType === "Cash" ? branchId : undefined,
-          cashPartition: p.paymentType === "Cash" ? "running" : undefined,
-          denominations: p.cashDetails?.received 
-            ? Object.entries(p.cashDetails.received).map(([val, qty]) => ({ denomination: Number(val), quantity: qty }))
-            : [],
-          returnedDenominations: p.cashDetails?.returned 
-            ? Object.entries(p.cashDetails.returned).map(([val, qty]) => ({ denomination: Number(val), quantity: qty }))
-            : [],
-        })),
+        payments: payments.map(p => {
+          const amt = Number(p.amount) || 0;
+          let cashDenoms = [];
+          let retDenoms = [];
+          if (p.paymentType === "Cash") {
+            if (p.cashDetails?.received) {
+              cashDenoms = Object.entries(p.cashDetails.received)
+                .filter(([, qty]) => Number(qty) > 0)
+                .map(([val, qty]) => ({ denomination: Number(val), quantity: Number(qty) }));
+            }
+            if (cashDenoms.length === 0 && amt > 0) {
+              const autoD = decomposeAmount(amt);
+              cashDenoms = Object.entries(autoD).map(([val, qty]) => ({ denomination: Number(val), quantity: Number(qty) }));
+            }
+            if (p.cashDetails?.returned) {
+              retDenoms = Object.entries(p.cashDetails.returned)
+                .filter(([, qty]) => Number(qty) > 0)
+                .map(([val, qty]) => ({ denomination: Number(val), quantity: Number(qty) }));
+            }
+          }
+          return {
+            paymentType: p.paymentType,
+            amount: amt,
+            paymentQrId: p.paymentType === "UPI" ? (p.paymentQrId || (primaryQr?._id ? String(primaryQr._id) : undefined)) : undefined,
+            txnRefNo: p.txnRefNo,
+            creditDueDate: p.paymentType === "Credit" ? p.creditDueDate : undefined,
+            creditNoteAllocations: p.paymentType === "CreditNote" ? (p.creditNoteAllocations || []) : undefined,
+            branchId: p.paymentType === "Cash" ? branchId : undefined,
+            cashPartition: p.paymentType === "Cash" ? "running" : undefined,
+            denominations: cashDenoms,
+            returnedDenominations: retDenoms,
+          };
+        }),
         notes,
       };
 
@@ -877,14 +1017,48 @@ export const SalesCheckoutModal = ({
               </p>
             </div>
             <div className={cn(
-              "px-3 py-1 rounded-xl text-xs font-bold border transition-all",
-              shortfall === 0
+              "px-3 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5",
+              isExactBalance
                 ? "bg-success-soft text-success border-success/30"
+                : overpayment > 0
+                ? "bg-error-soft text-error border-error/30"
                 : "bg-warning-soft text-warning border-warning/30"
             )}>
-              {shortfall === 0 ? "✓ Balanced" : isReturn ? `Pending Refund ₹${shortfall.toFixed(2)}` : `Short ₹${shortfall.toFixed(2)}`}
+              {isExactBalance
+                ? "✓ Balanced"
+                : overpayment > 0
+                ? (isReturn ? `Excess Refund ₹${overpayment.toFixed(2)}` : `Overpaid by ₹${overpayment.toFixed(2)}`)
+                : (isReturn ? `Pending Refund ₹${shortfall.toFixed(2)}` : `Short ₹${shortfall.toFixed(2)}`)}
             </div>
           </div>
+
+          {/* Overpayment Warning & Auto-Balance Banner */}
+          {overpayment > 0 && (
+            <div className="mx-5 mt-3 p-3 rounded-xl bg-error/10 border-2 border-error/40 text-error flex items-center justify-between gap-3 animate-in fade-in shrink-0 shadow-sm">
+              <div className="flex items-center gap-2 min-w-0">
+                <AlertCircle className="size-4.5 text-error shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[10px] font-black uppercase tracking-wider block text-error">
+                    Overpayment Detected
+                  </span>
+                  <p className="text-xs font-semibold text-error truncate">
+                    Total payments (₹{totalPaid.toFixed(2)}) exceed bill amount by ₹{overpayment.toFixed(2)}. Payments must exactly equal ₹{grandTotal.toFixed(2)}.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const rebalanced = rebalancePaymentsOnUpdate(payments, payments.length - 1, payments[payments.length - 1].amount, grandTotal);
+                  setPayments(rebalanced);
+                  setErrorMessage(null);
+                }}
+                className="px-3 py-1 rounded-lg bg-error text-white text-[11px] font-bold hover:bg-error/90 cursor-pointer shadow-xs whitespace-nowrap shrink-0 transition-colors"
+              >
+                Auto-Balance Split
+              </button>
+            </div>
+          )}
 
           {/* Prominent Full Error Message Banner */}
           {errorMessage && (
@@ -918,7 +1092,14 @@ export const SalesCheckoutModal = ({
                 <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                   Split Tender Active ({payments.length} parts)
                 </span>
-                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                <span className={cn(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                  isExactBalance
+                    ? "text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20"
+                    : overpayment > 0
+                    ? "text-error bg-error/10 border-error/30"
+                    : "text-amber-600 bg-amber-500/10 border-amber-500/30"
+                )}>
                   Paid: ₹{totalPaid.toFixed(2)} / ₹{grandTotal.toFixed(2)}
                 </span>
               </div>
@@ -945,16 +1126,38 @@ export const SalesCheckoutModal = ({
                       <label className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">
                         {isReturn ? "Refund Amount (₹)" : "Amount (₹)"}
                       </label>
-                      {payments.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveRow(index)}
-                          className="text-text-muted hover:text-error transition-colors p-0.5 cursor-pointer rounded"
-                          title="Remove payment row"
-                        >
-                          <Trash2 className="size-3" />
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {shortfall > 0 && payments.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdate(index, "amount", Math.round(((Number(row.amount) || 0) + shortfall) * 100) / 100)}
+                            className="text-[9.5px] font-bold text-primary hover:underline cursor-pointer"
+                            title="Add shortfall to this payment mode"
+                          >
+                            + Fill ₹{shortfall.toFixed(2)}
+                          </button>
+                        )}
+                        {overpayment > 0 && Number(row.amount || 0) >= overpayment && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdate(index, "amount", Math.round(((Number(row.amount) || 0) - overpayment) * 100) / 100)}
+                            className="text-[9.5px] font-bold text-error hover:underline cursor-pointer"
+                            title="Trim overpayment from this payment mode"
+                          >
+                            - Trim ₹{overpayment.toFixed(2)}
+                          </button>
+                        )}
+                        {payments.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRow(index)}
+                            className="text-text-muted hover:text-error transition-colors p-0.5 cursor-pointer rounded"
+                            title="Remove payment row"
+                          >
+                            <Trash2 className="size-3" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="relative">
                       <input
@@ -1138,6 +1341,23 @@ export const SalesCheckoutModal = ({
                           </div>
                         </div>
 
+                        {availableCredit > 0 && Number(row.amount || 0) < Math.min(grandTotal, availableCredit) && (
+                          <div className="flex justify-end pt-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const maxCred = Math.min(grandTotal, availableCredit);
+                                const rebalanced = rebalancePaymentsOnUpdate(payments, index, maxCred, grandTotal);
+                                setPayments(rebalanced);
+                                setErrorMessage(null);
+                              }}
+                              className="px-2.5 py-1 rounded bg-rose-600 text-white text-[10.5px] font-bold hover:bg-rose-700 cursor-pointer transition-all shadow-2xs"
+                            >
+                              Max Credit (₹{Math.min(grandTotal, availableCredit).toFixed(2)})
+                            </button>
+                          </div>
+                        )}
+
                         {Number(row.amount || 0) > availableCredit && (
                           <div className="p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-[11px] text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1.5">
                             <AlertCircle className="size-3.5 shrink-0" />
@@ -1253,7 +1473,12 @@ export const SalesCheckoutModal = ({
                               {creditNoteBalance > 0 && Number(row.amount || 0) < Math.min(grandTotal, creditNoteBalance) && (
                                 <button
                                   type="button"
-                                  onClick={() => handleUpdate(index, "amount", Math.min(grandTotal, creditNoteBalance))}
+                                  onClick={() => {
+                                    const maxCn = Math.min(grandTotal, creditNoteBalance);
+                                    const rebalanced = rebalancePaymentsOnUpdate(payments, index, maxCn, grandTotal);
+                                    setPayments(rebalanced);
+                                    setErrorMessage(null);
+                                  }}
                                   className="px-2.5 py-1 rounded bg-indigo-600 text-white text-[10.5px] font-bold hover:bg-indigo-700 cursor-pointer transition-all shadow-2xs"
                                 >
                                   Max Apply (₹{Math.min(grandTotal, creditNoteBalance).toFixed(2)})
@@ -1350,16 +1575,32 @@ export const SalesCheckoutModal = ({
                               </span>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <span className="text-[9.5px] font-bold text-text-muted uppercase block leading-none">
-                              Remaining After Bill
-                            </span>
-                            <span className={cn(
-                              "text-xs font-mono font-bold",
-                              advanceBalance >= Number(row.amount || 0) ? "text-emerald-600" : "text-rose-600"
-                            )}>
-                              ₹{Math.max(0, advanceBalance - Number(row.amount || 0)).toFixed(2)}
-                            </span>
+                          <div className="flex items-center gap-2">
+                            {advanceBalance > 0 && Number(row.amount || 0) < Math.min(grandTotal, advanceBalance) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const maxAdv = Math.min(grandTotal, advanceBalance);
+                                  const rebalanced = rebalancePaymentsOnUpdate(payments, index, maxAdv, grandTotal);
+                                  setPayments(rebalanced);
+                                  setErrorMessage(null);
+                                }}
+                                className="px-2.5 py-1 rounded bg-amber-600 text-white text-[10.5px] font-bold hover:bg-amber-700 cursor-pointer transition-all shadow-2xs"
+                              >
+                                Max Apply (₹{Math.min(grandTotal, advanceBalance).toFixed(2)})
+                              </button>
+                            )}
+                            <div className="text-right">
+                              <span className="text-[9.5px] font-bold text-text-muted uppercase block leading-none">
+                                Remaining After Bill
+                              </span>
+                              <span className={cn(
+                                "text-xs font-mono font-bold",
+                                advanceBalance >= Number(row.amount || 0) ? "text-emerald-600" : "text-rose-600"
+                              )}>
+                                ₹{Math.max(0, advanceBalance - Number(row.amount || 0)).toFixed(2)}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
@@ -1375,6 +1616,56 @@ export const SalesCheckoutModal = ({
                 )}
               </div>
             ))}
+
+            {/* Quick Settle Shortfall Options */}
+            {shortfall > 0 && !isReturn && (
+              <div className="p-2.5 rounded-xl border border-warning/30 bg-warning-soft/10 space-y-1.5 animate-in fade-in">
+                <div className="flex items-center justify-between text-[10px] font-bold text-warning uppercase tracking-wider">
+                  <span>Settle Shortfall (₹{shortfall.toFixed(2)} remaining)</span>
+                  <span>Select mode</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {!isWalkIn && effectiveCustomer?._id && availableCredit > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddOrFillPayment("Credit", Math.min(shortfall, availableCredit))}
+                      className="px-2.5 py-1 rounded-md text-[10.5px] font-bold bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 border border-rose-500/30 flex items-center gap-1 cursor-pointer transition-all shadow-2xs"
+                    >
+                      <Receipt className="size-3" />
+                      + Put ₹{Math.min(shortfall, availableCredit).toFixed(2)} on Credit (Udhar)
+                    </button>
+                  )}
+                  {!isWalkIn && effectiveCustomer?._id && creditNoteBalance > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddOrFillPayment("CreditNote", Math.min(shortfall, creditNoteBalance))}
+                      className="px-2.5 py-1 rounded-md text-[10.5px] font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-600 border border-indigo-500/30 flex items-center gap-1 cursor-pointer transition-all shadow-2xs"
+                    >
+                      <Receipt className="size-3" />
+                      + Pay ₹{Math.min(shortfall, creditNoteBalance).toFixed(2)} from Credit Note
+                    </button>
+                  )}
+                  {!isWalkIn && effectiveCustomer?._id && advanceBalance > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddOrFillPayment("Advance", Math.min(shortfall, advanceBalance))}
+                      className="px-2.5 py-1 rounded-md text-[10.5px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 border border-amber-500/30 flex items-center gap-1 cursor-pointer transition-all shadow-2xs"
+                    >
+                      <Wallet className="size-3" />
+                      + Pay ₹{Math.min(shortfall, advanceBalance).toFixed(2)} from Advance
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleAddOrFillPayment("UPI", shortfall)}
+                    className="px-2.5 py-1 rounded-md text-[10.5px] font-bold bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 border border-purple-500/30 flex items-center gap-1 cursor-pointer transition-all shadow-2xs"
+                  >
+                    <QrCode className="size-3" />
+                    + Add ₹{shortfall.toFixed(2)} UPI
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Compact Add Split Payment */}
             {!isReturn && (
@@ -1424,6 +1715,14 @@ export const SalesCheckoutModal = ({
                     ⚠️ The shift is closed. Open a shift to bill
                   </span>
                 </div>
+              ) : overpayment > 0 ? (
+                <span className="text-[11px] font-bold text-error truncate block">
+                  ⚠️ Overpaid by ₹{overpayment.toFixed(2)}. Payments must equal ₹{grandTotal.toFixed(2)}
+                </span>
+              ) : shortfall > 0 ? (
+                <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300 truncate block">
+                  ⚠️ Short by ₹{shortfall.toFixed(2)}. Settle remaining shortfall to continue
+                </span>
               ) : hasUncapturedCash ? (
                 <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 truncate block">
                   ⚠️ Select cash denominations to continue
@@ -1453,7 +1752,7 @@ export const SalesCheckoutModal = ({
                   className="px-5 font-bold"
                   isLoading={isSubmitting}
                   loadingText={isReturn ? "Processing Return..." : "Processing..."}
-                  disabled={isSubmitting || shortfall > 0 || hasUncapturedCash || isSessionBlocked}
+                  disabled={isSubmitting || !isExactBalance || hasUncapturedCash || isSessionBlocked}
                   onClick={handleProcessSale}
                   startIcon={isReturn ? <RotateCcw className="size-4" /> : <CheckCircle2 className="size-4" />}
                 >
@@ -1463,6 +1762,10 @@ export const SalesCheckoutModal = ({
                     ? "Business Day Closed"
                     : isShiftClosed
                     ? "Shift Closed"
+                    : overpayment > 0
+                    ? `Overpaid by ₹${overpayment.toFixed(2)}`
+                    : shortfall > 0
+                    ? `Short by ₹${shortfall.toFixed(2)}`
                     : isReturn
                         ? (payments[0]?.paymentType === "CreditNote" || payments[0]?.paymentType === "Credit"
                             ? "Confirm Return & Issue Credit Note"
@@ -1501,3 +1804,4 @@ export const SalesCheckoutModal = ({
 };
 
 export default SalesCheckoutModal;
+

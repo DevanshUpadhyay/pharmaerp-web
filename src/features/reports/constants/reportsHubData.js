@@ -31,6 +31,8 @@ import {
   Database,
   Share2,
   SlidersHorizontal,
+  Wallet,
+  QrCode,
 } from "lucide-react";
 
 /**
@@ -158,39 +160,29 @@ export const MASTER_CATEGORIES_DATA = {
         id: "sales-summary",
         slug: "summary",
         title: "Sales Summary",
-        subtitle: "Daily, monthly, and yearly sales overview with amount, profit and invoice details.",
+        subtitle: "Daily, monthly, and yearly sales overview with gross billing, GST tax, and payment mode breakdown.",
         stats: [
-          { id: "s1", title: "Total Sales", value: "₹12,48,500", trend: "12.5%", trendDirection: "up", trendLabel: "vs previous period", icon: Tag, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
-          { id: "s2", title: "Total Invoices", value: "1,482", trend: "10.2%", trendDirection: "up", trendLabel: "vs previous period", icon: FileText, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
-          { id: "s3", title: "Total Items Sold", value: "8,645", trend: "15.3%", trendDirection: "up", trendLabel: "vs previous period", icon: TrendingUp, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
-          { id: "s4", title: "Average Invoice Value", value: "₹842", trend: "2.1%", trendDirection: "up", trendLabel: "vs previous period", icon: Percent, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+          { id: "s1", dataKey: "totalSales", title: "Total Net Sales", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "for period", icon: Tag, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "s2", dataKey: "totalInvoices", title: "Total Invoices", value: "0", trend: "—", trendDirection: "up", trendLabel: "bills cleared", icon: FileText, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "s3", dataKey: "cashSales", title: "Cash Collected", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "counter cash", icon: Wallet, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+          { id: "s4", dataKey: "upiSales", title: "UPI & Digital Sales", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "digital payments", icon: QrCode, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
         ],
-        chart: { title: "Sales Trend", metric1Label: "Sales Amount", metric2Label: "Profit", metric1Color: "#059669", metric2Color: "#38bdf8", data: generateDailyTrend(1, 1) },
-        filterPlaceholder: "Search by invoice no., customer, product...",
+        chart: { title: "Sales Revenue & Invoices Trend", metric1Label: "Net Sales", metric2Label: "Bills Cleared", metric1Color: "#059669", metric2Color: "#38bdf8", data: [] },
+        filterPlaceholder: "Search by invoice no., doctor, customer...",
         columns: [
           { key: "date", label: "Date" },
           { key: "invoiceNo", label: "Invoice No." },
           { key: "customer", label: "Customer" },
+          { key: "doctor", label: "Prescribing Doctor" },
           { key: "items", label: "Items", align: "center" },
-          { key: "billAmount", label: "Bill Amount", align: "right", isCurrency: true },
+          { key: "billAmount", label: "Subtotal", align: "right", isCurrency: true },
           { key: "discount", label: "Discount", align: "right", isCurrency: true },
-          { key: "netAmount", label: "Net Amount", align: "right", isCurrency: true, highlight: true },
+          { key: "tax", label: "GST Tax", align: "right", isCurrency: true },
+          { key: "netAmount", label: "Net Total", align: "right", isCurrency: true, highlight: true },
           { key: "paymentMode", label: "Payment Mode", align: "center" },
-          { key: "profit", label: "Profit", align: "right", isCurrency: true },
           { key: "status", label: "Status", align: "center", isStatus: true },
         ],
-        rows: [
-          { id: "1", date: "31 Oct 2024", invoiceNo: "INV-001482", customer: "Walk-in Customer", items: 3, billAmount: 1245.0, discount: 50.0, netAmount: 1195.0, paymentMode: "Cash", profit: 210.5, status: "Completed" },
-          { id: "2", date: "31 Oct 2024", invoiceNo: "INV-001481", customer: "Rakesh Sharma", items: 5, billAmount: 2340.0, discount: 120.0, netAmount: 2220.0, paymentMode: "UPI", profit: 415.2, status: "Completed" },
-          { id: "3", date: "31 Oct 2024", invoiceNo: "INV-001480", customer: "Neha Patel", items: 2, billAmount: 980.0, discount: 0.0, netAmount: 980.0, paymentMode: "Card", profit: 178.0, status: "Completed" },
-          { id: "4", date: "30 Oct 2024", invoiceNo: "INV-001479", customer: "Walk-in Customer", items: 4, billAmount: 1876.0, discount: 76.0, netAmount: 1800.0, paymentMode: "Cash", profit: 302.4, status: "Completed" },
-          { id: "5", date: "30 Oct 2024", invoiceNo: "INV-001478", customer: "Amit Verma", items: 6, billAmount: 3420.0, discount: 200.0, netAmount: 3220.0, paymentMode: "UPI", profit: 612.8, status: "Completed" },
-          { id: "6", date: "29 Oct 2024", invoiceNo: "INV-001477", customer: "Walk-in Customer", items: 1, billAmount: 650.0, discount: 0.0, netAmount: 650.0, paymentMode: "Cash", profit: 122.5, status: "Completed" },
-          { id: "7", date: "29 Oct 2024", invoiceNo: "INV-001476", customer: "Sunita Jain", items: 3, billAmount: 1980.0, discount: 100.0, netAmount: 1880.0, paymentMode: "UPI", profit: 356.7, status: "Completed" },
-          { id: "8", date: "28 Oct 2024", invoiceNo: "INV-001475", customer: "Walk-in Customer", items: 2, billAmount: 890.0, discount: 0.0, netAmount: 890.0, paymentMode: "Cash", profit: 168.9, status: "Completed" },
-          { id: "9", date: "28 Oct 2024", invoiceNo: "INV-001474", customer: "Vikram Singh", items: 7, billAmount: 4120.0, discount: 250.0, netAmount: 3870.0, paymentMode: "Card", profit: 736.4, status: "Completed" },
-          { id: "10", date: "27 Oct 2024", invoiceNo: "INV-001473", customer: "Walk-in Customer", items: 4, billAmount: 1560.0, discount: 60.0, netAmount: 1500.0, paymentMode: "UPI", profit: 280.3, status: "Completed" },
-        ],
+        rows: [],
       },
       "detail": {
         id: "sales-detail",
@@ -198,12 +190,12 @@ export const MASTER_CATEGORIES_DATA = {
         title: "Sales Detail Report",
         subtitle: "Invoice wise line item breakdown with medicine, batch, quantity, GST rate, and margins.",
         stats: [
-          { id: "sd1", title: "Gross Sales", value: "₹13,18,000", trend: "11.8%", trendDirection: "up", trendLabel: "vs previous period", icon: Receipt, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
-          { id: "sd2", title: "Total Discounts", value: "₹69,500", trend: "3.2%", trendDirection: "down", trendLabel: "vs previous period", icon: Percent, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
-          { id: "sd3", title: "GST Collected", value: "₹1,42,800", trend: "9.4%", trendDirection: "up", trendLabel: "vs previous period", icon: Tag, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
-          { id: "sd4", title: "Net Realized", value: "₹12,48,500", trend: "12.5%", trendDirection: "up", trendLabel: "vs previous period", icon: TrendingUp, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "sd1", dataKey: "grossSales", title: "Gross Sales", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "before discount", icon: Receipt, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "sd2", dataKey: "totalDiscounts", title: "Total Discounts", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "down", trendLabel: "counter discounts", icon: Percent, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+          { id: "sd3", dataKey: "gstCollected", title: "GST Collected", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "tax output", icon: Tag, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+          { id: "sd4", dataKey: "netRealized", title: "Net Realized", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "total net revenue", icon: TrendingUp, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
         ],
-        chart: { title: "Gross vs Net Realization", metric1Label: "Gross Billing", metric2Label: "Net Realized", metric1Color: "#10b981", metric2Color: "#0284c7", data: generateDailyTrend(1.05, 0.95) },
+        chart: { title: "Gross vs Net Realization", metric1Label: "Gross Billing", metric2Label: "Net Realized", metric1Color: "#10b981", metric2Color: "#0284c7", data: [] },
         filterPlaceholder: "Search medicine, batch, invoice number...",
         columns: [
           { key: "date", label: "Date" },
@@ -217,18 +209,7 @@ export const MASTER_CATEGORIES_DATA = {
           { key: "total", label: "Total (₹)", align: "right", isCurrency: true, highlight: true },
           { key: "cashier", label: "Dispensed By" },
         ],
-        rows: [
-          { id: "1", date: "31 Oct 2024", invoiceNo: "INV-001482", item: "Augmentin 625 Duo Tablet", batch: "AG-6251", qty: 2, unitPrice: 204.5, gstRate: "12%", discount: 10.0, total: 399.0, cashier: "Devansh (Counter 1)" },
-          { id: "2", date: "31 Oct 2024", invoiceNo: "INV-001482", item: "Pan D Capsule (15s)", batch: "PND-992", qty: 1, unitPrice: 198.0, gstRate: "12%", discount: 5.0, total: 193.0, cashier: "Devansh (Counter 1)" },
-          { id: "3", date: "31 Oct 2024", invoiceNo: "INV-001481", item: "Telma 40mg Tablet", batch: "TLM-441", qty: 3, unitPrice: 245.0, gstRate: "12%", discount: 25.0, total: 710.0, cashier: "Suresh (Counter 2)" },
-          { id: "4", date: "31 Oct 2024", invoiceNo: "INV-001481", item: "Rosuvas 10mg Strip", batch: "RSV-810", qty: 2, unitPrice: 380.0, gstRate: "12%", discount: 30.0, total: 730.0, cashier: "Suresh (Counter 2)" },
-          { id: "5", date: "31 Oct 2024", invoiceNo: "INV-001480", item: "Dolo 650mg Paracetamol", batch: "DOL-112", qty: 4, unitPrice: 32.0, gstRate: "12%", discount: 0.0, total: 128.0, cashier: "Devansh (Counter 1)" },
-          { id: "6", date: "30 Oct 2024", invoiceNo: "INV-001479", item: "Allegra 120mg Tablet", batch: "ALG-303", qty: 2, unitPrice: 215.0, gstRate: "12%", discount: 15.0, total: 415.0, cashier: "Devansh (Counter 1)" },
-          { id: "7", date: "30 Oct 2024", invoiceNo: "INV-001478", item: "Glycomet GP2 Forte", batch: "GLY-087", qty: 4, unitPrice: 285.0, gstRate: "12%", discount: 40.0, total: 1100.0, cashier: "Suresh (Counter 2)" },
-          { id: "8", date: "29 Oct 2024", invoiceNo: "INV-001477", item: "Shelcal 500 Calcium Strip", batch: "SHL-701", qty: 2, unitPrice: 135.0, gstRate: "12%", discount: 0.0, total: 270.0, cashier: "Devansh (Counter 1)" },
-          { id: "9", date: "28 Oct 2024", invoiceNo: "INV-001474", item: "Thyronorm 50mcg (100s)", batch: "THY-612", qty: 1, unitPrice: 175.0, gstRate: "5%", discount: 10.0, total: 165.0, cashier: "Devansh (Counter 1)" },
-          { id: "10", date: "27 Oct 2024", invoiceNo: "INV-001473", item: "Montair LC Kid Syrup", batch: "MNT-223", qty: 2, unitPrice: 162.0, gstRate: "12%", discount: 10.0, total: 314.0, cashier: "Suresh (Counter 2)" },
-        ],
+        rows: [],
       },
       "customer": {
         id: "customer-sales",
@@ -236,13 +217,13 @@ export const MASTER_CATEGORIES_DATA = {
         title: "Customer Sales Report",
         subtitle: "Customer wise purchase frequency, total billing volume, outstanding ledger, and loyalty insights.",
         stats: [
-          { id: "cs1", title: "Active Buyers", value: "642", trend: "14.1%", trendDirection: "up", trendLabel: "vs previous period", icon: Users, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
-          { id: "cs2", title: "New Patients", value: "128", trend: "22.0%", trendDirection: "up", trendLabel: "vs previous period", icon: UserCheck, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
-          { id: "cs3", title: "Udhar Credit Given", value: "₹2,15,400", trend: "4.5%", trendDirection: "down", trendLabel: "vs previous period", icon: CreditCard, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
-          { id: "cs4", title: "Repeat Rate", value: "68.4%", trend: "5.2%", trendDirection: "up", trendLabel: "vs previous period", icon: TrendingUp, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+          { id: "cs1", dataKey: "activeBuyers", title: "Active Buyers", value: "0", trend: "—", trendDirection: "up", trendLabel: "unique customers", icon: Users, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "cs2", dataKey: "totalBilling", title: "Total Billing", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "customer spend", icon: ShoppingCart, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "cs3", dataKey: "udharGiven", title: "Udhar Credit Given", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "down", trendLabel: "credit sales issued", icon: CreditCard, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+          { id: "cs4", dataKey: "avgSpend", title: "Average Spend / Buyer", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "per active customer", icon: TrendingUp, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
         ],
-        chart: { title: "Patient Volume & Spend Trend", metric1Label: "Registered", metric2Label: "Walk-in Sales", metric1Color: "#6366f1", metric2Color: "#10b981", data: generateDailyTrend(0.9, 0.75) },
-        filterPlaceholder: "Search customer name, phone number, city...",
+        chart: { title: "Patient Volume & Spend Trend", metric1Label: "Total Billing", metric2Label: "Credit Given", metric1Color: "#6366f1", metric2Color: "#10b981", data: [] },
+        filterPlaceholder: "Search customer name, phone number, code...",
         columns: [
           { key: "customer", label: "Patient / Customer" },
           { key: "phone", label: "Phone Number" },
@@ -253,18 +234,7 @@ export const MASTER_CATEGORIES_DATA = {
           { key: "segment", label: "Segment", align: "center" },
           { key: "mode", label: "Preferred Mode", align: "center" },
         ],
-        rows: [
-          { id: "1", customer: "Rakesh Sharma", phone: "+91 98765 43210", visits: 8, totalSpend: 18450.0, outstanding: 0.0, lastVisit: "31 Oct 2024", segment: "Chronic VIP", mode: "UPI" },
-          { id: "2", customer: "Neha Patel", phone: "+91 98234 11223", visits: 4, totalSpend: 8200.0, outstanding: 450.0, lastVisit: "31 Oct 2024", segment: "Regular", mode: "Card" },
-          { id: "3", customer: "Amit Verma", phone: "+91 99100 88776", visits: 6, totalSpend: 14600.0, outstanding: 1200.0, lastVisit: "30 Oct 2024", segment: "Monthly Udhar", mode: "Cash" },
-          { id: "4", customer: "Sunita Jain", phone: "+91 94123 55667", visits: 5, totalSpend: 11300.0, outstanding: 0.0, lastVisit: "29 Oct 2024", segment: "Regular", mode: "UPI" },
-          { id: "5", customer: "Vikram Singh", phone: "+91 98989 33445", visits: 3, totalSpend: 9850.0, outstanding: 2500.0, lastVisit: "28 Oct 2024", segment: "Credit Account", mode: "Card" },
-          { id: "6", customer: "Dr. Arvind Mehta", phone: "+91 98221 77889", visits: 12, totalSpend: 34200.0, outstanding: 0.0, lastVisit: "27 Oct 2024", segment: "Doctor Clinic", mode: "NEFT" },
-          { id: "7", customer: "Pooja Malhotra", phone: "+91 97654 22110", visits: 3, totalSpend: 4950.0, outstanding: 0.0, lastVisit: "26 Oct 2024", segment: "Casual", mode: "Cash" },
-          { id: "8", customer: "Manoj Deshmukh", phone: "+91 98450 66778", visits: 7, totalSpend: 16800.0, outstanding: 850.0, lastVisit: "25 Oct 2024", segment: "Regular", mode: "UPI" },
-          { id: "9", customer: "Kavita Rao", phone: "+91 99887 44332", visits: 4, totalSpend: 7600.0, outstanding: 0.0, lastVisit: "24 Oct 2024", segment: "Chronic Care", mode: "UPI" },
-          { id: "10", customer: "Deepak Choudhary", phone: "+91 94321 00987", visits: 2, totalSpend: 3200.0, outstanding: 600.0, lastVisit: "23 Oct 2024", segment: "Casual", mode: "Cash" },
-        ],
+        rows: [],
       },
       "product": {
         id: "product-sales",
@@ -272,12 +242,12 @@ export const MASTER_CATEGORIES_DATA = {
         title: "Product Sales Report",
         subtitle: "Product wise turnover, units dispensed, revenue ranking, and inventory velocity.",
         stats: [
-          { id: "ps1", title: "Distinct SKUs Sold", value: "418", trend: "8.6%", trendDirection: "up", trendLabel: "vs previous period", icon: Boxes, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
-          { id: "ps2", title: "Top 10 SKU Share", value: "34.2%", trend: "1.8%", trendDirection: "up", trendLabel: "of total revenue", icon: Percent, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
-          { id: "ps3", title: "Slow Moving Items", value: "28", trend: "12.5%", trendDirection: "down", trendLabel: "<2 sales/mo", icon: AlertTriangle, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
-          { id: "ps4", title: "Stock Turns Velocity", value: "4.8x", trend: "0.6x", trendDirection: "up", trendLabel: "annualized velocity", icon: TrendingUp, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+          { id: "ps1", dataKey: "distinctSkus", title: "Distinct SKUs Sold", value: "0", trend: "—", trendDirection: "up", trendLabel: "unique medicines", icon: Boxes, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "ps2", dataKey: "top10Share", title: "Top 10 SKU Share", value: "0%", trend: "—", trendDirection: "up", trendLabel: "of total revenue", icon: Percent, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "ps3", dataKey: "totalUnits", title: "Total Units Dispensed", value: "0", trend: "—", trendDirection: "up", trendLabel: "bottles & strips sold", icon: Tag, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+          { id: "ps4", dataKey: "totalRevenue", title: "Total Product Revenue", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "from dispensed items", icon: TrendingUp, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
         ],
-        chart: { title: "Medicine Volume & Profit Velocity", metric1Label: "Revenue Produced", metric2Label: "Gross Margin", metric1Color: "#f59e0b", metric2Color: "#10b981", data: generateDailyTrend(0.85, 0.9) },
+        chart: { title: "Medicine Volume & Revenue Trend", metric1Label: "Revenue Produced", metric2Label: "Units Sold", metric1Color: "#f59e0b", metric2Color: "#10b981", data: [] },
         filterPlaceholder: "Search medicine name, brand, salt composition...",
         columns: [
           { key: "name", label: "Medicine / SKU" },
@@ -289,18 +259,7 @@ export const MASTER_CATEGORIES_DATA = {
           { key: "margin", label: "Margin %", align: "center" },
           { key: "stock", label: "Stock Status", align: "center" },
         ],
-        rows: [
-          { id: "1", name: "Augmentin 625 Duo", manufacturer: "GSK Pharmaceuticals", category: "Antibiotic", units: 340, avgPrice: 204.5, revenue: 69530.0, margin: "22.5%", stock: "In Stock" },
-          { id: "2", name: "Pan D Capsule", manufacturer: "Alkem Laboratories", category: "Antacid", units: 285, avgPrice: 198.0, revenue: 56430.0, margin: "26.0%", stock: "In Stock" },
-          { id: "3", name: "Telma 40mg Tablet", manufacturer: "Glenmark Pharma", category: "Cardiology", units: 220, avgPrice: 245.0, revenue: 53900.0, margin: "24.2%", stock: "In Stock" },
-          { id: "4", name: "Dolo 650mg Paracetamol", manufacturer: "Micro Labs", category: "Analgesic", units: 1420, avgPrice: 32.0, revenue: 45440.0, margin: "18.5%", stock: "In Stock" },
-          { id: "5", name: "Glycomet GP2 Forte", manufacturer: "USV Pharma", category: "Diabetic", units: 160, avgPrice: 285.0, revenue: 45600.0, margin: "21.0%", stock: "In Stock" },
-          { id: "6", name: "Shelcal 500 Calcium", manufacturer: "Torrent Pharma", category: "Nutritional", units: 260, avgPrice: 135.0, revenue: 35100.0, margin: "23.5%", stock: "In Stock" },
-          { id: "7", name: "Rosuvas 10mg Strip", manufacturer: "Sun Pharma", category: "Cardiology", units: 95, avgPrice: 380.0, revenue: 36100.0, margin: "25.0%", stock: "In Stock" },
-          { id: "8", name: "Allegra 120mg Tablet", manufacturer: "Sanofi India", category: "Antiallergic", units: 155, avgPrice: 215.0, revenue: 33325.0, margin: "20.5%", stock: "In Stock" },
-          { id: "9", name: "Thyronorm 50mcg", manufacturer: "Abbott India", category: "Hormone", units: 180, avgPrice: 175.0, revenue: 31500.0, margin: "19.0%", stock: "Low Stock" },
-          { id: "10", name: "Montair LC Kid Syrup", manufacturer: "Cipla Health", category: "Respiratory", units: 140, avgPrice: 162.0, revenue: 22680.0, margin: "24.0%", stock: "In Stock" },
-        ],
+        rows: [],
       },
       "return": {
         id: "sales-return",
@@ -308,12 +267,12 @@ export const MASTER_CATEGORIES_DATA = {
         title: "Sales Return Report",
         subtitle: "Customer sales returns, credit note receipts, return reasons, and stock reversal history.",
         stats: [
-          { id: "sr1", title: "Total Return Value", value: "₹24,800", trend: "18.2%", trendDirection: "down", trendLabel: "vs previous period", icon: RotateCcw, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
-          { id: "sr2", title: "Return Credit Notes", value: "32", trend: "12.5%", trendDirection: "down", trendLabel: "credit vouchers", icon: FileText, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
-          { id: "sr3", title: "Sales Return Ratio", value: "1.98%", trend: "0.4%", trendDirection: "down", trendLabel: "of gross billings", icon: Percent, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
-          { id: "sr4", title: "Refunds Disbursed", value: "₹18,400", trend: "15.0%", trendDirection: "down", trendLabel: "counter refund cash", icon: Tag, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "sr1", dataKey: "totalReturnValue", title: "Total Return Value", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "down", trendLabel: "returned goods", icon: RotateCcw, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+          { id: "sr2", dataKey: "totalVouchers", title: "Return Vouchers", value: "0", trend: "—", trendDirection: "down", trendLabel: "credit/return notes", icon: FileText, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+          { id: "sr3", dataKey: "cashRefunds", title: "Counter Cash Refunds", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "down", trendLabel: "disbursed from till", icon: Wallet, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "sr4", dataKey: "creditNotes", title: "Credit Notes Issued", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "down", trendLabel: "store credit issued", icon: Tag, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
         ],
-        chart: { title: "Daily Return & Refund Trend", metric1Label: "Return Value (₹)", metric2Label: "Credit Notes", metric1Color: "#f43f5e", metric2Color: "#8b5cf6", data: generateDailyTrend(0.18, 0.12) },
+        chart: { title: "Daily Return & Refund Trend", metric1Label: "Return Value (₹)", metric2Label: "Credit Notes", metric1Color: "#f43f5e", metric2Color: "#8b5cf6", data: [] },
         filterPlaceholder: "Search return no., original invoice, patient...",
         columns: [
           { key: "date", label: "Date" },
@@ -326,18 +285,7 @@ export const MASTER_CATEGORIES_DATA = {
           { key: "mode", label: "Mode", align: "center" },
           { key: "processedBy", label: "Approved By" },
         ],
-        rows: [
-          { id: "1", date: "31 Oct 2024", returnNo: "CN-000214", originalInvoice: "INV-001470", customer: "Walk-in Customer", items: "Pan D Capsule (10s)", refundAmount: 198.0, reason: "Doctor changed dosage", mode: "Cash", processedBy: "Devansh" },
-          { id: "2", date: "30 Oct 2024", returnNo: "CN-000213", originalInvoice: "INV-001452", customer: "Rakesh Sharma", items: "Telma 40mg (1 strip)", refundAmount: 245.0, reason: "Excess purchased", mode: "UPI Refund", processedBy: "Suresh" },
-          { id: "3", date: "29 Oct 2024", returnNo: "CN-000212", originalInvoice: "INV-001441", customer: "Neha Patel", items: "Dolo 650mg (2 strips)", refundAmount: 64.0, reason: "Fever recovered", mode: "Credit Note", processedBy: "Devansh" },
-          { id: "4", date: "28 Oct 2024", returnNo: "CN-000211", originalInvoice: "INV-001428", customer: "Amit Verma", items: "Rosuvas 10mg", refundAmount: 380.0, reason: "Allergic reaction", mode: "Cash", processedBy: "Suresh" },
-          { id: "5", date: "27 Oct 2024", returnNo: "CN-000210", originalInvoice: "INV-001415", customer: "Walk-in Customer", items: "Augmentin 625 Duo", refundAmount: 204.5, reason: "Patient admitted", mode: "Cash", processedBy: "Devansh" },
-          { id: "6", date: "26 Oct 2024", returnNo: "CN-000209", originalInvoice: "INV-001398", customer: "Sunita Jain", items: "Allegra 120mg", refundAmount: 215.0, reason: "Wrong strength bought", mode: "UPI Refund", processedBy: "Suresh" },
-          { id: "7", date: "25 Oct 2024", returnNo: "CN-000208", originalInvoice: "INV-001380", customer: "Vikram Singh", items: "Glycomet GP2 (2 strips)", refundAmount: 570.0, reason: "Doctor stopped drug", mode: "Credit Note", processedBy: "Devansh" },
-          { id: "8", date: "24 Oct 2024", returnNo: "CN-000207", originalInvoice: "INV-001366", customer: "Walk-in Customer", items: "Shelcal 500 (1 strip)", refundAmount: 135.0, reason: "Unopened seal return", mode: "Cash", processedBy: "Devansh" },
-          { id: "9", date: "23 Oct 2024", returnNo: "CN-000206", originalInvoice: "INV-001350", customer: "Pooja Malhotra", items: "Montair LC Kid", refundAmount: 162.0, reason: "Child dislike syrup", mode: "Cash", processedBy: "Suresh" },
-          { id: "10", date: "22 Oct 2024", returnNo: "CN-000205", originalInvoice: "INV-001332", customer: "Manoj Deshmukh", items: "Thyronorm 50mcg", refundAmount: 175.0, reason: "Dose titrated to 75mcg", mode: "UPI Refund", processedBy: "Devansh" },
-        ],
+        rows: [],
       },
     },
   },
@@ -370,36 +318,137 @@ export const MASTER_CATEGORIES_DATA = {
         title: "Purchase Summary",
         subtitle: "Procurement volume, vendor invoice tracking, credit terms, and stock entry overview.",
         stats: [
-          { id: "p1", title: "Total Purchases", value: "₹8,32,400", trend: "8.2%", trendDirection: "up", trendLabel: "vs previous period", icon: ShoppingCart, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
-          { id: "p2", title: "PO Bills Cleared", value: "412", trend: "6.5%", trendDirection: "up", trendLabel: "bills received", icon: FileText, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
-          { id: "p3", title: "Active Distributors", value: "64", trend: "3.2%", trendDirection: "up", trendLabel: "supplying vendors", icon: Truck, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
-          { id: "p4", title: "Average Bill Value", value: "₹2,020", trend: "1.8%", trendDirection: "down", trendLabel: "per purchase order", icon: Tag, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+          { id: "p1", dataKey: "totalPurchases", title: "Total Purchases", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "for period", icon: ShoppingCart, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "p2", dataKey: "totalBills", title: "Bills Received", value: "0", trend: "—", trendDirection: "up", trendLabel: "invoices processed", icon: FileText, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "p3", dataKey: "taxableAmount", title: "Taxable Inward", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "procurement subtotal", icon: Tag, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+          { id: "p4", dataKey: "totalGst", title: "Input GST ITC", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "tax credit claimed", icon: Percent, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
         ],
-        chart: { title: "Purchase Volume & Inward Stock", metric1Label: "Inward Value", metric2Label: "Vendor Paid", metric1Color: "#0284c7", metric2Color: "#10b981", data: generateDailyTrend(0.75, 0.65) },
+        chart: { title: "Purchase Volume & Inward Stock", metric1Label: "Purchase Spend", metric2Label: "Bills Inward", metric1Color: "#0284c7", metric2Color: "#10b981", data: [] },
         filterPlaceholder: "Search purchase invoice, supplier, medicine...",
         columns: [
           { key: "date", label: "Date" },
-          { key: "billNo", label: "Vendor Bill No." },
+          { key: "billNo", label: "Bill / PB No." },
+          { key: "supplierBillNo", label: "Vendor Inv No." },
           { key: "supplier", label: "Distributor / Supplier" },
           { key: "items", label: "SKUs", align: "center" },
           { key: "grossAmount", label: "Gross Amount", align: "right", isCurrency: true },
           { key: "tax", label: "GST Input", align: "right", isCurrency: true },
           { key: "netPayable", label: "Net Payable", align: "right", isCurrency: true, highlight: true },
-          { key: "paymentStatus", label: "Payment Status", align: "center" },
+          { key: "amountPaid", label: "Paid", align: "right", isCurrency: true },
+          { key: "amountDue", label: "Due", align: "right", isCurrency: true },
           { key: "deliveryStatus", label: "Delivery", align: "center", isStatus: true },
         ],
-        rows: [
-          { id: "1", date: "31 Oct 2024", billNo: "PUR-88401", supplier: "MedPlus Distributors", items: 14, grossAmount: 48500.0, tax: 5820.0, netPayable: 54320.0, paymentStatus: "Paid", deliveryStatus: "Received" },
-          { id: "2", date: "30 Oct 2024", billNo: "PUR-88392", supplier: "Apex Pharma Agencies", items: 8, grossAmount: 32400.0, tax: 3888.0, netPayable: 36288.0, paymentStatus: "Partial", deliveryStatus: "Received" },
-          { id: "3", date: "29 Oct 2024", billNo: "PUR-88370", supplier: "Shree Ganesh Medicals", items: 22, grossAmount: 89000.0, tax: 10680.0, netPayable: 99680.0, paymentStatus: "Credit (21D)", deliveryStatus: "Received" },
-          { id: "4", date: "28 Oct 2024", billNo: "PUR-88355", supplier: "Sun Pharma Direct Depot", items: 5, grossAmount: 18500.0, tax: 925.0, netPayable: 19425.0, paymentStatus: "Paid", deliveryStatus: "Received" },
-          { id: "5", date: "27 Oct 2024", billNo: "PUR-88340", supplier: "Cipla Distribution Centre", items: 18, grossAmount: 64200.0, tax: 7704.0, netPayable: 71904.0, paymentStatus: "Credit (30D)", deliveryStatus: "Received" },
-          { id: "6", date: "26 Oct 2024", billNo: "PUR-88311", supplier: "Abbott Healthcare Agency", items: 12, grossAmount: 41000.0, tax: 4920.0, netPayable: 45920.0, paymentStatus: "Paid", deliveryStatus: "Received" },
-          { id: "7", date: "25 Oct 2024", billNo: "PUR-88290", supplier: "Universal Surgicals", items: 9, grossAmount: 22800.0, tax: 4104.0, netPayable: 26904.0, paymentStatus: "Paid", deliveryStatus: "Received" },
-          { id: "8", date: "24 Oct 2024", billNo: "PUR-88274", supplier: "Zydus Lifesciences", items: 15, grossAmount: 51200.0, tax: 6144.0, netPayable: 57344.0, paymentStatus: "Credit (15D)", deliveryStatus: "Received" },
-          { id: "9", date: "23 Oct 2024", billNo: "PUR-88250", supplier: "Mankind Speciality", items: 11, grossAmount: 37500.0, tax: 4500.0, netPayable: 42000.0, paymentStatus: "Paid", deliveryStatus: "Received" },
-          { id: "10", date: "22 Oct 2024", billNo: "PUR-88210", supplier: "Torrent Pharma Logistics", items: 16, grossAmount: 58900.0, tax: 7068.0, netPayable: 65968.0, paymentStatus: "Credit (21D)", deliveryStatus: "Received" },
+        rows: [],
+      },
+      "detail": {
+        id: "purchase-detail",
+        slug: "detail",
+        title: "Purchase Detail Report",
+        subtitle: "Invoice wise line item breakdown with medicine, batch, quantity received, purchase rate, and GST slabs.",
+        stats: [
+          { id: "pd1", dataKey: "totalLineItems", title: "Line Items", value: "0", trend: "—", trendDirection: "up", trendLabel: "lines received", icon: FileText, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "pd2", dataKey: "totalQty", title: "Delivered Units", value: "0", trend: "—", trendDirection: "up", trendLabel: "bottles & strips", icon: Package, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "pd3", dataKey: "totalTaxable", title: "Taxable Inward", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "pre-tax value", icon: Tag, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+          { id: "pd4", dataKey: "totalInwardCost", title: "Realized Inward", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "total line cost", icon: TrendingUp, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
         ],
+        chart: { title: "Purchase Inward Items vs Valuation", metric1Label: "Inward Value", metric2Label: "Line Items", metric1Color: "#0284c7", metric2Color: "#10b981", data: [] },
+        filterPlaceholder: "Search medicine, batch, vendor bill...",
+        columns: [
+          { key: "date", label: "Date" },
+          { key: "billNo", label: "Bill No." },
+          { key: "supplier", label: "Supplier" },
+          { key: "item", label: "Medicine Name" },
+          { key: "pack", label: "Pack" },
+          { key: "batch", label: "Batch No." },
+          { key: "expiry", label: "Expiry" },
+          { key: "qty", label: "Qty Received", align: "center" },
+          { key: "freeQty", label: "Free", align: "center" },
+          { key: "unitCost", label: "Purchase Rate", align: "right", isCurrency: true },
+          { key: "mrp", label: "MRP", align: "right", isCurrency: true },
+          { key: "gstRate", label: "GST %", align: "center" },
+          { key: "total", label: "Total Inward", align: "right", isCurrency: true, highlight: true },
+          { key: "status", label: "Status", align: "center", isStatus: true },
+        ],
+        rows: [],
+      },
+      "supplier": {
+        id: "supplier-purchase",
+        slug: "supplier",
+        title: "Supplier Purchase Report",
+        subtitle: "Supplier-wise procurement volume, invoice count, GST input breakdown, and outstanding payables.",
+        stats: [
+          { id: "ps1", dataKey: "activeSuppliers", title: "Active Distributors", value: "0", trend: "—", trendDirection: "up", trendLabel: "supplying vendors", icon: Truck, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "ps2", dataKey: "totalProcurement", title: "Total Procurement", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "procurement volume", icon: Building2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "ps3", dataKey: "totalBills", title: "Invoices Received", value: "0", trend: "—", trendDirection: "up", trendLabel: "inward clearance", icon: FileText, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+          { id: "ps4", dataKey: "totalOutstanding", title: "Outstanding Payables", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "down", trendLabel: "due to stockists", icon: CreditCard, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+        ],
+        chart: { title: "Supplier Procurement Volume Share", metric1Label: "Total Purchased", metric2Label: "Outstanding", metric1Color: "#0284c7", metric2Color: "#10b981", data: [] },
+        filterPlaceholder: "Search distributor, GSTIN, mobile...",
+        columns: [
+          { key: "supplier", label: "Distributor / Supplier" },
+          { key: "code", label: "Supplier Code" },
+          { key: "gstin", label: "GSTIN" },
+          { key: "phone", label: "Mobile Number" },
+          { key: "billsCount", label: "Bills Received", align: "center" },
+          { key: "taxableAmount", label: "Taxable Total", align: "right", isCurrency: true },
+          { key: "gstAmount", label: "GST Input", align: "right", isCurrency: true },
+          { key: "totalPurchases", label: "Total Procurement", align: "right", isCurrency: true, highlight: true },
+          { key: "outstanding", label: "Payable Due", align: "right", isCurrency: true },
+          { key: "lastPurchase", label: "Last Inward" },
+        ],
+        rows: [],
+      },
+      "return": {
+        id: "purchase-return",
+        slug: "return",
+        title: "Purchase Return Report",
+        subtitle: "Returned items, debit note vouchers, return reasons, and vendor adjustment credits.",
+        stats: [
+          { id: "pr1", dataKey: "totalReturnValue", title: "Total Return Value", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "down", trendLabel: "returned goods", icon: RotateCcw, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+          { id: "pr2", dataKey: "totalVouchers", title: "Debit Notes Issued", value: "0", trend: "—", trendDirection: "down", trendLabel: "vouchers cleared", icon: FileText, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "pr3", dataKey: "gstReversed", title: "GST Input Reversed", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "down", trendLabel: "ITC reversed", icon: CheckCircle2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "pr4", dataKey: "pendingAdjustment", title: "Pending Claims", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "down", trendLabel: "awaiting credit note", icon: AlertTriangle, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+        ],
+        chart: { title: "Monthly Debit Notes & Vendor Replacements", metric1Label: "Return Value", metric2Label: "Vouchers", metric1Color: "#f43f5e", metric2Color: "#10b981", data: [] },
+        filterPlaceholder: "Search debit note, supplier, return reason...",
+        columns: [
+          { key: "date", label: "Date" },
+          { key: "returnNo", label: "Debit Note / Voucher" },
+          { key: "billNo", label: "Original Bill No." },
+          { key: "supplier", label: "Supplier" },
+          { key: "items", label: "Returned Items" },
+          { key: "refundAmount", label: "Debit Value (₹)", align: "right", isCurrency: true, highlight: true },
+          { key: "gstCredit", label: "GST Reversed", align: "right", isCurrency: true },
+          { key: "reason", label: "Return Reason" },
+          { key: "status", label: "Settlement Status", align: "center", isStatus: true },
+        ],
+        rows: [],
+      },
+      "grn": {
+        id: "grn-report",
+        slug: "grn",
+        title: "GRN Report / Stock Inward Log",
+        subtitle: "Goods receipt note register, inspected batches, receiving pharmacist, and QC pass audit.",
+        stats: [
+          { id: "pg1", dataKey: "totalInwards", title: "Total Inwards", value: "0", trend: "—", trendDirection: "up", trendLabel: "goods receipt logs", icon: FileText, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+          { id: "pg2", dataKey: "totalSkusReceived", title: "SKUs Received", value: "0", trend: "—", trendDirection: "up", trendLabel: "distinct medicines", icon: CheckCircle2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+          { id: "pg3", dataKey: "totalUnitsReceived", title: "Units Received", value: "0", trend: "—", trendDirection: "up", trendLabel: "bottles & strips", icon: Boxes, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+          { id: "pg4", dataKey: "inwardValuation", title: "Inward Valuation", value: "₹0.00", isCurrency: true, trend: "—", trendDirection: "up", trendLabel: "dock to shelf", icon: Clock, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+        ],
+        chart: { title: "Daily Goods Receipts & QC Pass Rate", metric1Label: "Inward Value", metric2Label: "QC Cleared", metric1Color: "#0284c7", metric2Color: "#10b981", data: [] },
+        filterPlaceholder: "Search GRN number, vendor invoice, supplier...",
+        columns: [
+          { key: "grnNo", label: "Inward / PB No." },
+          { key: "date", label: "Receipt Date" },
+          { key: "supplierBillNo", label: "Vendor Invoice No." },
+          { key: "supplier", label: "Distributor / Supplier" },
+          { key: "itemsReceived", label: "SKUs Received", align: "center" },
+          { key: "totalUnits", label: "Units Received", align: "center" },
+          { key: "inwardValue", label: "Inward Value", align: "right", isCurrency: true, highlight: true },
+          { key: "receivedBy", label: "Received By" },
+          { key: "status", label: "QC Status", align: "center", isStatus: true },
+        ],
+        rows: [],
       },
     },
   },
@@ -736,7 +785,7 @@ export const MASTER_CATEGORIES_DATA = {
       "list": {
         id: "product-list",
         slug: "list",
-        title: "Product Master Catalog",
+        title: "Product List",
         subtitle: "Pharmacy inventory catalog, Schedule H drug flags, salt formulations, and pack sizes.",
         stats: [
           { id: "pr1", title: "Master Catalog SKUs", value: "2,840", trend: "38 added", trendDirection: "up", trendLabel: "in database", icon: Boxes, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
@@ -833,6 +882,816 @@ export const MASTER_CATEGORIES_DATA = {
   },
 };
 
+
+/**
+ * ── Sub-Report Custom Datasets ──────────────────────────────────────────────
+ * Provides distinct configurations, stats, charts, columns, and rows for all
+ * 45 sub-reports across all 9 categories.
+ */
+const SUB_REPORTS_CATALOG = {
+  // ── 3. Inventory Sub-Reports
+
+  // ── 3. Inventory Sub-Reports
+  "inventory:stock-movement": {
+    stats: [
+      { id: "im1", title: "Inward Stock Qty", value: "4,200", trend: "18.4%", trendDirection: "up", trendLabel: "units received", icon: Package, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+      { id: "im2", title: "Dispensed Outward", value: "3,850", trend: "14.2%", trendDirection: "up", trendLabel: "sales fulfillment", icon: ShoppingCart, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "im3", title: "Net Stock Delta", value: "+350", trend: "Stable", trendDirection: "up", trendLabel: "monthly buffer", icon: Boxes, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "im4", title: "Turnover Velocity", value: "4.2x", trend: "High", trendDirection: "up", trendLabel: "annualized turns", icon: TrendingUp, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+    ],
+    chart: { title: "Daily Physical Inward vs Outward Dispensed", metric1Label: "Inward Qty", metric2Label: "Outward Qty", metric1Color: "#a855f7", metric2Color: "#10b981", data: generateDailyTrend(0.85, 0.8) },
+    filterPlaceholder: "Search medicine, movement type, batch, invoice reference...",
+    columns: [
+      { key: "date", label: "Date" },
+      { key: "item", label: "Medicine Name" },
+      { key: "batch", label: "Batch" },
+      { key: "movementType", label: "Type", align: "center" },
+      { key: "refNo", label: "Doc Reference" },
+      { key: "inQty", label: "Inward", align: "center" },
+      { key: "outQty", label: "Outward", align: "center" },
+      { key: "balanceQty", label: "Closing Stock", align: "center", highlight: true },
+      { key: "user", label: "Authorized By" },
+    ],
+    rows: [
+      { id: "1", date: "31 Oct 2024", item: "Augmentin 625 Duo Tablet", batch: "AG-6251", movementType: "Sale Outward", refNo: "INV-001482", inQty: 0, outQty: 2, balanceQty: 240, user: "Devansh" },
+      { id: "2", date: "31 Oct 2024", item: "Pan D Capsule (15s)", batch: "PND-992", movementType: "Sale Outward", refNo: "INV-001482", inQty: 0, outQty: 1, balanceQty: 180, user: "Devansh" },
+      { id: "3", date: "30 Oct 2024", item: "Telma 40mg Tablet", batch: "TLM-441", movementType: "PO Inward", refNo: "PUR-88392", inQty: 150, outQty: 0, balanceQty: 310, user: "Suresh" },
+      { id: "4", date: "30 Oct 2024", item: "Dolo 650mg Paracetamol", batch: "DOL-112", movementType: "Sale Outward", refNo: "INV-001479", inQty: 0, outQty: 4, balanceQty: 850, user: "Devansh" },
+      { id: "5", date: "29 Oct 2024", item: "Shelcal 500 Calcium Strip", batch: "SHL-701", movementType: "Sale Outward", refNo: "INV-001476", inQty: 0, outQty: 3, balanceQty: 290, user: "Suresh" },
+    ],
+  },
+  "inventory:stock-valuation": {
+    stats: [
+      { id: "iv1", title: "Cost Valuation", value: "₹18,75,300", trend: "5.1%", trendDirection: "up", trendLabel: "inventory at cost", icon: Package, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+      { id: "iv2", title: "Retail MRP Value", value: "₹24,18,000", trend: "4.8%", trendDirection: "up", trendLabel: "potential realization", icon: Tag, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "iv3", title: "Unrealized Margin", value: "₹5,42,700", trend: "28.9%", trendDirection: "up", trendLabel: "gross profit locked", icon: Percent, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "iv4", title: "Total Distinct SKUs", value: "1,240", trend: "18 categories", trendDirection: "up", trendLabel: "active product codes", icon: Boxes, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+    ],
+    chart: { title: "Stock Valuation by Therapeutic Category", metric1Label: "Cost Value", metric2Label: "MRP Value", metric1Color: "#a855f7", metric2Color: "#059669", data: generateDailyTrend(0.9, 0.72) },
+    filterPlaceholder: "Search therapeutic category, brand, composition...",
+    columns: [
+      { key: "category", label: "Therapeutic Category" },
+      { key: "totalSkus", label: "Total SKUs", align: "center" },
+      { key: "stockQty", label: "Units in Stock", align: "center" },
+      { key: "costValue", label: "Valuation at Cost", align: "right", isCurrency: true },
+      { key: "mrpValue", label: "Valuation at MRP", align: "right", isCurrency: true },
+      { key: "marginAmount", label: "Unrealized Profit", align: "right", isCurrency: true, highlight: true },
+      { key: "marginPct", label: "Margin %", align: "center" },
+    ],
+    rows: [
+      { id: "1", category: "Antibiotics & Anti-infectives", totalSkus: 142, stockQty: 4800, costValue: 384000.0, mrpValue: 498000.0, marginAmount: 114000.0, marginPct: "22.9%" },
+      { id: "2", category: "Cardiovascular & Hypertension", totalSkus: 185, stockQty: 6200, costValue: 465000.0, mrpValue: 604000.0, marginAmount: 139000.0, marginPct: "23.0%" },
+      { id: "3", category: "Gastrointestinal & Antacids", totalSkus: 110, stockQty: 5400, costValue: 270000.0, mrpValue: 351000.0, marginAmount: 81000.0, marginPct: "23.1%" },
+      { id: "4", category: "Anti-diabetic Formulations", totalSkus: 125, stockQty: 4900, costValue: 342000.0, mrpValue: 444000.0, marginAmount: 102000.0, marginPct: "23.0%" },
+      { id: "5", category: "Analgesics & Pain Management", totalSkus: 95, stockQty: 8800, costValue: 176000.0, mrpValue: 237000.0, marginAmount: 61000.0, marginPct: "25.7%" },
+    ],
+  },
+  "inventory:expiry": {
+    stats: [
+      { id: "ie1", title: "Expired Stock", value: "0 Units", trend: "Clean", trendDirection: "up", trendLabel: "zero on shelf", icon: ShieldCheck, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "ie2", title: "Critical (<30 Days)", value: "8 SKUs", trend: "Immediate", trendDirection: "down", trendLabel: "return to supplier", icon: AlertTriangle, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "ie3", title: "Warning (30-60 Days)", value: "19 SKUs", trend: "₹18,400", trendDirection: "down", trendLabel: "dispense first", icon: Clock, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "ie4", title: "Watchlist (60-90 Days)", value: "34 SKUs", trend: "₹42,000", trendDirection: "up", trendLabel: "monitored shelf", icon: RotateCcw, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+    ],
+    chart: { title: "Upcoming Expiry Risk Distribution by Month", metric1Label: "Expiring Stock Value", metric2Label: "Units Affected", metric1Color: "#f43f5e", metric2Color: "#f59e0b", data: generateDailyTrend(0.4, 0.35) },
+    filterPlaceholder: "Search medicine name, batch no, shelf rack, days remaining...",
+    columns: [
+      { key: "name", label: "Medicine / Product" },
+      { key: "batch", label: "Batch No." },
+      { key: "expiryDate", label: "Expiry Date" },
+      { key: "daysRemaining", label: "Days Left", align: "center" },
+      { key: "rack", label: "Shelf Location" },
+      { key: "stockQty", label: "Qty on Hand", align: "center" },
+      { key: "riskValue", label: "Value at Risk", align: "right", isCurrency: true, highlight: true },
+      { key: "status", label: "Alert Tier", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", name: "Amoxyclav 375mg Tablet", batch: "AMX-109", expiryDate: "15 Nov 2024", daysRemaining: "15 Days", rack: "R-02 / B3", stockQty: 45, riskValue: 4950.0, status: "Critical" },
+      { id: "2", name: "Cetrizine 10mg Strip", batch: "CTZ-882", expiryDate: "28 Nov 2024", daysRemaining: "28 Days", rack: "R-01 / A4", stockQty: 120, riskValue: 2400.0, status: "Critical" },
+      { id: "3", name: "Cough Syrup 100ml", batch: "CS-4410", expiryDate: "10 Dec 2024", daysRemaining: "40 Days", rack: "R-05 / E2", stockQty: 30, riskValue: 3300.0, status: "Warning" },
+      { id: "4", name: "Ranitidine 150mg Tab", batch: "RNT-319", expiryDate: "20 Dec 2024", daysRemaining: "50 Days", rack: "R-03 / C2", stockQty: 90, riskValue: 1800.0, status: "Warning" },
+      { id: "5", name: "Azithromycin 250mg", batch: "AZT-904", expiryDate: "15 Jan 2025", daysRemaining: "75 Days", rack: "R-02 / B1", stockQty: 55, riskValue: 5500.0, status: "Watchlist" },
+    ],
+  },
+  "inventory:low-stock": {
+    stats: [
+      { id: "il1", title: "Below Reorder Level", value: "36 SKUs", trend: "Reorder", trendDirection: "down", trendLabel: "trigger PO", icon: AlertTriangle, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "il2", title: "Out of Stock (Zero)", value: "14 SKUs", trend: "Urgent", trendDirection: "down", trendLabel: "lost sales risk", icon: Boxes, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "il3", title: "Recommended PO Value", value: "₹1,42,000", trend: "Estimated", trendDirection: "up", trendLabel: "restock cost", icon: ShoppingCart, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "il4", title: "Fast-Moving Out Risk", value: "8 SKUs", trend: "High Priority", trendDirection: "down", trendLabel: "daily runners", icon: TrendingUp, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Stock Shortage Distribution Across Racks", metric1Label: "Current Units", metric2Label: "Min Required", metric1Color: "#f43f5e", metric2Color: "#0284c7", data: generateDailyTrend(0.3, 0.6) },
+    filterPlaceholder: "Search low stock product, composition, rack location...",
+    columns: [
+      { key: "name", label: "Medicine Name" },
+      { key: "rack", label: "Rack / Shelf" },
+      { key: "currentStock", label: "Current Stock", align: "center" },
+      { key: "reorderLevel", label: "Min Reorder Level", align: "center" },
+      { key: "maxLevel", label: "Max Capacity", align: "center" },
+      { key: "dailyConsumption", label: "Daily Run Rate", align: "center" },
+      { key: "suggestedQty", label: "Suggested PO Qty", align: "center", highlight: true },
+      { key: "status", label: "Stock Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", name: "Thyronorm 50mcg (100s)", rack: "R-05 / E1", currentStock: 6, reorderLevel: 25, maxLevel: 100, dailyConsumption: 4, suggestedQty: 80, status: "Critical" },
+      { id: "2", name: "Rosuvas 10mg Strip", rack: "R-03 / C3", currentStock: 12, reorderLevel: 30, maxLevel: 120, dailyConsumption: 5, suggestedQty: 90, status: "Low Stock" },
+      { id: "3", name: "Glycomet 500mg SR", rack: "R-04 / D1", currentStock: 0, reorderLevel: 40, maxLevel: 200, dailyConsumption: 8, suggestedQty: 160, status: "Out of Stock" },
+      { id: "4", name: "Pantocid 40mg Strip", rack: "R-01 / A3", currentStock: 15, reorderLevel: 50, maxLevel: 150, dailyConsumption: 6, suggestedQty: 100, status: "Low Stock" },
+      { id: "5", name: "Liv 52 DS Syrup", rack: "R-06 / F1", currentStock: 4, reorderLevel: 20, maxLevel: 60, dailyConsumption: 3, suggestedQty: 40, status: "Critical" },
+    ],
+  },
+
+  // ── 4. Customer Sub-Reports
+  "customer:purchases": {
+    stats: [
+      { id: "cp1", title: "Repeat Purchases", value: "68.4%", trend: "14.2%", trendDirection: "up", trendLabel: "loyalty refill rate", icon: UserCheck, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "cp2", title: "Avg Basket Size", value: "₹890", trend: "3.2 items", trendDirection: "up", trendLabel: "per visit", icon: ShoppingCart, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "cp3", title: "Top Patient Spend", value: "₹68,450", trend: "VIP Gold", trendDirection: "up", trendLabel: "annual spend", icon: Tag, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "cp4", title: "Active Prescriptions", value: "482", trend: "28 Doctors", trendDirection: "up", trendLabel: "doctor linked", icon: FileText, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Customer Inward Visits vs Billed Volume", metric1Label: "Billed Amount", metric2Label: "Cash Collected", metric1Color: "#ea580c", metric2Color: "#10b981", data: generateDailyTrend(0.8, 0.75) },
+    filterPlaceholder: "Search patient name, mobile, prescription doctor...",
+    columns: [
+      { key: "date", label: "Date" },
+      { key: "invoiceNo", label: "Invoice No." },
+      { key: "customer", label: "Patient Name" },
+      { key: "phone", label: "Phone" },
+      { key: "items", label: "Items", align: "center" },
+      { key: "billAmount", label: "Bill Total", align: "right", isCurrency: true, highlight: true },
+      { key: "paymentMode", label: "Payment", align: "center" },
+      { key: "doctor", label: "Doctor" },
+    ],
+    rows: [
+      { id: "1", date: "31 Oct 2024", invoiceNo: "INV-001481", customer: "Rakesh Sharma", phone: "+91 98765 43210", items: 5, billAmount: 2220.0, paymentMode: "UPI", doctor: "Dr. Arvind Mehta" },
+      { id: "2", date: "31 Oct 2024", invoiceNo: "INV-001480", customer: "Neha Patel", phone: "+91 98234 11223", items: 2, billAmount: 980.0, paymentMode: "Card", doctor: "Dr. K. S. Sethi" },
+      { id: "3", date: "30 Oct 2024", invoiceNo: "INV-001478", customer: "Amit Verma", phone: "+91 99100 88776", items: 6, billAmount: 3220.0, paymentMode: "UPI", doctor: "Dr. Arvind Mehta" },
+      { id: "4", date: "29 Oct 2024", invoiceNo: "INV-001476", customer: "Sunita Jain", phone: "+91 94123 55667", items: 3, billAmount: 1880.0, paymentMode: "UPI", doctor: "Dr. R. Gupta" },
+      { id: "5", date: "28 Oct 2024", invoiceNo: "INV-001474", customer: "Vikram Singh", phone: "+91 98989 33445", items: 7, billAmount: 3870.0, paymentMode: "Card", doctor: "Dr. P. K. Rao" },
+    ],
+  },
+  "customer:outstanding": {
+    stats: [
+      { id: "co1", title: "Total Udhar Outstanding", value: "₹84,200", trend: "1.2%", trendDirection: "down", trendLabel: "total credit balance", icon: CreditCard, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "co2", title: "Owing Patients", value: "48", trend: "84 Accounts", trendDirection: "down", trendLabel: "active balance dues", icon: Users, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "co3", title: "Overdue >30 Days", value: "₹18,400", trend: "6 patients", trendDirection: "down", trendLabel: "followup needed", icon: AlertTriangle, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+      { id: "co4", title: "Monthly Recovery", value: "₹62,800", trend: "92.4%", trendDirection: "up", trendLabel: "settlement rate", icon: CheckCircle2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+    ],
+    chart: { title: "Customer Credit Issued vs Collected", metric1Label: "Credit Given", metric2Label: "Cash Recovered", metric1Color: "#ea580c", metric2Color: "#10b981", data: generateDailyTrend(0.5, 0.45) },
+    filterPlaceholder: "Search patient name, phone, outstanding amount...",
+    columns: [
+      { key: "customer", label: "Patient / Customer" },
+      { key: "phone", label: "Mobile" },
+      { key: "creditLimit", label: "Assigned Limit", align: "right", isCurrency: true },
+      { key: "totalDue", label: "Current Due", align: "right", isCurrency: true, highlight: true },
+      { key: "overdueDays", label: "Overdue Days", align: "center" },
+      { key: "lastPaymentDate", label: "Last Settled" },
+      { key: "status", label: "Account Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", customer: "Vikram Singh", phone: "+91 98989 33445", creditLimit: 10000.0, totalDue: 2500.0, overdueDays: "18 Days", lastPaymentDate: "10 Oct 2024", status: "Active Due" },
+      { id: "2", customer: "Amit Verma", phone: "+91 99100 88776", creditLimit: 5000.0, totalDue: 1200.0, overdueDays: "5 Days", lastPaymentDate: "25 Oct 2024", status: "Active Due" },
+      { id: "3", customer: "Manoj Deshmukh", phone: "+91 98450 66778", creditLimit: 5000.0, totalDue: 850.0, overdueDays: "12 Days", lastPaymentDate: "18 Oct 2024", status: "Active Due" },
+      { id: "4", customer: "Deepak Choudhary", phone: "+91 94321 00987", creditLimit: 3000.0, totalDue: 600.0, overdueDays: "8 Days", lastPaymentDate: "22 Oct 2024", status: "Active Due" },
+      { id: "5", customer: "Neha Patel", phone: "+91 98234 11223", creditLimit: 5000.0, totalDue: 450.0, overdueDays: "2 Days", lastPaymentDate: "29 Oct 2024", status: "Active Due" },
+    ],
+  },
+  "customer:credit": {
+    stats: [
+      { id: "cc1", title: "Credit Accounts", value: "84", trend: "Assigned", trendDirection: "up", trendLabel: "pre-approved limits", icon: CreditCard, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "cc2", title: "Total Assigned Pool", value: "₹3,50,000", trend: "Disbursed", trendDirection: "up", trendLabel: "maximum credit limit", icon: Tag, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "cc3", title: "Pool Utilized", value: "24.1%", trend: "Safe", trendDirection: "up", trendLabel: "healthy buffer", icon: Percent, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "cc4", title: "Zero Default Rate", value: "99.2%", trend: "Top Tier", trendDirection: "up", trendLabel: "chronic patients", icon: ShieldCheck, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Credit Utilization by Patient Tier", metric1Label: "Limit Assigned", metric2Label: "Balance Utilized", metric1Color: "#ea580c", metric2Color: "#0284c7", data: generateDailyTrend(0.6, 0.25) },
+    filterPlaceholder: "Search patient, credit limit, tier...",
+    columns: [
+      { key: "customer", label: "Patient Name" },
+      { key: "tier", label: "Tier", align: "center" },
+      { key: "creditLimit", label: "Credit Limit", align: "right", isCurrency: true },
+      { key: "usedCredit", label: "Utilized", align: "right", isCurrency: true },
+      { key: "availableCredit", label: "Available Buffer", align: "right", isCurrency: true, highlight: true },
+      { key: "utilizationPct", label: "Utilized %", align: "center" },
+      { key: "status", label: "Credit Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", customer: "Dr. Arvind Mehta Clinic", tier: "Platinum", creditLimit: 50000.0, usedCredit: 0.0, availableCredit: 50000.0, utilizationPct: "0.0%", status: "Healthy" },
+      { id: "2", customer: "Rakesh Sharma", tier: "VIP Gold", creditLimit: 25000.0, usedCredit: 0.0, availableCredit: 25000.0, utilizationPct: "0.0%", status: "Healthy" },
+      { id: "3", customer: "Vikram Singh", tier: "Regular", creditLimit: 10000.0, usedCredit: 2500.0, availableCredit: 7500.0, utilizationPct: "25.0%", status: "Active" },
+      { id: "4", customer: "Amit Verma", tier: "Gold", creditLimit: 10000.0, usedCredit: 1200.0, availableCredit: 8800.0, utilizationPct: "12.0%", status: "Active" },
+      { id: "5", customer: "Sunita Jain", tier: "Silver", creditLimit: 5000.0, usedCredit: 0.0, availableCredit: 5000.0, utilizationPct: "0.0%", status: "Healthy" },
+    ],
+  },
+  "customer:aging": {
+    stats: [
+      { id: "ca1", title: "Current (0-15 Days)", value: "₹45,200", trend: "53.6%", trendDirection: "up", trendLabel: "within cycle", icon: CheckCircle2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "ca2", title: "16-30 Days Due", value: "₹20,600", trend: "24.5%", trendDirection: "up", trendLabel: "grace period", icon: Clock, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "ca3", title: "31-60 Days Overdue", value: "₹12,400", trend: "14.7%", trendDirection: "down", trendLabel: "reminder sent", icon: AlertTriangle, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "ca4", title: "60+ Days Critical", value: "₹6,000", trend: "7.1%", trendDirection: "down", trendLabel: "escalated", icon: RotateCcw, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+    ],
+    chart: { title: "Aging Buckets Distribution of Patient Dues", metric1Label: "Total Dues", metric2Label: "Recoverable", metric1Color: "#ea580c", metric2Color: "#10b981", data: generateDailyTrend(0.5, 0.4) },
+    filterPlaceholder: "Search patient aging bucket, name, phone...",
+    columns: [
+      { key: "customer", label: "Patient Name" },
+      { key: "totalDue", label: "Total Outstanding", align: "right", isCurrency: true, highlight: true },
+      { key: "current", label: "0-15 Days", align: "right", isCurrency: true },
+      { key: "days16to30", label: "16-30 Days", align: "right", isCurrency: true },
+      { key: "days31to60", label: "31-60 Days", align: "right", isCurrency: true },
+      { key: "daysOver60", label: "60+ Days", align: "right", isCurrency: true },
+      { key: "action", label: "Followup Stage", align: "center" },
+    ],
+    rows: [
+      { id: "1", customer: "Vikram Singh", totalDue: 2500.0, current: 0.0, days16to30: 2500.0, days31to60: 0.0, daysOver60: 0.0, action: "Gentle Reminder" },
+      { id: "2", customer: "Amit Verma", totalDue: 1200.0, current: 1200.0, days16to30: 0.0, days31to60: 0.0, daysOver60: 0.0, action: "Current Cycle" },
+      { id: "3", customer: "Manoj Deshmukh", totalDue: 850.0, current: 850.0, days16to30: 0.0, days31to60: 0.0, daysOver60: 0.0, action: "Current Cycle" },
+      { id: "4", customer: "Harish Bhatia", totalDue: 3400.0, current: 0.0, days16to30: 0.0, days31to60: 3400.0, daysOver60: 0.0, action: "Phone Call" },
+      { id: "5", customer: "Sanjay Singhania", totalDue: 2600.0, current: 0.0, days16to30: 0.0, days31to60: 0.0, daysOver60: 2600.0, action: "Personal Visit" },
+    ],
+  },
+
+  // ── 5. Supplier Sub-Reports
+  "supplier:purchases": {
+    stats: [
+      { id: "sp1", title: "Total Purchases", value: "₹8,32,400", trend: "8.2%", trendDirection: "up", trendLabel: "vendor purchases", icon: Truck, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "sp2", title: "Vendor Invoices", value: "412", trend: "64 vendors", trendDirection: "up", trendLabel: "received & logged", icon: FileText, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "sp3", title: "GST Input Booked", value: "₹99,880", trend: "12% avg", trendDirection: "up", trendLabel: "eligible ITC", icon: Tag, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "sp4", title: "Total Paid", value: "₹6,17,900", trend: "74.2%", trendDirection: "up", trendLabel: "cleared to date", icon: CreditCard, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Supplier Purchases vs Payments Settled", metric1Label: "Purchased", metric2Label: "Payments", metric1Color: "#e11d48", metric2Color: "#0284c7", data: generateDailyTrend(0.75, 0.65) },
+    filterPlaceholder: "Search distributor, bill number, GSTIN...",
+    columns: [
+      { key: "supplier", label: "Distributor Name" },
+      { key: "billsCount", label: "Bills Count", align: "center" },
+      { key: "totalPurchased", label: "Total Billed", align: "right", isCurrency: true },
+      { key: "taxInput", label: "GST Input", align: "right", isCurrency: true },
+      { key: "paidAmount", label: "Paid Amount", align: "right", isCurrency: true },
+      { key: "netDue", label: "Outstanding Due", align: "right", isCurrency: true, highlight: true },
+      { key: "terms", label: "Credit Days", align: "center" },
+    ],
+    rows: [
+      { id: "1", supplier: "MedPlus Distributors", billsCount: 18, totalPurchased: 284500.0, taxInput: 34140.0, paidAmount: 242000.0, netDue: 42500.0, terms: "30 Days" },
+      { id: "2", supplier: "Apex Pharma Agencies", billsCount: 14, totalPurchased: 198200.0, taxInput: 23784.0, paidAmount: 185000.0, netDue: 13200.0, terms: "21 Days" },
+      { id: "3", supplier: "Shree Ganesh Medicals", billsCount: 12, totalPurchased: 164000.0, taxInput: 19680.0, paidAmount: 124000.0, netDue: 40000.0, terms: "15 Days" },
+      { id: "4", supplier: "Sun Pharma Depot", billsCount: 9, totalPurchased: 142000.0, taxInput: 17040.0, paidAmount: 142000.0, netDue: 0.0, terms: "Immediate" },
+      { id: "5", supplier: "Cipla Distribution Hub", billsCount: 15, totalPurchased: 189000.0, taxInput: 22680.0, paidAmount: 155000.0, netDue: 34000.0, terms: "30 Days" },
+    ],
+  },
+  "supplier:outstanding": {
+    stats: [
+      { id: "so1", title: "Total Supplier Dues", value: "₹2,14,500", trend: "Healthy", trendDirection: "up", trendLabel: "current payables", icon: Truck, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "so2", title: "Dues in Term", value: "₹1,82,000", trend: "84.8%", trendDirection: "up", trendLabel: "within credit window", icon: CheckCircle2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "so3", title: "Overdue Dues", value: "₹32,500", trend: "3 bills", trendDirection: "down", trendLabel: "priority payout", icon: AlertTriangle, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "so4", title: "Next Pay Batch", value: "05 Nov", trend: "₹64,000", trendDirection: "up", trendLabel: "scheduled RTGS", icon: Calendar, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+    ],
+    chart: { title: "Upcoming Vendor Payment Schedule", metric1Label: "Payable Amount", metric2Label: "Discounts Available", metric1Color: "#e11d48", metric2Color: "#059669", data: generateDailyTrend(0.65, 0.5) },
+    filterPlaceholder: "Search vendor, due date, invoice reference...",
+    columns: [
+      { key: "supplier", label: "Supplier Name" },
+      { key: "gstin", label: "GSTIN" },
+      { key: "totalDue", label: "Total Payable", align: "right", isCurrency: true, highlight: true },
+      { key: "dueDate", label: "Payment Due Date" },
+      { key: "overdueDays", label: "Overdue Status", align: "center" },
+      { key: "paymentMode", label: "Mode", align: "center" },
+      { key: "status", label: "Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", supplier: "MedPlus Distributors", gstin: "27AABCM8821Q1Z4", totalDue: 42500.0, dueDate: "05 Nov 2024", overdueDays: "Due in 5 Days", paymentMode: "RTGS", status: "Upcoming" },
+      { id: "2", supplier: "Shree Ganesh Medicals", gstin: "27AABCS9912K1Z9", totalDue: 40000.0, dueDate: "02 Nov 2024", overdueDays: "Due in 2 Days", paymentMode: "NEFT", status: "Upcoming" },
+      { id: "3", supplier: "Cipla Distribution Hub", gstin: "27AABCC4481P1Z1", totalDue: 34000.0, dueDate: "10 Nov 2024", overdueDays: "Due in 10 Days", paymentMode: "RTGS", status: "Upcoming" },
+      { id: "4", supplier: "Apex Pharma Agencies", gstin: "27AABCA3319L1Z2", totalDue: 13200.0, dueDate: "28 Oct 2024", overdueDays: "3 Days Over", paymentMode: "Cheque", status: "Overdue" },
+      { id: "5", supplier: "Torrent Pharma Logistics", gstin: "27AABCT7723N1Z5", totalDue: 13400.0, dueDate: "08 Nov 2024", overdueDays: "Due in 8 Days", paymentMode: "NEFT", status: "Upcoming" },
+    ],
+  },
+  "supplier:credit": {
+    stats: [
+      { id: "sc1", title: "Total Vendor Credit", value: "₹15,00,000", trend: "64 Vendors", trendDirection: "up", trendLabel: "combined credit lines", icon: CreditCard, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "sc2", title: "Credit Utilized", value: "14.3%", trend: "Low Risk", trendDirection: "up", trendLabel: "plenty of capacity", icon: Percent, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "sc3", title: "Avg Credit Period", value: "28 Days", trend: "+3 days", trendDirection: "up", trendLabel: "improved terms", icon: Clock, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "sc4", title: "Preferred Credit Tier", value: "8 Vendors", trend: "45 Days", trendDirection: "up", trendLabel: "top distributors", icon: ShieldCheck, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Vendor Credit Assigned vs Utilized", metric1Label: "Credit Limit", metric2Label: "Balance Utilized", metric1Color: "#e11d48", metric2Color: "#f59e0b", data: generateDailyTrend(0.7, 0.3) },
+    filterPlaceholder: "Search vendor credit terms, limit, ratings...",
+    columns: [
+      { key: "supplier", label: "Supplier Name" },
+      { key: "creditTerms", label: "Credit Window", align: "center" },
+      { key: "creditLimit", label: "Max Limit", align: "right", isCurrency: true },
+      { key: "usedCredit", label: "Utilized", align: "right", isCurrency: true },
+      { key: "availableCredit", label: "Available", align: "right", isCurrency: true, highlight: true },
+      { key: "termsDays", label: "Grace Period", align: "center" },
+      { key: "rating", label: "Trust Tier", align: "center" },
+    ],
+    rows: [
+      { id: "1", supplier: "MedPlus Distributors", creditTerms: "30 Days", creditLimit: 200000.0, usedCredit: 42500.0, availableCredit: 157500.0, termsDays: "30 Days", rating: "Tier 1 Prime" },
+      { id: "2", supplier: "Apex Pharma Agencies", creditTerms: "21 Days", creditLimit: 150000.0, usedCredit: 13200.0, availableCredit: 136800.0, termsDays: "21 Days", rating: "Tier 1 Prime" },
+      { id: "3", supplier: "Shree Ganesh Medicals", creditTerms: "15 Days", creditLimit: 100000.0, usedCredit: 40000.0, availableCredit: 60000.0, termsDays: "15 Days", rating: "Tier 2" },
+      { id: "4", supplier: "Cipla Distribution Hub", creditTerms: "30 Days", creditLimit: 250000.0, usedCredit: 34000.0, availableCredit: 216000.0, termsDays: "30 Days", rating: "Tier 1 Prime" },
+      { id: "5", supplier: "Torrent Pharma Logistics", creditTerms: "21 Days", creditLimit: 120000.0, usedCredit: 13400.0, availableCredit: 106600.0, termsDays: "21 Days", rating: "Tier 2" },
+    ],
+  },
+  "supplier:aging": {
+    stats: [
+      { id: "sa1", title: "Current (0-30 Days)", value: "₹1,82,000", trend: "84.8%", trendDirection: "up", trendLabel: "within terms", icon: CheckCircle2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "sa2", title: "31-60 Days Over", value: "₹22,000", trend: "10.3%", trendDirection: "down", trendLabel: "approaching limit", icon: Clock, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "sa3", title: "61-90 Days Over", value: "₹10,500", trend: "4.9%", trendDirection: "down", trendLabel: "disputed invoices", icon: AlertTriangle, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "sa4", title: "Over 90 Days", value: "₹0", trend: "0%", trendDirection: "up", trendLabel: "no bad debts", icon: ShieldCheck, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+    ],
+    chart: { title: "Supplier Payable Aging Analysis", metric1Label: "Total Payables", metric2Label: "Current Terms", metric1Color: "#e11d48", metric2Color: "#0284c7", data: generateDailyTrend(0.65, 0.55) },
+    filterPlaceholder: "Search supplier payable aging, vendor name, bill reference...",
+    columns: [
+      { key: "supplier", label: "Supplier Name" },
+      { key: "totalDue", label: "Total Payable", align: "right", isCurrency: true, highlight: true },
+      { key: "current0to30", label: "0-30 Days", align: "right", isCurrency: true },
+      { key: "days31to60", label: "31-60 Days", align: "right", isCurrency: true },
+      { key: "days61to90", label: "61-90 Days", align: "right", isCurrency: true },
+      { key: "over90", label: "> 90 Days", align: "right", isCurrency: true },
+      { key: "status", label: "Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", supplier: "MedPlus Distributors", totalDue: 42500.0, current0to30: 42500.0, days31to60: 0.0, days61to90: 0.0, over90: 0.0, status: "Normal" },
+      { id: "2", supplier: "Shree Ganesh Medicals", totalDue: 40000.0, current0to30: 40000.0, days31to60: 0.0, days61to90: 0.0, over90: 0.0, status: "Normal" },
+      { id: "3", supplier: "Cipla Distribution Hub", totalDue: 34000.0, current0to30: 34000.0, days31to60: 0.0, days61to90: 0.0, over90: 0.0, status: "Normal" },
+      { id: "4", supplier: "Apex Pharma Agencies", totalDue: 13200.0, current0to30: 0.0, days31to60: 13200.0, days61to90: 0.0, over90: 0.0, status: "Review" },
+      { id: "5", supplier: "Universal Surgicals", totalDue: 10500.0, current0to30: 0.0, days31to60: 0.0, days61to90: 10500.0, over90: 0.0, status: "Disputed" },
+    ],
+  },
+
+  // ── 6. Financial Sub-Reports
+  "financial:day-book": {
+    stats: [
+      { id: "fb1", title: "Today's Inflow", value: "₹42,800", trend: "+14.2%", trendDirection: "up", trendLabel: "cash & UPI receipts", icon: TrendingUp, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "fb2", title: "Today's Outflow", value: "₹8,400", trend: "3 vouchers", trendDirection: "down", trendLabel: "vendor & opex cash", icon: ShoppingCart, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "fb3", title: "Bank Deposits", value: "₹25,000", trend: "Settled", trendDirection: "up", trendLabel: "counter cash deposit", icon: Building2, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "fb4", title: "Closing Till Cash", value: "₹9,400", trend: "Matched", trendDirection: "up", trendLabel: "counter float balance", icon: Tag, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+    ],
+    chart: { title: "Day Book Inward Receipts vs Outward Disbursements", metric1Label: "Receipts", metric2Label: "Payments", metric1Color: "#059669", metric2Color: "#f43f5e", data: generateDailyTrend(0.85, 0.4) },
+    filterPlaceholder: "Search voucher, account head, narration, cashier...",
+    columns: [
+      { key: "time", label: "Time" },
+      { key: "voucherNo", label: "Voucher No." },
+      { key: "accountHead", label: "Account Head" },
+      { key: "narration", label: "Description / Narration" },
+      { key: "debit", label: "Debit (Out)", align: "right", isCurrency: true },
+      { key: "credit", label: "Credit (In)", align: "right", isCurrency: true, highlight: true },
+      { key: "balance", label: "Running Till", align: "right", isCurrency: true },
+      { key: "cashier", label: "Cashier" },
+    ],
+    rows: [
+      { id: "1", time: "09:00 AM", voucherNo: "OB-001", accountHead: "Opening Float", narration: "Cash drawer opening float", debit: 0.0, credit: 5000.0, balance: 5000.0, cashier: "Devansh" },
+      { id: "2", time: "11:30 AM", voucherNo: "CS-1481", accountHead: "Retail Counter 1", narration: "Retail POS billing sales", debit: 0.0, credit: 12450.0, balance: 17450.0, cashier: "Devansh" },
+      { id: "3", time: "02:15 PM", voucherNo: "PV-042", accountHead: "Store Expenses", narration: "Emergency generator diesel", debit: 1200.0, credit: 0.0, balance: 16250.0, cashier: "Suresh" },
+      { id: "4", time: "05:00 PM", voucherNo: "BD-012", accountHead: "Bank Deposit", narration: "Cash deposited to HDFC current a/c", debit: 15000.0, credit: 0.0, balance: 1250.0, cashier: "Devansh" },
+      { id: "5", time: "09:30 PM", voucherNo: "CS-1482", accountHead: "Evening POS Shift", narration: "Evening session counter collection", debit: 0.0, credit: 25350.0, balance: 26600.0, cashier: "Devansh" },
+    ],
+  },
+  "financial:cash-flow": {
+    stats: [
+      { id: "fc1", title: "Net Cash from Ops", value: "₹3,12,000", trend: "18.4%", trendDirection: "up", trendLabel: "operating cash flow", icon: TrendingUp, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "fc2", title: "Vendor Payouts", value: "₹6,17,900", trend: "Purchases", trendDirection: "down", trendLabel: "procurement payments", icon: ShoppingCart, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "fc3", title: "OpEx Cash Disbursed", value: "₹82,000", trend: "Rent & Wages", trendDirection: "down", trendLabel: "monthly operations", icon: Tag, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "fc4", title: "Closing Cash & Bank", value: "₹4,82,400", trend: "+₹1,12,000", trendDirection: "up", trendLabel: "liquid liquidity", icon: Building2, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+    ],
+    chart: { title: "Monthly Cash Inflow vs Outflow Trends", metric1Label: "Cash Inflow", metric2Label: "Cash Outflow", metric1Color: "#059669", metric2Color: "#e11d48", data: generateDailyTrend(0.9, 0.65) },
+    filterPlaceholder: "Search monthly cash flow, capital expenses, operating heads...",
+    columns: [
+      { key: "month", label: "Month / Period" },
+      { key: "operatingInflow", label: "Operating Receipts", align: "right", isCurrency: true },
+      { key: "operatingOutflow", label: "Operating Payments", align: "right", isCurrency: true },
+      { key: "netOperating", label: "Net Operating Cash", align: "right", isCurrency: true, highlight: true },
+      { key: "capitalExp", label: "Capex Investments", align: "right", isCurrency: true },
+      { key: "netCash", label: "Net Cash Position", align: "right", isCurrency: true },
+    ],
+    rows: [
+      { id: "1", month: "October 2024", operatingInflow: 1248500.0, operatingOutflow: 699900.0, netOperating: 548600.0, capitalExp: 45000.0, netCash: 503600.0 },
+      { id: "2", month: "September 2024", operatingInflow: 1120000.0, operatingOutflow: 642000.0, netOperating: 478000.0, capitalExp: 22000.0, netCash: 456000.0 },
+      { id: "3", month: "August 2024", operatingInflow: 1080000.0, operatingOutflow: 615000.0, netOperating: 465000.0, capitalExp: 18000.0, netCash: 447000.0 },
+      { id: "4", month: "July 2024", operatingInflow: 995000.0, operatingOutflow: 580000.0, netOperating: 415000.0, capitalExp: 35000.0, netCash: 380000.0 },
+      { id: "5", month: "June 2024", operatingInflow: 940000.0, operatingOutflow: 540000.0, netOperating: 400000.0, capitalExp: 12000.0, netCash: 388000.0 },
+    ],
+  },
+  "financial:payment-collection": {
+    stats: [
+      { id: "fp1", title: "Total Collections", value: "₹12,48,500", trend: "12.5%", trendDirection: "up", trendLabel: "monthly sales cash", icon: TrendingUp, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "fp2", title: "UPI QR Share", value: "54.8%", trend: "₹6,84,000", trendDirection: "up", trendLabel: "instant digital receipts", icon: Tag, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "fp3", title: "Counter Cash", value: "33.0%", trend: "₹4,12,000", trendDirection: "down", trendLabel: "physical currency", icon: CreditCard, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "fp4", title: "Card POS Machine", value: "12.2%", trend: "₹1,52,500", trendDirection: "up", trendLabel: "debit & credit cards", icon: CreditCard, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Daily Payment Collections Breakdown by Channel", metric1Label: "Digital (UPI + Card)", metric2Label: "Cash", metric1Color: "#0284c7", metric2Color: "#f59e0b", data: generateDailyTrend(0.7, 0.45) },
+    filterPlaceholder: "Search collections date, cashier counter, channel...",
+    columns: [
+      { key: "date", label: "Date" },
+      { key: "counter", label: "POS Counter" },
+      { key: "cashAmount", label: "Cash Collected", align: "right", isCurrency: true },
+      { key: "upiAmount", label: "UPI Received", align: "right", isCurrency: true },
+      { key: "cardAmount", label: "Card Received", align: "right", isCurrency: true },
+      { key: "totalCollected", label: "Total Inward", align: "right", isCurrency: true, highlight: true },
+      { key: "bankDeposit", label: "Auto Bank Remittance", align: "center" },
+    ],
+    rows: [
+      { id: "1", date: "31 Oct 2024", counter: "Counter 1 (Main)", cashAmount: 14200.0, upiAmount: 22400.0, cardAmount: 4800.0, totalCollected: 41400.0, bankDeposit: "Settled 100%" },
+      { id: "2", date: "30 Oct 2024", counter: "Counter 1 (Main)", cashAmount: 12500.0, upiAmount: 18900.0, cardAmount: 3200.0, totalCollected: 34600.0, bankDeposit: "Settled 100%" },
+      { id: "3", date: "29 Oct 2024", counter: "Counter 2 (Express)", cashAmount: 9800.0, upiAmount: 16500.0, cardAmount: 2900.0, totalCollected: 29200.0, bankDeposit: "Settled 100%" },
+      { id: "4", date: "28 Oct 2024", counter: "Counter 1 (Main)", cashAmount: 15400.0, upiAmount: 24200.0, cardAmount: 5100.0, totalCollected: 44700.0, bankDeposit: "Settled 100%" },
+      { id: "5", date: "27 Oct 2024", counter: "Counter 1 (Main)", cashAmount: 11200.0, upiAmount: 15400.0, cardAmount: 3400.0, totalCollected: 30000.0, bankDeposit: "Settled 100%" },
+    ],
+  },
+  "financial:expenses": {
+    stats: [
+      { id: "fe1", title: "Total OpEx Billed", value: "₹82,000", trend: "3.2%", trendDirection: "down", trendLabel: "of gross revenue", icon: Tag, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "fe2", title: "Staff Payroll", value: "₹32,000", trend: "3 Pharmacists", trendDirection: "up", trendLabel: "monthly salaries", icon: Users, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "fe3", title: "Store Rent & Power", value: "₹38,000", trend: "Fixed", trendDirection: "up", trendLabel: "utilities & lease", icon: Building2, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "fe4", title: "Packaging & Bags", value: "₹12,000", trend: "Consumables", trendDirection: "up", trendLabel: "pos supplies", icon: Package, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Store Operating Expenses by Category", metric1Label: "Budget", metric2Label: "Actual Spent", metric1Color: "#f43f5e", metric2Color: "#0284c7", data: generateDailyTrend(0.4, 0.38) },
+    filterPlaceholder: "Search expense category, payee, description...",
+    columns: [
+      { key: "date", label: "Date" },
+      { key: "voucherNo", label: "Voucher No." },
+      { key: "category", label: "Expense Head" },
+      { key: "payee", label: "Payee / Vendor" },
+      { key: "description", label: "Description" },
+      { key: "amount", label: "Amount", align: "right", isCurrency: true, highlight: true },
+      { key: "paymentMode", label: "Mode", align: "center" },
+      { key: "status", label: "Approval", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", date: "31 Oct 2024", voucherNo: "EXP-088", category: "Store Utilities", payee: "State Electricity Board", description: "Pharmacy AC & deep freezer power", amount: 14200.0, paymentMode: "Bank Netbanking", status: "Approved" },
+      { id: "2", date: "28 Oct 2024", voucherNo: "EXP-087", category: "Consumables", payee: "PackWell Printers", description: "5000 printed medicine carry bags", amount: 6500.0, paymentMode: "UPI", status: "Approved" },
+      { id: "3", date: "25 Oct 2024", voucherNo: "EXP-086", category: "Maintenance", payee: "CoolTech Refrigeration", description: "Vaccine chiller maintenance & QC", amount: 2400.0, paymentMode: "Cash", status: "Approved" },
+      { id: "4", date: "20 Oct 2024", voucherNo: "EXP-085", category: "Software", payee: "Cloud Sync Gateway", description: "E-invoice & automated WhatsApp API", amount: 1800.0, paymentMode: "Card", status: "Approved" },
+      { id: "5", date: "15 Oct 2024", voucherNo: "EXP-084", category: "Rent", payee: "Central Market Landlord", description: "Premises advance monthly lease", amount: 24000.0, paymentMode: "NEFT", status: "Approved" },
+    ],
+  },
+
+  // ── 7. GST Sub-Reports
+  "gst:purchase": {
+    stats: [
+      { id: "gp1", title: "Eligible ITC Inward", value: "₹89,200", trend: "100% Valid", trendDirection: "up", trendLabel: "claimable tax credit", icon: Tag, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+      { id: "gp2", title: "12% Bracket Inward", value: "₹54,000", trend: "Medicines", trendDirection: "up", trendLabel: "formulations tax", icon: Percent, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "gp3", title: "18% Bracket Inward", value: "₹28,200", trend: "Nutraceuticals", trendDirection: "up", trendLabel: "supplements tax", icon: Percent, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "gp4", title: "GSTR-2B Matched", value: "99.4%", trend: "Synced", trendDirection: "up", trendLabel: "reconciled with portal", icon: ShieldCheck, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+    ],
+    chart: { title: "Input Tax Credit (ITC) Accumulated vs Set Off", metric1Label: "Eligible ITC", metric2Label: "Output Tax Setoff", metric1Color: "#9333ea", metric2Color: "#059669", data: generateDailyTrend(0.7, 0.6) },
+    filterPlaceholder: "Search vendor bill, supplier GSTIN, tax bracket...",
+    columns: [
+      { key: "date", label: "Bill Date" },
+      { key: "billNo", label: "Invoice No." },
+      { key: "supplier", label: "Distributor" },
+      { key: "gstin", label: "Supplier GSTIN" },
+      { key: "taxableValue", label: "Taxable Value", align: "right", isCurrency: true },
+      { key: "cgst", label: "CGST", align: "right", isCurrency: true },
+      { key: "sgst", label: "SGST", align: "right", isCurrency: true },
+      { key: "totalTax", label: "Total ITC", align: "right", isCurrency: true, highlight: true },
+      { key: "invoiceTotal", label: "Gross Bill", align: "right", isCurrency: true },
+    ],
+    rows: [
+      { id: "1", date: "31 Oct 2024", billNo: "PUR-88401", supplier: "MedPlus Distributors", gstin: "27AABCM8821Q1Z4", taxableValue: 48500.0, cgst: 2910.0, sgst: 2910.0, totalTax: 5820.0, invoiceTotal: 54320.0 },
+      { id: "2", date: "30 Oct 2024", billNo: "PUR-88392", supplier: "Apex Pharma Agencies", gstin: "27AABCA3319L1Z2", taxableValue: 32400.0, cgst: 1944.0, sgst: 1944.0, totalTax: 3888.0, invoiceTotal: 36288.0 },
+      { id: "3", date: "29 Oct 2024", billNo: "PUR-88370", supplier: "Shree Ganesh Medicals", gstin: "27AABCS9912K1Z9", taxableValue: 89000.0, cgst: 5340.0, sgst: 5340.0, totalTax: 10680.0, invoiceTotal: 99680.0 },
+      { id: "4", date: "28 Oct 2024", billNo: "PUR-88355", supplier: "Sun Pharma Depot", gstin: "27AABCS1209M1Z8", taxableValue: 18500.0, cgst: 462.5, sgst: 462.5, totalTax: 925.0, invoiceTotal: 19425.0 },
+      { id: "5", date: "27 Oct 2024", billNo: "PUR-88340", supplier: "Cipla Distribution Hub", gstin: "27AABCC4481P1Z1", taxableValue: 64200.0, cgst: 3852.0, sgst: 3852.0, totalTax: 7704.0, invoiceTotal: 71904.0 },
+    ],
+  },
+  "gst:gstr-1": {
+    stats: [
+      { id: "g1", title: "Outward Taxable Sales", value: "₹11,14,732", trend: "1,482 Bills", trendDirection: "up", trendLabel: "total net revenue", icon: FileText, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+      { id: "g2", title: "Total Output GST", value: "₹1,33,768", trend: "₹66,884 each", trendDirection: "up", trendLabel: "CGST + SGST", icon: Tag, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "g3", title: "Table 7 (B2C Small)", value: "100%", trend: "1,482 Bills", trendDirection: "up", trendLabel: "consumer retail", icon: Users, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "g4", title: "HSN Summary Rows", value: "24", trend: "Validated", trendDirection: "up", trendLabel: "ready for JSON export", icon: ShieldCheck, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+    ],
+    chart: { title: "GSTR-1 Monthly Outward Tax Liability", metric1Label: "Taxable Turnover", metric2Label: "Output Tax", metric1Color: "#9333ea", metric2Color: "#0ea5e9", data: generateDailyTrend(0.85, 0.4) },
+    filterPlaceholder: "Search GSTR-1 rate slab, table section, HSN summary...",
+    columns: [
+      { key: "period", label: "Tax Period" },
+      { key: "section", label: "GSTR-1 Section" },
+      { key: "invoiceCount", label: "Invoice Count", align: "center" },
+      { key: "taxableValue", label: "Taxable Value", align: "right", isCurrency: true },
+      { key: "cgst", label: "Central Tax", align: "right", isCurrency: true },
+      { key: "sgst", label: "State Tax", align: "right", isCurrency: true },
+      { key: "totalTax", label: "Total GST", align: "right", isCurrency: true, highlight: true },
+    ],
+    rows: [
+      { id: "1", period: "October 2024", section: "Table 7 - B2C Retail (12%)", invoiceCount: 1140, taxableValue: 785000.0, cgst: 47100.0, sgst: 47100.0, totalTax: 94200.0 },
+      { id: "2", period: "October 2024", section: "Table 7 - B2C Retail (18%)", invoiceCount: 220, taxableValue: 182000.0, cgst: 16380.0, sgst: 16380.0, totalTax: 32760.0 },
+      { id: "3", period: "October 2024", section: "Table 7 - B2C Retail (5%)", invoiceCount: 122, taxableValue: 147732.0, cgst: 3693.3, sgst: 3693.3, totalTax: 7386.6 },
+    ],
+  },
+  "gst:gstr-3b": {
+    stats: [
+      { id: "g3b1", title: "Outward Tax Payable", value: "₹1,33,768", trend: "3.1 Table", trendDirection: "up", trendLabel: "gross tax due", icon: FileText, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+      { id: "g3b2", title: "Eligible ITC Setoff", value: "₹89,200", trend: "Table 4", trendDirection: "up", trendLabel: "purchases credit", icon: CheckCircle2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "g3b3", title: "Net Cash Tax Due", value: "₹44,568", trend: "Table 6.1", trendDirection: "up", trendLabel: "payable in challan", icon: CreditCard, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "g3b4", title: "Late Fee & Interest", value: "₹0", trend: "On Time", trendDirection: "up", trendLabel: "zero penalty", icon: ShieldCheck, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+    ],
+    chart: { title: "GSTR-3B Tax Liability vs ITC Setoff", metric1Label: "Tax Payable", metric2Label: "ITC Available", metric1Color: "#9333ea", metric2Color: "#10b981", data: generateDailyTrend(0.75, 0.5) },
+    filterPlaceholder: "Search GSTR-3B tax period, filing status...",
+    columns: [
+      { key: "period", label: "Month" },
+      { key: "outwardTaxable", label: "Outward Taxable", align: "right", isCurrency: true },
+      { key: "outputTax", label: "Output Tax", align: "right", isCurrency: true },
+      { key: "eligibleItc", label: "Eligible ITC", align: "right", isCurrency: true },
+      { key: "netTaxPayable", label: "Net Cash Due", align: "right", isCurrency: true, highlight: true },
+      { key: "paidInCash", label: "Paid in Cash", align: "right", isCurrency: true },
+      { key: "status", label: "Filing Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", period: "October 2024", outwardTaxable: 1114732.0, outputTax: 133768.0, eligibleItc: 89200.0, netTaxPayable: 44568.0, paidInCash: 44568.0, status: "Filed" },
+      { id: "2", period: "September 2024", outwardTaxable: 1000000.0, outputTax: 120000.0, eligibleItc: 82000.0, netTaxPayable: 38000.0, paidInCash: 38000.0, status: "Filed" },
+      { id: "3", period: "August 2024", outwardTaxable: 964285.0, outputTax: 115714.0, eligibleItc: 78500.0, netTaxPayable: 37214.0, paidInCash: 37214.0, status: "Filed" },
+    ],
+  },
+  "gst:hsn": {
+    stats: [
+      { id: "gh1", title: "HSN 3004 (Medicines)", value: "₹11,80,000", trend: "94.5%", trendDirection: "up", trendLabel: "core formulations", icon: Package, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+      { id: "gh2", title: "HSN 3005 (Wadding)", value: "₹42,000", trend: "3.4%", trendDirection: "up", trendLabel: "cotton & gauze", icon: Tag, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "gh3", title: "HSN 3006 (Appliances)", value: "₹26,500", trend: "2.1%", trendDirection: "up", trendLabel: "dental & surgicals", icon: Boxes, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "gh4", title: "HSN Codes Tracked", value: "12", trend: "6-digit code", trendDirection: "up", trendLabel: "portal compliant", icon: ShieldCheck, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+    ],
+    chart: { title: "HSN Chapter 30 Revenue Contribution", metric1Label: "Taxable Value", metric2Label: "GST Amount", metric1Color: "#9333ea", metric2Color: "#f59e0b", data: generateDailyTrend(0.85, 0.4) },
+    filterPlaceholder: "Search HSN code, product description...",
+    columns: [
+      { key: "hsnCode", label: "HSN Code" },
+      { key: "description", label: "Description" },
+      { key: "uqc", label: "UQC", align: "center" },
+      { key: "totalQty", label: "Total Qty", align: "center" },
+      { key: "taxableValue", label: "Taxable Turnover", align: "right", isCurrency: true },
+      { key: "cgst", label: "CGST", align: "right", isCurrency: true },
+      { key: "sgst", label: "SGST", align: "right", isCurrency: true },
+      { key: "totalTax", label: "Total GST", align: "right", isCurrency: true, highlight: true },
+    ],
+    rows: [
+      { id: "1", hsnCode: "300410", description: "Medicaments containing penicillins or derivatives", uqc: "BOX", totalQty: 2480, taxableValue: 485000.0, cgst: 29100.0, sgst: 29100.0, totalTax: 58200.0 },
+      { id: "2", hsnCode: "300490", description: "Other medicaments of mixed or unmixed products", uqc: "TAB", totalQty: 5400, taxableValue: 695000.0, cgst: 41700.0, sgst: 41700.0, totalTax: 83400.0 },
+      { id: "3", hsnCode: "300510", description: "Adhesive dressings and other articles having an adhesive layer", uqc: "ROL", totalQty: 680, taxableValue: 42000.0, cgst: 2520.0, sgst: 2520.0, totalTax: 5040.0 },
+      { id: "4", hsnCode: "300610", description: "Sterile surgical catgut and suture materials", uqc: "NOS", totalQty: 180, taxableValue: 26500.0, cgst: 1590.0, sgst: 1590.0, totalTax: 3180.0 },
+    ],
+  },
+
+  // ── 8. Product Sub-Reports
+  "product:movement": {
+    stats: [
+      { id: "pm1", title: "Active Catalog SKUs", value: "1,240", trend: "100% active", trendDirection: "up", trendLabel: "monitored medicines", icon: Package, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "pm2", title: "High Velocity SKUs", value: "84", trend: "Top 20%", trendDirection: "up", trendLabel: "dispensed daily", icon: TrendingUp, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "pm3", title: "Average Turnover", value: "14.2 Days", trend: "Fast", trendDirection: "up", trendLabel: "inventory turn", icon: Clock, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "pm4", title: "Slow Velocity SKUs", value: "32", trend: "Review", trendDirection: "down", trendLabel: "low movement", icon: AlertTriangle, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+    ],
+    chart: { title: "Product Dispensing Velocity by Dosage Form", metric1Label: "Units Sold", metric2Label: "Current Stock", metric1Color: "#e11d48", metric2Color: "#059669", data: generateDailyTrend(0.85, 0.75) },
+    filterPlaceholder: "Search brand name, generic salt, velocity tier...",
+    columns: [
+      { key: "brand", label: "Medicine Name" },
+      { key: "salt", label: "Salt Composition" },
+      { key: "inwardQty", label: "Inward Units", align: "center" },
+      { key: "soldQty", label: "Sold Units", align: "center" },
+      { key: "currentStock", label: "Stock Left", align: "center", highlight: true },
+      { key: "turnoverRatio", label: "Turnover Ratio", align: "center" },
+      { key: "velocity", label: "Velocity", align: "center" },
+    ],
+    rows: [
+      { id: "1", brand: "Dolo 650mg Paracetamol", salt: "Paracetamol (650mg)", inwardQty: 1000, soldQty: 850, currentStock: 850, turnoverRatio: "4.8x", velocity: "Fast" },
+      { id: "2", brand: "Augmentin 625 Duo Tablet", salt: "Amoxicillin + Clavulanic", inwardQty: 300, soldQty: 240, currentStock: 240, turnoverRatio: "3.6x", velocity: "Fast" },
+      { id: "3", brand: "Pan D Capsule (15s)", salt: "Pantoprazole + Domperidone", inwardQty: 250, soldQty: 180, currentStock: 180, turnoverRatio: "3.2x", velocity: "Fast" },
+      { id: "4", brand: "Telma 40mg Tablet", salt: "Telmisartan (40mg)", inwardQty: 400, soldQty: 310, currentStock: 310, turnoverRatio: "3.8x", velocity: "Fast" },
+      { id: "5", brand: "Glycomet GP2 Forte", salt: "Glimepiride + Metformin", inwardQty: 200, soldQty: 145, currentStock: 145, turnoverRatio: "2.4x", velocity: "Moderate" },
+    ],
+  },
+  "product:fast-moving": {
+    stats: [
+      { id: "pf1", title: "Top 20 Revenue Share", value: "54.8%", trend: "High Impact", trendDirection: "up", trendLabel: "of total pharmacy sales", icon: TrendingUp, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "pf2", title: "Average Days on Shelf", value: "4.2 Days", trend: "Rapid Turn", trendDirection: "up", trendLabel: "high turnover items", icon: Clock, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "pf3", title: "Weekly Reorder Lines", value: "18 SKUs", trend: "Scheduled", trendDirection: "up", trendLabel: "auto PO generated", icon: ShoppingCart, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+      { id: "pf4", title: "Zero Stock Risk", value: "Minimal", trend: "Safety Buffer", trendDirection: "up", trendLabel: "buffered minimums", icon: ShieldCheck, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+    ],
+    chart: { title: "Top 10 Fast-Moving Medicines Revenue Contribution", metric1Label: "Revenue", metric2Label: "Profit", metric1Color: "#e11d48", metric2Color: "#10b981", data: generateDailyTrend(0.95, 0.7) },
+    filterPlaceholder: "Search fast moving product, manufacturer, ranking...",
+    columns: [
+      { key: "rank", label: "Rank", align: "center" },
+      { key: "brand", label: "Medicine Name" },
+      { key: "manufacturer", label: "Pharma Company" },
+      { key: "unitsSold", label: "Units Sold", align: "center" },
+      { key: "revenue", label: "Revenue Generated", align: "right", isCurrency: true, highlight: true },
+      { key: "profit", label: "Gross Profit", align: "right", isCurrency: true },
+      { key: "currentStock", label: "In Stock", align: "center" },
+    ],
+    rows: [
+      { id: "1", rank: "#1", brand: "Augmentin 625 Duo Tablet", manufacturer: "GSK Pharmaceuticals", unitsSold: 420, revenue: 85890.0, profit: 18700.0, currentStock: 240 },
+      { id: "2", rank: "#2", brand: "Telma 40mg Tablet", manufacturer: "Glenmark Pharma", unitsSold: 380, revenue: 93100.0, profit: 22800.0, currentStock: 310 },
+      { id: "3", rank: "#3", brand: "Pan D Capsule (15s)", manufacturer: "Alkem Laboratories", unitsSold: 340, revenue: 67320.0, profit: 17000.0, currentStock: 180 },
+      { id: "4", rank: "#4", brand: "Dolo 650mg Paracetamol", manufacturer: "Micro Labs", unitsSold: 1200, revenue: 38400.0, profit: 9000.0, currentStock: 850 },
+      { id: "5", rank: "#5", brand: "Glycomet GP2 Forte", manufacturer: "USV Pharma", unitsSold: 210, revenue: 59850.0, profit: 13650.0, currentStock: 145 },
+    ],
+  },
+  "product:slow-moving": {
+    stats: [
+      { id: "psm1", title: "Slow Moving Items", value: "32 SKUs", trend: "Monitored", trendDirection: "down", trendLabel: ">45 days without turn", icon: AlertTriangle, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "psm2", title: "Capital Tied Up", value: "₹48,200", trend: "Locked", trendDirection: "down", trendLabel: "inventory value", icon: Tag, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "psm3", title: "Avg Days Idle", value: "54 Days", trend: "Aging", trendDirection: "down", trendLabel: "since last sale", icon: Clock, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "psm4", title: "Supplier Returnable", value: "18 SKUs", trend: "Debit Note", trendDirection: "up", trendLabel: "eligible for return", icon: RotateCcw, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+    ],
+    chart: { title: "Capital Tied in Slow-Moving Inventory", metric1Label: "Tied Value", metric2Label: "Units", metric1Color: "#f43f5e", metric2Color: "#f59e0b", data: generateDailyTrend(0.4, 0.3) },
+    filterPlaceholder: "Search slow moving brand, days idle, action required...",
+    columns: [
+      { key: "brand", label: "Medicine Name" },
+      { key: "manufacturer", label: "Pharma Company" },
+      { key: "stockQty", label: "Stock Qty", align: "center" },
+      { key: "lastSoldDate", label: "Last Sale Date" },
+      { key: "daysIdle", label: "Days Without Sale", align: "center" },
+      { key: "tiedValue", label: "Tied Value", align: "right", isCurrency: true, highlight: true },
+      { key: "action", label: "Recommended Action", align: "center" },
+    ],
+    rows: [
+      { id: "1", brand: "Cardivas 3.125mg Tablet", manufacturer: "Sun Pharma", stockQty: 45, lastSoldDate: "05 Sep 2024", daysIdle: "56 Days", tiedValue: 6750.0, action: "Doctor Detailing" },
+      { id: "2", brand: "Zoryl M1 Forte", manufacturer: "Intas Pharma", stockQty: 30, lastSoldDate: "12 Sep 2024", daysIdle: "49 Days", tiedValue: 4800.0, action: "Counter Push" },
+      { id: "3", brand: "Nebicard 2.5mg Tablet", manufacturer: "Torrent Pharma", stockQty: 25, lastSoldDate: "18 Aug 2024", daysIdle: "74 Days", tiedValue: 3950.0, action: "Return to Vendor" },
+      { id: "4", brand: "Atorlip 20mg Tablet", manufacturer: "Cipla", stockQty: 20, lastSoldDate: "22 Aug 2024", daysIdle: "70 Days", tiedValue: 4200.0, action: "Return to Vendor" },
+      { id: "5", brand: "Preva 75mg Capsule", manufacturer: "Lupin", stockQty: 18, lastSoldDate: "01 Sep 2024", daysIdle: "60 Days", tiedValue: 3240.0, action: "Doctor Detailing" },
+    ],
+  },
+  "product:non-moving": {
+    stats: [
+      { id: "pnm1", title: "Non-Moving Items", value: "14 SKUs", trend: "Zero Sales", trendDirection: "down", trendLabel: ">90 days dead stock", icon: AlertTriangle, iconBg: "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" },
+      { id: "pnm2", title: "Dead Stock Value", value: "₹22,400", trend: "At Cost", trendDirection: "down", trendLabel: "locked funds", icon: Tag, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "pnm3", title: "Expiry Risk", value: "6 Batches", trend: "<6 Months", trendDirection: "down", trendLabel: "action before expiry", icon: Clock, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+      { id: "pnm4", title: "Debit Note Prepared", value: "8 SKUs", trend: "₹14,200", trendDirection: "up", trendLabel: "ready for return", icon: CheckCircle2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+    ],
+    chart: { title: "Dead Inventory Write-off & Return Analysis", metric1Label: "Dead Value", metric2Label: "Claimable", metric1Color: "#f43f5e", metric2Color: "#10b981", data: generateDailyTrend(0.3, 0.25) },
+    filterPlaceholder: "Search dead product, batch no, supplier return...",
+    columns: [
+      { key: "brand", label: "Medicine Name" },
+      { key: "batch", label: "Batch No." },
+      { key: "expiry", label: "Expiry Date" },
+      { key: "stockQty", label: "Units Left", align: "center" },
+      { key: "costPrice", label: "Unit Cost", align: "right", isCurrency: true },
+      { key: "deadValue", label: "Total Locked", align: "right", isCurrency: true, highlight: true },
+      { key: "daysZeroSale", label: "Days Dormant", align: "center" },
+      { key: "status", label: "Action Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", brand: "Rablet D Capsule", batch: "RBL-801", expiry: "04/2025", stockQty: 25, costPrice: 180.0, deadValue: 4500.0, daysZeroSale: "110 Days", status: "Return to Vendor" },
+      { id: "2", brand: "Ocid 20mg Capsule", batch: "OCD-441", expiry: "06/2025", stockQty: 40, costPrice: 65.0, deadValue: 2600.0, daysZeroSale: "98 Days", status: "Return to Vendor" },
+      { id: "3", brand: "Cipcal 500mg Strip", batch: "CPC-112", expiry: "03/2025", stockQty: 35, costPrice: 90.0, deadValue: 3150.0, daysZeroSale: "125 Days", status: "Return to Vendor" },
+      { id: "4", brand: "Eldoper 2mg Capsule", batch: "ELD-902", expiry: "08/2025", stockQty: 50, costPrice: 42.0, deadValue: 2100.0, daysZeroSale: "105 Days", status: "Doctor Detailing" },
+      { id: "5", brand: "Voveran SR 100mg", batch: "VOV-331", expiry: "05/2025", stockQty: 30, costPrice: 160.0, deadValue: 4800.0, daysZeroSale: "135 Days", status: "Write-off Review" },
+    ],
+  },
+
+  // ── 9. Custom Sub-Reports
+  "custom:create": {
+    stats: [
+      { id: "ccr1", title: "Custom Queries", value: "8", trend: "Saved", trendDirection: "up", trendLabel: "active builders", icon: Sliders, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "ccr2", title: "Data Fields Available", value: "84", trend: "All Modules", trendDirection: "up", trendLabel: "sales, inventory, gst", icon: Database, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "ccr3", title: "Automated Webhooks", value: "3", trend: "Active", trendDirection: "up", trendLabel: "WhatsApp & Email", icon: Clock, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "ccr4", title: "Export Formats", value: "CSV, XLSX, PDF", trend: "Instant", trendDirection: "up", trendLabel: "file engines", icon: Download, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Custom Report Builds & Executions", metric1Label: "Runs", metric2Label: "Downloads", metric1Color: "#f59e0b", metric2Color: "#0284c7", data: generateDailyTrend(0.5, 0.4) },
+    filterPlaceholder: "Search query title, domain module, created by...",
+    columns: [
+      { key: "templateName", label: "Query Name" },
+      { key: "module", label: "Source Module", align: "center" },
+      { key: "fieldsCount", label: "Fields Included", align: "center" },
+      { key: "filterRules", label: "Filter Conditions" },
+      { key: "format", label: "Output Format", align: "center" },
+      { key: "createdBy", label: "Author" },
+      { key: "lastRun", label: "Last Tested" },
+    ],
+    rows: [
+      { id: "1", templateName: "High Margin Diabetic Formulations", module: "Inventory", fieldsCount: 8, filterRules: "Category = Diabetic AND Margin > 25%", format: "Excel", createdBy: "Devansh", lastRun: "31 Oct 2024" },
+      { id: "2", templateName: "Schedule H1 Weekly Doctor Audit", module: "Sales", fieldsCount: 12, filterRules: "Schedule = H1 AND Date >= 7 Days", format: "PDF", createdBy: "Suresh", lastRun: "28 Oct 2024" },
+      { id: "3", templateName: "Supplier Debit Notes Pending Settlement", module: "Purchases", fieldsCount: 7, filterRules: "Status = Approved AND Balance > 0", format: "CSV", createdBy: "Accounts", lastRun: "25 Oct 2024" },
+    ],
+  },
+  "custom:scheduled": {
+    stats: [
+      { id: "csr1", title: "Active Crons", value: "5 Jobs", trend: "Automated", trendDirection: "up", trendLabel: "standing schedules", icon: Clock, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "csr2", title: "Daily Evening Dispatch", value: "10:00 PM", trend: "WhatsApp", trendDirection: "up", trendLabel: "owner summary", icon: Share2, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "csr3", title: "Weekly Inventory Sync", value: "Mon 09 AM", trend: "Store Email", trendDirection: "up", trendLabel: "expiry report", icon: FileText, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "csr4", title: "Delivery Success Rate", value: "100%", trend: "0 Failures", trendDirection: "up", trendLabel: "30-day reliability", icon: CheckCircle2, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Automated Delivery Triggers by Channel", metric1Label: "WhatsApp Dispatches", metric2Label: "Email Dispatches", metric1Color: "#f59e0b", metric2Color: "#10b981", data: generateDailyTrend(0.5, 0.45) },
+    filterPlaceholder: "Search automated schedule, trigger time, recipients...",
+    columns: [
+      { key: "reportName", label: "Schedule Title" },
+      { key: "frequency", label: "Cadence", align: "center" },
+      { key: "time", label: "Trigger Time", align: "center" },
+      { key: "channel", label: "Channel", align: "center" },
+      { key: "recipients", label: "Recipients" },
+      { key: "lastSent", label: "Last Dispatched" },
+      { key: "status", label: "Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", reportName: "Daily Cash & UPI Till Reconciliation", frequency: "Daily", time: "10:00 PM", channel: "WhatsApp", recipients: "+91 98200 11223 (Owner)", lastSent: "31 Oct 2024 22:00", status: "Active" },
+      { id: "2", reportName: "Near Expiry Stock <60 Days Alert", frequency: "Weekly", time: "Mon 09:00 AM", channel: "Email", recipients: "storemanager@pharmacy.com", lastSent: "28 Oct 2024 09:00", status: "Active" },
+      { id: "3", reportName: "Doctor Prescription Turnover Share", frequency: "Monthly", time: "1st of Month", channel: "Email", recipients: "director@pharmacy.com", lastSent: "01 Oct 2024 00:00", status: "Active" },
+      { id: "4", reportName: "Low Stock Emergency Restock PO", frequency: "Daily", time: "08:00 AM", channel: "WhatsApp", recipients: "+91 94112 44332 (Purchaser)", lastSent: "31 Oct 2024 08:00", status: "Active" },
+    ],
+  },
+  "custom:export": {
+    stats: [
+      { id: "ce1", title: "Recent Export Jobs", value: "28", trend: "This Month", trendDirection: "up", trendLabel: "data downloads", icon: Download, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "ce2", title: "Total Records Exported", value: "48,200", trend: "Excel & CSV", trendDirection: "up", trendLabel: "verified rows", icon: FileText, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "ce3", title: "Avg Generation Time", value: "1.2s", trend: "High Speed", trendDirection: "up", trendLabel: "client-side engine", icon: Clock, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "ce4", title: "Retention Window", value: "30 Days", trend: "Secure", trendDirection: "up", trendLabel: "download logs", icon: ShieldCheck, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Export Jobs Volume by File Format", metric1Label: "Excel Exports", metric2Label: "PDF Exports", metric1Color: "#f59e0b", metric2Color: "#0284c7", data: generateDailyTrend(0.55, 0.4) },
+    filterPlaceholder: "Search export job, file name, exported by...",
+    columns: [
+      { key: "jobId", label: "Job ID" },
+      { key: "reportName", label: "Export File Name" },
+      { key: "dateRange", label: "Data Period" },
+      { key: "format", label: "Format", align: "center" },
+      { key: "fileSize", label: "Size", align: "center" },
+      { key: "exportedBy", label: "Requested By" },
+      { key: "status", label: "Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", jobId: "EXP-2024-118", reportName: "Sales_Summary_Oct_2024.xlsx", dateRange: "01 Oct - 31 Oct 2024", format: "Excel", fileSize: "1.4 MB", exportedBy: "Devansh", status: "Ready" },
+      { id: "2", jobId: "EXP-2024-117", reportName: "GSTR1_Outward_Supplies.json", dateRange: "01 Oct - 31 Oct 2024", format: "JSON", fileSize: "420 KB", exportedBy: "CA Consultant", status: "Ready" },
+      { id: "3", jobId: "EXP-2024-116", reportName: "Inventory_Valuation_Cost_MRP.csv", dateRange: "As of 31 Oct 2024", format: "CSV", fileSize: "840 KB", exportedBy: "Devansh", status: "Ready" },
+      { id: "4", jobId: "EXP-2024-115", reportName: "Schedule_H1_Register_Signed.pdf", dateRange: "01 Oct - 31 Oct 2024", format: "PDF", fileSize: "2.8 MB", exportedBy: "Suresh (Pharmacist)", status: "Ready" },
+    ],
+  },
+  "custom:templates": {
+    stats: [
+      { id: "ct1", title: "Built-in Templates", value: "12", trend: "Pharma Ready", trendDirection: "up", trendLabel: "pre-configured views", icon: FileText, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+      { id: "ct2", title: "Regulatory Audits", value: "4", trend: "Compliant", trendDirection: "up", trendLabel: "drug inspector standard", icon: ShieldCheck, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+      { id: "ct3", title: "Financial & Tax", value: "5", trend: "CA Approved", trendDirection: "up", trendLabel: "accounting models", icon: Tag, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+      { id: "ct4", title: "Inventory Restock", value: "3", trend: "PO Assisted", trendDirection: "up", trendLabel: "reorder algorithms", icon: Package, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+    ],
+    chart: { title: "Standard Template Usage Across Pharmacy Shifts", metric1Label: "Times Run", metric2Label: "Exports", metric1Color: "#f59e0b", metric2Color: "#10b981", data: generateDailyTrend(0.6, 0.45) },
+    filterPlaceholder: "Search template standard, domain, regulatory purpose...",
+    columns: [
+      { key: "templateTitle", label: "Template Standard" },
+      { key: "category", label: "Domain" },
+      { key: "compliance", label: "Regulatory Standard", align: "center" },
+      { key: "recommendedFor", label: "Recommended For" },
+      { key: "updatedAt", label: "Last Updated" },
+      { key: "status", label: "Status", align: "center", isStatus: true },
+    ],
+    rows: [
+      { id: "1", templateTitle: "Schedule H1 Register & Prescription Log", category: "Compliance", compliance: "Drugs & Cosmetics Act", recommendedFor: "Drug Inspector Audit", updatedAt: "Oct 2024", status: "Verified" },
+      { id: "2", templateTitle: "Daily Cashier Drawer End-of-Day Balancing", category: "Finance", compliance: "Internal Audit", recommendedFor: "Shift Handover", updatedAt: "Oct 2024", status: "Verified" },
+      { id: "3", templateTitle: "Fast Mover Reorder Schedule (PO Suggested)", category: "Inventory", compliance: "Supply Chain", recommendedFor: "Weekly Procurement", updatedAt: "Oct 2024", status: "Verified" },
+      { id: "4", templateTitle: "Monthly GST 3B Set-off Computation", category: "GST", compliance: "GSTN Schema v1.4", recommendedFor: "Monthly CA Filing", updatedAt: "Oct 2024", status: "Verified" },
+    ],
+  },
+};
+
+// Auto-enrich all categories in MASTER_CATEGORIES_DATA
+for (const [catKey, category] of Object.entries(MASTER_CATEGORIES_DATA)) {
+  for (const item of category.items) {
+    const catalogKey = `${catKey}:${item.slug}`;
+    const altCatalogKey = `${catKey}:${item.id}`;
+    const extra = SUB_REPORTS_CATALOG[catalogKey] || SUB_REPORTS_CATALOG[altCatalogKey];
+
+    if (!category.tabs[item.slug]) {
+      if (extra) {
+        category.tabs[item.slug] = {
+          id: item.id,
+          slug: item.slug,
+          title: item.title,
+          subtitle: item.subtitle,
+          ...extra,
+        };
+      } else {
+        // Fallback dedicated sub-report data so every tab always has complete config
+        category.tabs[item.slug] = {
+          id: item.id,
+          slug: item.slug,
+          title: item.title,
+          subtitle: item.subtitle,
+          stats: [
+            { id: "st1", title: "Tracked Records", value: "340", trend: "+8.4%", trendDirection: "up", trendLabel: "vs last cycle", icon: FileText, iconBg: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" },
+            { id: "st2", title: "Active Turnaround", value: "98.2%", trend: "Optimal", trendDirection: "up", trendLabel: "execution rate", icon: CheckCircle2, iconBg: "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" },
+            { id: "st3", title: "Audited Lines", value: "1,240", trend: "Verified", trendDirection: "up", trendLabel: "reconciled items", icon: ShieldCheck, iconBg: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400" },
+            { id: "st4", title: "Report Status", value: "Active", trend: "Realtime", trendDirection: "up", trendLabel: "live database feed", icon: Tag, iconBg: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" },
+          ],
+          chart: { title: `${item.title} Monthly Analysis`, metric1Label: "Primary Metric", metric2Label: "Secondary Metric", metric1Color: "#059669", metric2Color: "#0284c7", data: generateDailyTrend(0.7, 0.6) },
+          filterPlaceholder: `Search ${item.title.toLowerCase()}...`,
+          columns: [
+            { key: "date", label: "Date" },
+            { key: "item", label: "Record Reference" },
+            { key: "category", label: "Category" },
+            { key: "qty", label: "Quantity / Units", align: "center" },
+            { key: "amount", label: "Billed Value", align: "right", isCurrency: true, highlight: true },
+            { key: "status", label: "Status", align: "center", isStatus: true },
+          ],
+          rows: [
+            { id: "1", date: "31 Oct 2024", item: `${item.title} Ref #001`, category: category.title, qty: 12, amount: 2450.0, status: "Active" },
+            { id: "2", date: "30 Oct 2024", item: `${item.title} Ref #002`, category: category.title, qty: 8, amount: 1890.0, status: "Active" },
+            { id: "3", date: "29 Oct 2024", item: `${item.title} Ref #003`, category: category.title, qty: 15, amount: 3420.0, status: "Active" },
+            { id: "4", date: "28 Oct 2024", item: `${item.title} Ref #004`, category: category.title, qty: 6, amount: 980.0, status: "Active" },
+            { id: "5", date: "27 Oct 2024", item: `${item.title} Ref #005`, category: category.title, qty: 22, amount: 5120.0, status: "Active" },
+          ],
+        };
+      }
+    }
+
+    // Always register aliases for both full id and clean suffix so any URL format resolves cleanly
+    if (category.tabs[item.slug]) {
+      category.tabs[item.id] = category.tabs[item.slug];
+      const cleanSuffix = item.id.replace(`${catKey}-`, "");
+      category.tabs[cleanSuffix] = category.tabs[item.slug];
+    }
+  }
+}
+
 /**
  * Normalization helper: resolves category slug and tab config
  */
@@ -860,11 +1719,16 @@ export const resolveCategoryAndTab = (categoryParam, subReportParam) => {
   if (subReportParam) {
     const cleanTab = subReportParam.toLowerCase();
     if (cleanTab in categoryData.tabs) {
-      tabKey = cleanTab;
+      tabKey = categoryData.tabs[cleanTab]?.slug || cleanTab;
     } else {
       // Try to find matching item slug or id
-      const matched = categoryData.items.find((it) => it.id === cleanTab || it.slug === cleanTab);
-      if (matched && matched.slug in categoryData.tabs) {
+      const matched = categoryData.items.find(
+        (it) =>
+          it.id.toLowerCase() === cleanTab ||
+          it.slug.toLowerCase() === cleanTab ||
+          it.id.toLowerCase().replace(`${catKey}-`, "") === cleanTab
+      );
+      if (matched) {
         tabKey = matched.slug;
       }
     }

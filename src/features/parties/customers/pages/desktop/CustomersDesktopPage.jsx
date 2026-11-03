@@ -119,6 +119,7 @@ const STATUS_OPTIONS = [
 ];
 
 const SORT_SELECT_OPTIONS = [
+  { label: "Recently Updated", value: "updatedAt-desc" },
   { label: "Name: A to Z", value: "name-asc" },
   { label: "Name: Z to A", value: "name-desc" },
   { label: "Credit Due: High to Low", value: "due-desc" },
@@ -225,7 +226,7 @@ export const CustomersDesktopPage = ({
   const [selectedType, setSelectedType] = useState("all");
   const [selectedBalanceType, setSelectedBalanceType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [sortOption, setSortOption] = useState("name-asc");
+  const [sortOption, setSortOption] = useState("updatedAt-desc");
 
   // Filter Modal Dialog state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -236,7 +237,7 @@ export const CustomersDesktopPage = ({
     if (selectedType !== "all") count++;
     if (selectedBalanceType !== "all") count++;
     if (selectedStatus !== "all") count++;
-    if (sortOption !== "name-asc") count++;
+    if (sortOption !== "updatedAt-desc") count++;
     return count;
   }, [selectedType, selectedBalanceType, selectedStatus, sortOption]);
 
@@ -373,9 +374,27 @@ export const CustomersDesktopPage = ({
         params.customerType = "walk_in,hospital,clinic,corporate,other";
       }
 
+      // Backend sort query mapping
+      if (sortOption === "name-asc") {
+        params.sort = "name";
+      } else if (sortOption === "name-desc") {
+        params.sort = "-name";
+      } else if (sortOption === "due-desc") {
+        params.sort = "-creditOutstanding";
+      } else if (sortOption === "adv-desc") {
+        params.sort = "-advanceBalance";
+      } else if (sortOption === "createdAt-desc") {
+        params.sort = "-createdAt";
+      } else if (sortOption === "createdAt-asc") {
+        params.sort = "createdAt";
+      } else {
+        // Default recently updated
+        params.sort = "-updatedAt";
+      }
+
       return params;
     },
-    [debouncedSearch, selectedStatus, selectedType, customerScope],
+    [debouncedSearch, selectedStatus, selectedType, customerScope, sortOption],
   );
 
   // Fetch initial batch (Page 1) or full refresh
@@ -566,7 +585,7 @@ export const CustomersDesktopPage = ({
     setSelectedType("all");
     setSelectedBalanceType("all");
     setSelectedStatus("all");
-    setSortOption("name-asc");
+    setSortOption("updatedAt-desc");
     setCustomerScope("all");
     navigate(ROUTES.CUSTOMERS, { replace: true });
   }, [navigate]);
@@ -616,6 +635,11 @@ export const CustomersDesktopPage = ({
       if (!aIsWalkIn && bIsWalkIn) return 1;
 
       switch (sortOption) {
+        case "updatedAt-desc":
+          return (
+            new Date(b.updatedAt || b.createdAt || 0) -
+            new Date(a.updatedAt || a.createdAt || 0)
+          );
         case "name-asc":
           return a.name.localeCompare(b.name);
         case "name-desc":
@@ -629,7 +653,10 @@ export const CustomersDesktopPage = ({
         case "createdAt-asc":
           return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
         default:
-          return 0;
+          return (
+            new Date(b.updatedAt || b.createdAt || 0) -
+            new Date(a.updatedAt || a.createdAt || 0)
+          );
       }
     });
 
@@ -1556,7 +1583,7 @@ export const CustomersDesktopPage = ({
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-text flex items-center justify-between">
                 <span>Sort Sequence</span>
-                {sortOption !== "name-asc" && (
+                {sortOption !== "updatedAt-desc" && (
                   <span className="text-[11px] text-primary font-bold">
                     Custom Sort
                   </span>
@@ -1582,7 +1609,7 @@ export const CustomersDesktopPage = ({
               setSelectedType("all");
               setSelectedBalanceType("all");
               setSelectedStatus("all");
-              setSortOption("name-asc");
+              setSortOption("updatedAt-desc");
             }}
             className="text-text-muted hover:text-text text-xs"
           >

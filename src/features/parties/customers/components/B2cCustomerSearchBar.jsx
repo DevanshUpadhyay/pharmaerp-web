@@ -36,7 +36,7 @@ export const B2cCustomerSearchBar = forwardRef(
     const isControlled = controlledValue !== undefined;
     const [searchTerm, setSearchTerm] = useState(selectedCustomer?.name || "");
     const currentValue = isControlled ? controlledValue : searchTerm;
-    const isPreTypeMode = !currentValue || currentValue.trim().length === 0;
+    const isWalkInMode = !currentValue || currentValue.trim().length < 2;
 
     const [walkInCustomer, setWalkInCustomer] = useState(propWalkInCustomer || null);
     const [results, setResults] = useState([]);
@@ -183,7 +183,8 @@ export const B2cCustomerSearchBar = forwardRef(
       if (!q || q.length < 2) {
         setResults([]);
         setIsLoading(false);
-        setIsOpen(false);
+        // Do NOT force close the dropdown here!
+        // When in focus, 0 or 1 character displays the Walk-in customer dropdown.
         return;
       }
 
@@ -239,16 +240,13 @@ export const B2cCustomerSearchBar = forwardRef(
       if (onInputChange) onInputChange(val);
 
       const trimmed = val.trim();
-      if (trimmed.length === 0) {
-        setIsOpen(true);
+      // Keep dropdown open: 0 or 1 char shows Walk-in, 2+ chars shows search
+      setIsOpen(true);
+      if (trimmed.length < 2) {
         setSelectedIndex(0);
         setResults([]);
-      } else if (trimmed.length === 1) {
-        setIsOpen(false);
-        setResults([]);
-        setSelectedIndex(-1);
+        setIsLoading(false);
       } else {
-        setIsOpen(true);
         setSelectedIndex(-1);
       }
     };
@@ -259,6 +257,7 @@ export const B2cCustomerSearchBar = forwardRef(
       }
       setSelectedIndex(0);
       setResults([]);
+      setIsLoading(false);
       if (onInputChange) onInputChange("");
       if (onSelectCustomer) onSelectCustomer(null);
       setIsOpen(true);
@@ -277,20 +276,16 @@ export const B2cCustomerSearchBar = forwardRef(
 
     const handleKeyDown = (e) => {
       if (!isOpen && (e.key === "ArrowDown" || e.key === "Enter")) {
-        if (isPreTypeMode) {
-          setIsOpen(true);
+        setIsOpen(true);
+        if (isWalkInMode) {
           setSelectedIndex(0);
-          return;
         }
-        if (currentValue?.trim()?.length >= 2 && results.length > 0) {
-          setIsOpen(true);
-          return;
-        }
+        return;
       }
 
       if (!isOpen) return;
 
-      if (isPreTypeMode) {
+      if (isWalkInMode) {
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
           setSelectedIndex(0);
@@ -344,7 +339,7 @@ export const B2cCustomerSearchBar = forwardRef(
     }[size] || "h-10 text-sm px-3 rounded-xl";
 
     return (
-      <div ref={containerRef} className={cn("relative w-full select-none", className)}>
+      <div ref={containerRef} className={cn("relative w-full select-none", isOpen && "z-30", className)}>
         {/* Search Input Box */}
         <div
           className={cn(
@@ -369,11 +364,9 @@ export const B2cCustomerSearchBar = forwardRef(
             value={currentValue}
             onChange={handleInputChange}
             onFocus={() => {
-              if (!currentValue || currentValue.trim().length === 0) {
-                setIsOpen(true);
+              setIsOpen(true);
+              if (!currentValue || currentValue.trim().length < 2) {
                 setSelectedIndex(0);
-              } else if (currentValue.trim().length >= 2) {
-                setIsOpen(true);
               }
             }}
             onKeyDown={handleKeyDown}
@@ -412,16 +405,16 @@ export const B2cCustomerSearchBar = forwardRef(
           )}
         </div>
 
-        {/* Dropdown Results List - Render when open and either in pre-type mode (shows Walk-in) or after 2+ characters */}
-        {isOpen && (isPreTypeMode || Boolean(currentValue?.trim()?.length >= 2)) && (
+        {/* Dropdown Results List - Render when open: shows Walk-in for 0 or 1 char, or search results for 2+ chars */}
+        {isOpen && (
           <div
             className={cn(
-              "absolute left-0 right-0 top-[calc(100%+6px)] z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[var(--app-shadow-xl)] animate-in fade-in-50 zoom-in-95 duration-100",
-              isPreTypeMode ? "h-auto max-h-[240px]" : "h-[340px]",
+              "absolute left-0 right-0 top-[calc(100%+6px)] z-30 flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[var(--app-shadow-xl)] animate-in fade-in-50 zoom-in-95 duration-100",
+              isWalkInMode ? "h-auto max-h-[240px]" : "h-[340px]",
               dropdownClassName
             )}
           >
-            {isPreTypeMode ? (
+            {isWalkInMode ? (
               /* Pre-type Mode: Single Walk-in Customer Suggestion */
               <>
                 <div className="flex items-center justify-between border-b border-border/60 bg-surface-alt/60 px-3.5 py-2 text-[11px] font-semibold text-text-muted shrink-0">

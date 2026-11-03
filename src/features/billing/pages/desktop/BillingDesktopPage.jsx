@@ -1,4 +1,4 @@
-// src/features/billing/pages/desktop/BillingDesktopPage.jsx
+﻿// src/features/billing/pages/desktop/BillingDesktopPage.jsx
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
@@ -737,6 +737,13 @@ export const BillingDesktopPage = () => {
         </div>
       );
     }
+        if (modeUpper === "CREDITNOTE" || modeUpper === "CREDIT_NOTE" || modeUpper === "CREDIT NOTE") {
+      return (
+        <UIBadge variant="soft" color="info" className="font-semibold text-xs border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 bg-indigo-500/10">
+          Credit Note
+        </UIBadge>
+      );
+    }
     if (modeUpper === "CREDIT") {
       return (
         <div className="inline-flex flex-col items-center gap-0.5">
@@ -765,10 +772,14 @@ export const BillingDesktopPage = () => {
     );
   };
 
-  // Extract split payment breakdown (Cash vs UPI)
+  // Extract split payment breakdown across all payment methods
   const getSplitBreakdown = (inv) => {
     let cash = 0;
     let upi = 0;
+    let creditNote = 0;
+    let advance = 0;
+    let credit = 0;
+    let card = 0;
     const payments = Array.isArray(inv?.payments) ? inv.payments : [];
     if (payments.length > 0) {
       for (const p of payments) {
@@ -776,19 +787,33 @@ export const BillingDesktopPage = () => {
         const amt = Number(p.amount || 0);
         if (type.includes("UPI") || type.includes("QR")) {
           upi += amt;
+        } else if (type.includes("CREDIT_NOTE") || type.includes("CREDITNOTE")) {
+          creditNote += amt;
+        } else if (type.includes("CREDIT")) {
+          credit += amt;
+        } else if (type.includes("ADVANCE") || type.includes("WALLET")) {
+          advance += amt;
         } else if (type.includes("CASH")) {
           cash += amt;
-        } else if (!type.includes("CARD") && !type.includes("WALLET") && !type.includes("CREDIT")) {
+        } else if (type.includes("CARD")) {
+          card += amt;
+        } else {
           cash += amt;
         }
       }
-    } else if (Number(inv?.paidAmount || inv?.amount || 0) > 0) {
-      const grand = Number(inv?.amount || 0);
-      const tendered = Number(inv?.paidAmount || 0);
-      cash = Math.min(grand, tendered);
-      upi = Math.max(0, grand - cash);
+    } else {
+      if (Number(inv?.creditNoteTotal || 0) > 0) {
+        creditNote = Number(inv.creditNoteTotal);
+      }
+      const pMethod = String(inv?.paymentMode || inv?.paymentMethod || "").toUpperCase();
+      const grand = Number(inv?.amount || inv?.grandTotal || 0);
+      if (pMethod === "SPLIT") {
+        const tendered = Number(inv?.paidAmount || inv?.cashTendered || 0);
+        cash = Math.min(grand, tendered);
+        upi = Math.max(0, grand - cash - creditNote);
+      }
     }
-    return { cash, upi };
+    return { cash, upi, creditNote, advance, credit, card };
   };
 
   // Determine dynamic stats cards based on active payment filter
@@ -1344,10 +1369,17 @@ export const BillingDesktopPage = () => {
               ) : (
                 invoices.map((inv) => {
                   const split = inv.split || getSplitBreakdown(inv);
-                  const isSplit = inv.isSplit ?? (split.cash > 0 && split.upi > 0);
-                  const isSplitUnderCash = selectedPaymentType === "Cash" && isSplit;
-                  const isSplitUnderUpi = selectedPaymentType === "UPI" && isSplit;
-                  const isSplitUnderSingleFilter = isSplitUnderCash || isSplitUnderUpi;
+                  const isSplit = inv.isSplit ?? (
+                    String(inv.paymentMode || inv.paymentMethod || "").trim().toUpperCase() === "SPLIT" ||
+                    (Array.isArray(inv.payments) && inv.payments.length > 1) ||
+                    [split.cash > 0, split.upi > 0, split.creditNote > 0, split.advance > 0, split.credit > 0, split.card > 0].filter(Boolean).length > 1
+                  );
+                  const isSplitUnderCash = selectedPaymentType === "Cash" && isSplit && split.cash > 0;
+                  const isSplitUnderUpi = selectedPaymentType === "UPI" && isSplit && split.upi > 0;
+                  const isSplitUnderCreditNote = (selectedPaymentType === "CreditNote" || selectedPaymentType === "creditnote") && isSplit && split.creditNote > 0;
+                  const isSplitUnderCredit = selectedPaymentType === "Credit" && isSplit && split.credit > 0;
+                  const isSplitUnderAdvance = selectedPaymentType === "Advance" && isSplit && split.advance > 0;
+                  const isSplitUnderSingleFilter = isSplitUnderCash || isSplitUnderUpi || isSplitUnderCreditNote || isSplitUnderCredit || isSplitUnderAdvance;
 
                   return (
                     <UITableRow
@@ -1417,7 +1449,6 @@ export const BillingDesktopPage = () => {
                         <div className="flex flex-col items-end">
                           {isSplit ? (
                             selectedPaymentType === "Cash" ? (
-                              // Cash filter selected: Highlight Cash amount, Blur UPI amount
                               <div className="flex flex-col items-end">
                                 <div className="flex items-baseline gap-1.5">
                                   <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Cash:</span>
@@ -1425,15 +1456,15 @@ export const BillingDesktopPage = () => {
                                     ₹{formatCurrency(split.cash)}
                                   </span>
                                 </div>
-                                {split.upi > 0 && (
+                                {(split.upi > 0 || split.creditNote > 0 || split.advance > 0 || split.credit > 0) && (
                                   <div
-                                    className="flex items-baseline gap-1 mt-0.5 filter blur-[2px] opacity-40 select-none transition-all cursor-not-allowed"
-                                    title="UPI amount (blurred in Cash view)"
+                                    className="flex flex-col items-end gap-0.5 mt-0.5 filter blur-[2px] opacity-40 select-none transition-all cursor-not-allowed"
+                                    title="Other split amounts (blurred in Cash view)"
                                   >
-                                    <span className="text-[10px] text-text-muted">UPI:</span>
-                                    <span className="font-mono text-[11px] text-text-muted tabular-nums">
-                                      ₹{formatCurrency(split.upi)}
-                                    </span>
+                                    {split.creditNote > 0 && <span className="font-mono text-[10px] text-text-muted">CN: ₹{formatCurrency(split.creditNote)}</span>}
+                                    {split.upi > 0 && <span className="font-mono text-[10px] text-text-muted">UPI: ₹{formatCurrency(split.upi)}</span>}
+                                    {split.advance > 0 && <span className="font-mono text-[10px] text-text-muted">Adv: ₹{formatCurrency(split.advance)}</span>}
+                                    {split.credit > 0 && <span className="font-mono text-[10px] text-text-muted">Credit: ₹{formatCurrency(split.credit)}</span>}
                                   </div>
                                 )}
                                 <span className="text-[9.5px] text-text-muted/70 font-mono mt-0.5">
@@ -1441,7 +1472,6 @@ export const BillingDesktopPage = () => {
                                 </span>
                               </div>
                             ) : selectedPaymentType === "UPI" ? (
-                              // UPI filter selected: Highlight UPI amount, Blur Cash amount
                               <div className="flex flex-col items-end">
                                 <div className="flex items-baseline gap-1.5">
                                   <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">UPI:</span>
@@ -1449,15 +1479,84 @@ export const BillingDesktopPage = () => {
                                     ₹{formatCurrency(split.upi)}
                                   </span>
                                 </div>
-                                {split.cash > 0 && (
+                                {(split.cash > 0 || split.creditNote > 0 || split.advance > 0 || split.credit > 0) && (
                                   <div
-                                    className="flex items-baseline gap-1 mt-0.5 filter blur-[2px] opacity-40 select-none transition-all cursor-not-allowed"
-                                    title="Cash amount (blurred in UPI view)"
+                                    className="flex flex-col items-end gap-0.5 mt-0.5 filter blur-[2px] opacity-40 select-none transition-all cursor-not-allowed"
+                                    title="Other split amounts (blurred in UPI view)"
                                   >
-                                    <span className="text-[10px] text-text-muted">Cash:</span>
-                                    <span className="font-mono text-[11px] text-text-muted tabular-nums">
-                                      ₹{formatCurrency(split.cash)}
-                                    </span>
+                                    {split.creditNote > 0 && <span className="font-mono text-[10px] text-text-muted">CN: ₹{formatCurrency(split.creditNote)}</span>}
+                                    {split.cash > 0 && <span className="font-mono text-[10px] text-text-muted">Cash: ₹{formatCurrency(split.cash)}</span>}
+                                    {split.advance > 0 && <span className="font-mono text-[10px] text-text-muted">Adv: ₹{formatCurrency(split.advance)}</span>}
+                                    {split.credit > 0 && <span className="font-mono text-[10px] text-text-muted">Credit: ₹{formatCurrency(split.credit)}</span>}
+                                  </div>
+                                )}
+                                <span className="text-[9.5px] text-text-muted/70 font-mono mt-0.5">
+                                  Total: ₹{formatCurrency(inv.amount)}
+                                </span>
+                              </div>
+                            ) : (selectedPaymentType === "CreditNote" || selectedPaymentType === "creditnote") ? (
+                              <div className="flex flex-col items-end">
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">Credit Note:</span>
+                                  <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 tabular-nums text-sm">
+                                    ₹{formatCurrency(split.creditNote)}
+                                  </span>
+                                </div>
+                                {(split.cash > 0 || split.upi > 0 || split.advance > 0 || split.credit > 0) && (
+                                  <div
+                                    className="flex flex-col items-end gap-0.5 mt-0.5 filter blur-[2px] opacity-40 select-none transition-all cursor-not-allowed"
+                                    title="Other split amounts (blurred in Credit Note view)"
+                                  >
+                                    {split.cash > 0 && <span className="font-mono text-[10px] text-text-muted">Cash: ₹{formatCurrency(split.cash)}</span>}
+                                    {split.upi > 0 && <span className="font-mono text-[10px] text-text-muted">UPI: ₹{formatCurrency(split.upi)}</span>}
+                                    {split.advance > 0 && <span className="font-mono text-[10px] text-text-muted">Adv: ₹{formatCurrency(split.advance)}</span>}
+                                    {split.credit > 0 && <span className="font-mono text-[10px] text-text-muted">Credit: ₹{formatCurrency(split.credit)}</span>}
+                                  </div>
+                                )}
+                                <span className="text-[9.5px] text-text-muted/70 font-mono mt-0.5">
+                                  Total: ₹{formatCurrency(inv.amount)}
+                                </span>
+                              </div>
+                            ) : selectedPaymentType === "Credit" ? (
+                              <div className="flex flex-col items-end">
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Credit:</span>
+                                  <span className="font-mono font-bold text-rose-600 dark:text-rose-400 tabular-nums text-sm">
+                                    ₹{formatCurrency(split.credit)}
+                                  </span>
+                                </div>
+                                {(split.cash > 0 || split.upi > 0 || split.creditNote > 0 || split.advance > 0) && (
+                                  <div
+                                    className="flex flex-col items-end gap-0.5 mt-0.5 filter blur-[2px] opacity-40 select-none transition-all cursor-not-allowed"
+                                    title="Other split amounts (blurred in Credit view)"
+                                  >
+                                    {split.creditNote > 0 && <span className="font-mono text-[10px] text-text-muted">CN: ₹{formatCurrency(split.creditNote)}</span>}
+                                    {split.cash > 0 && <span className="font-mono text-[10px] text-text-muted">Cash: ₹{formatCurrency(split.cash)}</span>}
+                                    {split.upi > 0 && <span className="font-mono text-[10px] text-text-muted">UPI: ₹{formatCurrency(split.upi)}</span>}
+                                    {split.advance > 0 && <span className="font-mono text-[10px] text-text-muted">Adv: ₹{formatCurrency(split.advance)}</span>}
+                                  </div>
+                                )}
+                                <span className="text-[9.5px] text-text-muted/70 font-mono mt-0.5">
+                                  Total: ₹{formatCurrency(inv.amount)}
+                                </span>
+                              </div>
+                            ) : selectedPaymentType === "Advance" ? (
+                              <div className="flex flex-col items-end">
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">Advance:</span>
+                                  <span className="font-mono font-bold text-amber-600 dark:text-amber-400 tabular-nums text-sm">
+                                    ₹{formatCurrency(split.advance)}
+                                  </span>
+                                </div>
+                                {(split.cash > 0 || split.upi > 0 || split.creditNote > 0 || split.credit > 0) && (
+                                  <div
+                                    className="flex flex-col items-end gap-0.5 mt-0.5 filter blur-[2px] opacity-40 select-none transition-all cursor-not-allowed"
+                                    title="Other split amounts (blurred in Advance view)"
+                                  >
+                                    {split.creditNote > 0 && <span className="font-mono text-[10px] text-text-muted">CN: ₹{formatCurrency(split.creditNote)}</span>}
+                                    {split.cash > 0 && <span className="font-mono text-[10px] text-text-muted">Cash: ₹{formatCurrency(split.cash)}</span>}
+                                    {split.upi > 0 && <span className="font-mono text-[10px] text-text-muted">UPI: ₹{formatCurrency(split.upi)}</span>}
+                                    {split.credit > 0 && <span className="font-mono text-[10px] text-text-muted">Credit: ₹{formatCurrency(split.credit)}</span>}
                                   </div>
                                 )}
                                 <span className="text-[9.5px] text-text-muted/70 font-mono mt-0.5">
@@ -1465,12 +1564,17 @@ export const BillingDesktopPage = () => {
                                 </span>
                               </div>
                             ) : (
-                              // Standard view (All Payments / Split / Credit / Advance)
+                              // Standard view (All Payments / Split)
                               <div className="flex flex-col items-end">
                                 <span className="font-mono font-bold text-text tabular-nums text-sm">
                                   ₹{formatCurrency(inv.amount)}
                                 </span>
-                                <div className="mt-0.5 flex flex-col items-end text-[10.5px] font-mono leading-tight">
+                                <div className="mt-0.5 flex flex-col items-end text-[10.5px] font-mono leading-tight gap-0.5">
+                                  {split.creditNote > 0 && (
+                                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                      CN: ₹{formatCurrency(split.creditNote)}
+                                    </span>
+                                  )}
                                   {split.cash > 0 && (
                                     <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                                       Cash: ₹{formatCurrency(split.cash)}
@@ -1479,6 +1583,21 @@ export const BillingDesktopPage = () => {
                                   {split.upi > 0 && (
                                     <span className="font-semibold text-sky-600 dark:text-sky-400">
                                       UPI: ₹{formatCurrency(split.upi)}
+                                    </span>
+                                  )}
+                                  {split.advance > 0 && (
+                                    <span className="font-semibold text-amber-600 dark:text-amber-400">
+                                      Adv: ₹{formatCurrency(split.advance)}
+                                    </span>
+                                  )}
+                                  {split.credit > 0 && (
+                                    <span className="font-semibold text-rose-600 dark:text-rose-400">
+                                      Credit: ₹{formatCurrency(split.credit)}
+                                    </span>
+                                  )}
+                                  {split.card > 0 && (
+                                    <span className="font-semibold text-purple-600 dark:text-purple-400">
+                                      Card: ₹{formatCurrency(split.card)}
                                     </span>
                                   )}
                                 </div>
@@ -1562,3 +1681,4 @@ export const BillingDesktopPage = () => {
 };
 
 export default BillingDesktopPage;
+

@@ -1,4 +1,4 @@
-// src/features/sales/components/OrderInvoiceDocument.jsx
+﻿// src/features/sales/components/OrderInvoiceDocument.jsx
 
 import React, { useMemo } from "react";
 import { QRCodeSVG } from "qrcode.react";
@@ -620,8 +620,8 @@ export const OrderInvoiceDocument = ({
                 <span className="font-bold block text-[8px] uppercase tracking-wider text-indigo-800">Credit Notes Redeemed:</span>
                 {saleData.creditNoteAllocations.map((cna, idx) => (
                   <div key={idx} className="flex justify-between">
-                    <span>{cna.creditNoteNo || "CN"}:</span>
-                    <span className="font-bold">₹{safeNum(cna.amount).toFixed(2)}</span>
+                    <span>{cna.creditNoteNumber || cna.creditNoteNo || "CN"}:</span>
+                    <span className="font-bold">₹{safeNum(cna.amountApplied || cna.amount).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -642,3 +642,4 @@ export const OrderInvoiceDocument = ({
 };
 
 export default OrderInvoiceDocument;
+

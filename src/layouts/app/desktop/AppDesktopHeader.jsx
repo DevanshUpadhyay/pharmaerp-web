@@ -7,6 +7,7 @@ import { ChevronRight, Sparkles, Plus, Layers, Command, Settings, HelpCircle } f
 
 import { ROUTES } from "@/constants";
 import { useWorkMode } from "@/contexts";
+import { useNavigationPipeline } from "@/contexts/NavigationPipelineContext";
 import { useSetupStatus } from "@/features/setup/hooks/useSetupStatus";
 import {
   HeaderSearchBar,
@@ -665,6 +666,8 @@ export const AppDesktopHeader = ({ sidebarCollapsed, sidebarWidth = 240, onOpenS
   const location = useLocation();
   const { isSetupComplete, completedCount } = useSetupStatus();
   const { workMode, isOperationMode } = useWorkMode();
+  const { currentLevel, isWorkspaceLevel, isCompanyLevel, isBranchLevel } =
+    useNavigationPipeline();
 
   // State for Stock Matrix dialog
   const [isStockMatrixOpen, setIsStockMatrixOpen] = React.useState(false);
@@ -763,51 +766,32 @@ export const AppDesktopHeader = ({ sidebarCollapsed, sidebarWidth = 240, onOpenS
       }}
     >
       <div className="flex h-full w-full items-center px-6 gap-4">
-        {/* ── LEFT: Dynamic Page Title & Traversible Breadcrumbs ─────── */}
-        <div className="flex-1 min-w-0 shrink-0 flex flex-col justify-center py-1">
-          <div className="flex items-center gap-3">
-            <AnimatePresence mode="wait">
-              <motion.h1
-                key={pageTitle}
-                initial={{ opacity: 0, y: -2 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 2 }}
-                transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                className="truncate text-base lg:text-[16px] font-bold tracking-tight text-text leading-tight"
-              >
-                {pageTitle}
-              </motion.h1>
-            </AnimatePresence>
-            <div id="header-stats-portal" className="flex items-center"></div>
+        {/* ── LEFT: Dynamic Page Title & Stats Portal ─────── */}
+        <div className="flex-1 min-w-0 flex items-center gap-3.5">
+          <div className="flex flex-col justify-center py-1 shrink-0 min-w-0">
+            <div className="flex items-center gap-2">
+              <AnimatePresence mode="wait">
+                <motion.h1
+                  key={pageTitle}
+                  initial={{ opacity: 0, y: -2 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 2 }}
+                  transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                  className="truncate text-base lg:text-[16px] font-bold tracking-tight text-text leading-tight"
+                >
+                  {pageTitle}
+                </motion.h1>
+              </AnimatePresence>
+              <div id="header-stats-portal" className="flex items-center"></div>
+            </div>
           </div>
-
-          {/* TopBar Traversible Breadcrumb Trail */}
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[11px] text-text-muted mt-0.5 select-none">
-            {breadcrumbs.map((crumb, idx) => (
-              <React.Fragment key={idx}>
-                {idx > 0 && <ChevronRight className="size-3 text-text-muted/40 shrink-0" />}
-                {crumb.to ? (
-                  <Link
-                    to={crumb.to}
-                    className="hover:text-primary transition-colors truncate max-w-[130px] font-medium"
-                  >
-                    {crumb.label}
-                  </Link>
-                ) : (
-                  <span className="text-text font-semibold truncate max-w-[150px]">
-                    {crumb.label}
-                  </span>
-                )}
-              </React.Fragment>
-            ))}
-          </nav>
         </div>
 
-        {/* ── RIGHT: Search Bar, Import Button, Notifications, & POS Button ── */}
-        <div className="flex shrink-0 items-center justify-end gap-3 w-auto">
+        {/* ── RIGHT: Search Bar, Import Button, Notifications, & Quick Actions ── */}
+        <div className="flex shrink-0 items-center justify-end gap-2.5 sm:gap-3 w-auto">
           {/* Search Bar (kept visible on all pages) */}
           {isSetupComplete ? (
-            <div className="w-[280px] lg:w-[400px]">
+            <div className="w-[240px] lg:w-[360px]">
               <HeaderSearchBar />
             </div>
           ) : (
@@ -832,7 +816,7 @@ export const AppDesktopHeader = ({ sidebarCollapsed, sidebarWidth = 240, onOpenS
             <span>Stock Matrix</span>
           </button>
 
-          {/* Work Mode Switcher (Operation vs View) */}
+          {/* Work Mode Switcher (Contextual per Level) */}
           <HeaderWorkModeToggle />
 
           {/* Dotted Grid Quick App & Dashboard Menu */}
@@ -857,15 +841,57 @@ export const AppDesktopHeader = ({ sidebarCollapsed, sidebarWidth = 240, onOpenS
             onClose={() => setIsStockMatrixOpen(false)}
           />
 
-          {/* POS Billing Plus Button (Strictly Operation Mode) */}
-          {isOperationMode && (
+          {/* Level-Scoped Quick Actions (Operation Mode) */}
+          {isOperationMode && isBranchLevel && (
             <Link
               to="/sales"
-              className="flex items-center justify-center size-9 rounded-full bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 shadow-sm ring-2 ring-primary/20"
+              className="flex items-center justify-center size-9 rounded-full bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 shadow-sm ring-2 ring-primary/20 shrink-0"
               title="POS Billing (Alt + N)"
             >
               <Plus className="size-5 text-white dark:text-white" color="white" />
             </Link>
+          )}
+
+          {isOperationMode && isCompanyLevel && (
+            <div className="hidden lg:flex items-center gap-1.5 shrink-0">
+              <Link
+                to="/branches/create"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-xs font-semibold text-primary transition-all shadow-2xs"
+                title="Create Branch in this Company"
+              >
+                <Plus className="size-3.5" />
+                <span>Branch</span>
+              </Link>
+              <Link
+                to="/parties/customers/create"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border bg-surface hover:bg-surface-hover text-xs font-semibold text-text transition-all shadow-2xs"
+                title="Add Direct Customer"
+              >
+                <Plus className="size-3.5 text-text-muted" />
+                <span>Customer</span>
+              </Link>
+            </div>
+          )}
+
+          {isOperationMode && isWorkspaceLevel && (
+            <div className="hidden lg:flex items-center gap-1.5 shrink-0">
+              <Link
+                to="/companies/create"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-xs font-semibold text-primary transition-all shadow-2xs"
+                title="Create Company in Workspace"
+              >
+                <Plus className="size-3.5" />
+                <span>Company</span>
+              </Link>
+              <Link
+                to="/members/invite"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border bg-surface hover:bg-surface-hover text-xs font-semibold text-text transition-all shadow-2xs"
+                title="Invite Staff Member"
+              >
+                <Plus className="size-3.5 text-text-muted" />
+                <span>Invite Staff</span>
+              </Link>
+            </div>
           )}
 
         </div>

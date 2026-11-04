@@ -14,13 +14,14 @@ import { UIConfirmDialog } from "@/components/ui";
 import {
   SIDEBAR_NAV_GROUPS,
   SidebarItem,
-  SidebarCompanySelector,
+  SidebarLevelIndicator,
   SidebarUserProfile,
   SidebarScrollArea,
   SidebarContextualStatusWidget,
-  filterNavByWorkMode,
+  filterNavByPipeline,
 } from "../components/sidebar";
 import { filterNavByPermission } from "../components/sidebar/filterNavByPermission";
+import { useNavigationPipeline } from "@/contexts/NavigationPipelineContext";
 
 const SIDEBAR_EXPANDED_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 68;
@@ -43,6 +44,7 @@ const AppDesktopSidebar = ({
   const { isSetupComplete, companyCompleted, branchCompleted } = useSetupStatus();
   const { can, canAny, isOwner } = usePermission();
   const { workMode } = useWorkMode();
+  const { currentLevel } = useNavigationPipeline();
 
   // Clear timer when sidebar collapses or component unmounts
   useEffect(() => {
@@ -51,6 +53,13 @@ const AppDesktopSidebar = ({
       autoCloseTimerRef.current = null;
     }
   }, [collapsed]);
+
+  useEffect(() => {
+    if (isCompanyDropdownOpen && autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+  }, [isCompanyDropdownOpen]);
 
   useEffect(() => {
     return () => {
@@ -83,11 +92,11 @@ const AppDesktopSidebar = ({
     }, AUTO_CLOSE_DELAY_MS);
   };
 
-  // Filter nav groups by active workMode first, then by permissions, owner status, and setup completion
+  // Filter nav groups by active pipeline level and workMode first, then by permissions
   const visibleNavGroups = useMemo(() => {
-    const modeFiltered = filterNavByWorkMode(SIDEBAR_NAV_GROUPS, workMode);
+    const pipelineFiltered = filterNavByPipeline(SIDEBAR_NAV_GROUPS, currentLevel, workMode);
     return filterNavByPermission(
-      modeFiltered,
+      pipelineFiltered,
       can,
       canAny,
       isOwner,
@@ -100,6 +109,7 @@ const AppDesktopSidebar = ({
       },
     );
   }, [
+    currentLevel,
     workMode,
     can,
     canAny,
@@ -197,10 +207,9 @@ const AppDesktopSidebar = ({
             )}
           </div>
         ) : (
-          <SidebarCompanySelector
+          <SidebarLevelIndicator
             collapsed={collapsed}
             onToggleCollapse={onToggleCollapse}
-            onClose={onClose}
             onOpenChange={setIsCompanyDropdownOpen}
           />
         )}

@@ -63,7 +63,7 @@ export const CompanyTopSellingProductsCard = ({ products = [], className, isLoad
             />
           </div>
         ) : (
-          <div className="overflow-x-auto max-h-[300px] overflow-y-auto pr-1">
+          <div className="overflow-x-auto max-h-[300px] overflow-y-auto no-scrollbar">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border/60 text-text-muted font-medium sticky top-0 bg-surface">

@@ -78,7 +78,7 @@ export const BranchPurchaseReceiptsCard = ({ receipts = [], className, isLoading
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left border-collapse text-[11px]">
               <thead>
                 <tr className="border-b border-border/60 text-text-muted font-medium">
@@ -111,9 +111,9 @@ export const BranchPurchaseReceiptsCard = ({ receipts = [], className, isLoading
                         color={getStatusColor(item.status)}
                         size="xs"
                         variant="soft"
-                      >
-                        {item.status}
-                      </UIBadge>
+                        label={item.status}
+                        className="shrink-0"
+                      />
                     </td>
                   </tr>
                 ))}

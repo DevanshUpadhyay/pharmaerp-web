@@ -7,3 +7,7 @@ export { default as SidebarUserProfile } from "./SidebarUserProfile";
 export { default as SidebarScrollArea } from "./SidebarScrollArea";
 export { SidebarContextualStatusWidget } from "./SidebarContextualStatusWidget";
 export { filterNavByWorkMode } from "./filterNavByWorkMode";
+export { filterNavByPipeline } from "./filterNavByPipeline";
+export { default as SidebarLevelIndicator } from "./SidebarLevelIndicator";
+
+

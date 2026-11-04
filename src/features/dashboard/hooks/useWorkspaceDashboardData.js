@@ -6,12 +6,17 @@ import dashboardService from "../services/dashboardService";
 
 export const useWorkspaceDashboardData = (timeframe = "This Month", dateRange = null) => {
   const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace);
+  const user = useSelector((state) => state.user?.user);
 
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const workspaceId = currentWorkspace?._id;
+  const workspaceId =
+    currentWorkspace?._id ||
+    currentWorkspace?.id ||
+    user?.activeContext?.workspaceId ||
+    user?.workspaces?.[0]?._id;
 
   const normalizedTimeframe = String(timeframe || "THIS_MONTH")
     .toUpperCase()
@@ -24,7 +29,7 @@ export const useWorkspaceDashboardData = (timeframe = "This Month", dateRange = 
       const res = await dashboardService.getWorkspaceDashboard({
         timeframe: normalizedTimeframe,
         dateRange: dateRange || undefined,
-        workspaceId,
+        workspaceId: workspaceId || undefined,
       });
       setData(res);
     } catch (err) {
@@ -44,7 +49,7 @@ export const useWorkspaceDashboardData = (timeframe = "This Month", dateRange = 
         const res = await dashboardService.getWorkspaceDashboard({
           timeframe: normalizedTimeframe,
           dateRange: dateRange || undefined,
-          workspaceId,
+          workspaceId: workspaceId || undefined,
         });
         if (active) {
           setData(res);

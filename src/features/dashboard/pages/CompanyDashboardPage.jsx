@@ -26,7 +26,7 @@ export const CompanyDashboardPage = () => {
   );
 
   return (
-    <section className="min-h-[100dvh] w-full bg-bg px-3 sm:px-5 py-4 font-sans text-text">
+    <section className="min-h-[100dvh] w-full bg-bg px-3 sm:px-5 py-4 font-sans text-text dashboard-no-scrollbar">
       <div className="max-w-[1600px] mx-auto space-y-3.5">
         {/* ── 1. Header with Title, Date Range Picker & Timeframe Tabs ──── */}
         <CompanyDashboardHeader

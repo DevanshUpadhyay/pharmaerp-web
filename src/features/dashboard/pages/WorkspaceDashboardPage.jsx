@@ -1,5 +1,6 @@
 // src/features/dashboard/pages/WorkspaceDashboardPage.jsx
 
+import { useState } from "react";
 import { useWorkspaceDashboardData } from "../hooks";
 import {
   WorkspaceDashboardHeader,
@@ -12,14 +13,17 @@ import {
 } from "../components/workspace";
 
 export const WorkspaceDashboardPage = () => {
-  const { data, isLoading, refresh } = useWorkspaceDashboardData();
+  const [timeframe, setTimeframe] = useState("This Month");
+  const { data, isLoading, refresh } = useWorkspaceDashboardData(timeframe);
 
   return (
-    <section className="min-h-[100dvh] w-full bg-bg px-3 sm:px-5 py-4 font-sans text-text">
+    <section className="min-h-[100dvh] w-full bg-bg px-3 sm:px-5 py-4 font-sans text-text dashboard-no-scrollbar">
       <div className="max-w-[1600px] mx-auto space-y-4">
         {/* ── 1. Workspace Executive Header ─────────────────────────────── */}
         <WorkspaceDashboardHeader
           workspaceInfo={data?.workspaceInfo}
+          timeframe={timeframe}
+          onTimeframeChange={setTimeframe}
           onRefresh={refresh}
           isLoading={isLoading}
         />

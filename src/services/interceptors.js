@@ -22,12 +22,23 @@ export const setupInterceptors = (apiClient, store) => {
         const workspaceId =
           state.workspace?.currentWorkspace?._id ||
           state.workspace?.currentWorkspace?.id;
-        const companyId =
+        let companyId =
           state.company?.currentCompany?._id ||
           state.company?.currentCompany?.id;
-        const branchId =
+        if (!companyId) {
+          try {
+            companyId = localStorage.getItem("pahuch_active_company_id") || null;
+          } catch {}
+        }
+
+        let branchId =
           state.branch?.currentBranch?._id ||
           state.branch?.currentBranch?.id;
+        if (!branchId) {
+          try {
+            branchId = localStorage.getItem("pahuch_active_branch_id") || null;
+          } catch {}
+        }
 
         if (workspaceId) {
           config.headers["x-workspace-id"] = workspaceId;

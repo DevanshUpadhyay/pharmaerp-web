@@ -9,6 +9,7 @@ import { usePermission, FOCUS_SEARCH_EVENT } from "@/hooks";
 import { ROUTES } from "@/constants";
 import { useSetupStatus } from "@/features/setup/hooks/useSetupStatus";
 import { useWorkMode } from "@/contexts";
+import { useNavigationPipeline } from "@/contexts/NavigationPipelineContext";
 import { uiToast } from "@/components/ui";
 import { getAccessibleSearchCommands } from "./accessibleSearchCommands";
 
@@ -17,6 +18,7 @@ const HeaderSearchBar = ({ className = "" }) => {
   const { can, canAny, isOwner } = usePermission();
   const { isSetupComplete, companyCompleted } = useSetupStatus();
   const { workMode } = useWorkMode();
+  const { currentLevel } = useNavigationPipeline();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -32,10 +34,10 @@ const HeaderSearchBar = ({ className = "" }) => {
   const shortcutText = isMac ? "⌘ K" : "Ctrl + K";
 
 
-  // Compute all commands the current user is permitted to see
+  // Compute all commands the current user is permitted to see, scoped by currentLevel
   const accessibleCommands = useMemo(() => {
-    return getAccessibleSearchCommands(can, canAny, isOwner, workMode);
-  }, [can, canAny, isOwner, workMode]);
+    return getAccessibleSearchCommands(can, canAny, isOwner, workMode, currentLevel);
+  }, [can, canAny, isOwner, workMode, currentLevel]);
 
   // Tag commands with setup locked status
   const commandsWithLockStatus = useMemo(() => {

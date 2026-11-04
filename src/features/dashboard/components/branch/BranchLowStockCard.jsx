@@ -70,7 +70,7 @@ export const BranchLowStockCard = ({ items = [], className, isLoading = false })
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left border-collapse text-[11px]">
               <thead>
                 <tr className="border-b border-border/60 text-text-muted font-medium">

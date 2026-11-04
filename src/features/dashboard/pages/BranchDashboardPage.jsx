@@ -20,7 +20,7 @@ export const BranchDashboardPage = () => {
   const { data, isLoading, refresh } = useBranchDashboardData(selectedDate);
 
   return (
-    <section className="min-h-[100dvh] w-full bg-bg px-3 sm:px-5 py-4 font-sans text-text">
+    <section className="min-h-[100dvh] w-full bg-bg px-3 sm:px-5 py-4 font-sans text-text dashboard-no-scrollbar">
       <div className="max-w-[1600px] mx-auto space-y-3.5">
         {/* ── 1. Header with Branch Identity, Business Day & Date Selector ──── */}
         <BranchDashboardHeader
@@ -28,9 +28,7 @@ export const BranchDashboardPage = () => {
           selectedDate={selectedDate}
           onRefresh={refresh}
           isLoading={isLoading}
-          onDateChange={() => {
-            setSelectedDate((prev) => (prev === "Today" ? "Yesterday" : "Today"));
-          }}
+          onDateSelect={setSelectedDate}
         />
 
         {/* ── 2. Top 5 Real-Time Operational KPI Cards ───────────────────── */}

@@ -20,9 +20,11 @@ import {
   UISkeleton,
 } from "@/components/ui";
 import { ROUTES } from "@/constants";
+import { useNavigationPipeline } from "@/contexts/NavigationPipelineContext";
 
 export const WorkspaceCompaniesCard = ({ companies = [], isLoading = false, className }) => {
   const navigate = useNavigate();
+  const { enterCompany } = useNavigationPipeline();
 
   return (
     <UICard
@@ -83,7 +85,7 @@ export const WorkspaceCompaniesCard = ({ companies = [], isLoading = false, clas
             className="py-8"
           />
         ) : (
-          <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[460px] overflow-y-auto no-scrollbar">
             {companies.map((comp) => {
               const activeLicenses = [
                 comp.retailLicense && `Retail: ${comp.retailLicense}`,
@@ -102,16 +104,14 @@ export const WorkspaceCompaniesCard = ({ companies = [], isLoading = false, clas
                       <span className="text-sm font-bold text-text truncate">
                         {comp.name}
                       </span>
-                      <UIBadge variant="soft" color="purple" size="xs">
-                        {comp.code}
-                      </UIBadge>
+                      <UIBadge variant="soft" color="purple" size="xs" label={comp.code} className="shrink-0" />
                       <UIBadge
                         variant="soft"
                         color={comp.status === "ACTIVE" ? "success" : "neutral"}
                         size="xs"
-                      >
-                        {comp.status}
-                      </UIBadge>
+                        label={comp.status}
+                        className="shrink-0"
+                      />
                     </div>
 
                     {/* Legal metadata */}
@@ -175,15 +175,27 @@ export const WorkspaceCompaniesCard = ({ companies = [], isLoading = false, clas
                       </span>
                     </div>
 
-                    <UIButton
-                      variant="outline"
-                      size="xs"
-                      onClick={() => navigate(`/companies/${comp.id}`)}
-                      className="gap-1 text-xs"
-                    >
-                      <span>Manage</span>
-                      <ExternalLink className="size-3" />
-                    </UIButton>
+                    <div className="flex items-center gap-1.5">
+                      <UIButton
+                        variant="primary"
+                        size="xs"
+                        onClick={() => enterCompany({ _id: comp.id, name: comp.name })}
+                        className="gap-1 text-xs font-semibold shadow-2xs"
+                      >
+                        <span>Enter Company</span>
+                        <ArrowRight className="size-3" />
+                      </UIButton>
+
+                      <UIButton
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => navigate(`/companies/${comp.id}`)}
+                        className="gap-1 text-xs text-text-muted hover:text-text"
+                        title="Company Settings"
+                      >
+                        <ExternalLink className="size-3" />
+                      </UIButton>
+                    </div>
                   </div>
                 </div>
               );

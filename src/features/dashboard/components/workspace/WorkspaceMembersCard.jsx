@@ -83,7 +83,7 @@ export const WorkspaceMembersCard = ({ members = [], isLoading = false, classNam
             className="py-8"
           />
         ) : (
-          <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[460px] overflow-y-auto no-scrollbar">
             {members.map((m) => (
               <div
                 key={m.id}
@@ -101,21 +101,29 @@ export const WorkspaceMembersCard = ({ members = [], isLoading = false, classNam
                         {m.name}
                       </span>
                       {m.isOwner && (
-                        <UIBadge variant="soft" color="warning" size="xs" className="gap-1">
-                          <Crown className="size-2.5 fill-warning text-warning" />
-                          Owner
-                        </UIBadge>
+                        <UIBadge
+                          variant="soft"
+                          color="warning"
+                          size="xs"
+                          icon={<Crown className="size-2.5 fill-warning text-warning" />}
+                          label="Owner"
+                          className="shrink-0"
+                        />
                       )}
-                      <UIBadge variant="soft" color="primary" size="xs">
-                        {m.roleName}
-                      </UIBadge>
+                      <UIBadge
+                        variant="soft"
+                        color="primary"
+                        size="xs"
+                        label={m.roleName}
+                        className="shrink-0"
+                      />
                       <UIBadge
                         variant="soft"
                         color={m.status === "Active" ? "success" : "neutral"}
                         size="xs"
-                      >
-                        {m.status}
-                      </UIBadge>
+                        label={m.status}
+                        className="shrink-0"
+                      />
                     </div>
 
                     <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-text-muted">

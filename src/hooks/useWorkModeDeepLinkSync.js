@@ -1,7 +1,13 @@
 // src/hooks/useWorkModeDeepLinkSync.js
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useWorkMode, WORK_MODES } from "@/contexts";
+import {
+  useWorkMode,
+  WORK_MODES,
+  getPipelineDefaultRoute,
+  PIPELINE_LEVELS,
+  PIPELINE_STORAGE_KEYS,
+} from "@/contexts";
 import { ROUTES } from "@/constants";
 
 /**
@@ -45,14 +51,26 @@ export const useWorkModeDeepLinkSync = () => {
       }
     }
 
-    // 2. In Operation Mode: Disallow view dashboard routes -> Go to Sales (POS)
+    // 2. In Operation Mode: Disallow view dashboard routes -> Go to active level landing route
     if (workMode === WORK_MODES.OPERATION) {
       if (
         pathname === "/" ||
         pathname === "/dashboard" ||
         pathname.startsWith("/dashboard/")
       ) {
-        navigate(ROUTES.SALES, { replace: true });
+        let activeLevel = PIPELINE_LEVELS.WORKSPACE;
+        try {
+          const saved = localStorage.getItem(PIPELINE_STORAGE_KEYS.ACTIVE_LEVEL);
+          if (
+            saved === PIPELINE_LEVELS.WORKSPACE ||
+            saved === PIPELINE_LEVELS.COMPANY ||
+            saved === PIPELINE_LEVELS.BRANCH
+          ) {
+            activeLevel = saved;
+          }
+        } catch {}
+        const targetRoute = getPipelineDefaultRoute(activeLevel, WORK_MODES.OPERATION);
+        navigate(targetRoute, { replace: true });
         return;
       }
     }

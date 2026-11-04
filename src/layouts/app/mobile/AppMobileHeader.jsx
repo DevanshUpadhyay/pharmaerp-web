@@ -13,11 +13,13 @@ import {
 import { ROUTES } from "@/constants";
 import { usePermission } from "@/hooks";
 import { useWorkMode } from "@/contexts";
+import { useNavigationPipeline } from "@/contexts/NavigationPipelineContext";
 import { useSetupStatus } from "@/features/setup/hooks/useSetupStatus";
 import {
   HeaderNotifications,
   HeaderProfileDropdown,
   HeaderAppMenu,
+  HeaderWorkModeToggle,
 } from "@/layouts/app/components/header";
 import { getAccessibleSearchCommands } from "@/layouts/app/components/header/accessibleSearchCommands";
 import { UIIconButton } from "@/components/ui";
@@ -84,6 +86,7 @@ const AppMobileHeader = ({ onMenuClick }) => {
   const { can, canAny, isOwner } = usePermission();
   const { isSetupComplete } = useSetupStatus();
   const { workMode } = useWorkMode();
+  const { currentLevel } = useNavigationPipeline();
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,10 +94,10 @@ const AppMobileHeader = ({ onMenuClick }) => {
 
   const pageTitle = useMemo(() => getPageTitle(location.pathname), [location.pathname]);
 
-  // Compute all commands accessible to the user
+  // Compute all commands accessible to the user scoped by currentLevel
   const accessibleCommands = useMemo(() => {
-    return getAccessibleSearchCommands(can, canAny, isOwner, workMode);
-  }, [can, canAny, isOwner, workMode]);
+    return getAccessibleSearchCommands(can, canAny, isOwner, workMode, currentLevel);
+  }, [can, canAny, isOwner, workMode, currentLevel]);
 
   useEffect(() => {
     if (searchOpen) {
@@ -179,8 +182,12 @@ const AppMobileHeader = ({ onMenuClick }) => {
           </AnimatePresence>
         </div>
 
-        {/* Right: Search, App Menu, Notifications, Profile */}
+        {/* Right: Work Mode, App Menu, Search, Notifications, Profile */}
         <div className="flex shrink-0 items-center gap-1.5">
+          {workMode && (
+            <HeaderWorkModeToggle />
+          )}
+
           <HeaderAppMenu />
 
           {isSetupComplete && (

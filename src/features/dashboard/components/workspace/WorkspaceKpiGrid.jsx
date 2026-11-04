@@ -1,5 +1,6 @@
 // src/features/dashboard/components/workspace/WorkspaceKpiGrid.jsx
 
+import React from "react";
 import {
   Building2,
   Store,
@@ -8,9 +9,13 @@ import {
   Layers,
   Sparkles,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { UIStatCard } from "@/components/ui";
+import { ROUTES } from "@/constants";
 
 export const WorkspaceKpiGrid = ({ kpis, isLoading = false }) => {
+  const navigate = useNavigate();
+
   const totalCompanies = kpis?.totalCompanies ?? 0;
   const totalBranches = kpis?.totalBranches ?? 0;
   const totalStaff = kpis?.totalStaff ?? 0;
@@ -24,7 +29,7 @@ export const WorkspaceKpiGrid = ({ kpis, isLoading = false }) => {
       subtitle: "Corporate legal entities",
       icon: Building2,
       color: "purple",
-      valueClassName: "text-base sm:text-lg font-bold font-mono tracking-tight text-text tabular-nums whitespace-nowrap",
+      route: ROUTES.COMPANIES || "/companies",
     },
     {
       id: "branches",
@@ -32,8 +37,8 @@ export const WorkspaceKpiGrid = ({ kpis, isLoading = false }) => {
       value: `${totalBranches} ${totalBranches === 1 ? "Branch" : "Branches"}`,
       subtitle: "Operating dispensaries",
       icon: Store,
-      color: "primary",
-      valueClassName: "text-base sm:text-lg font-bold font-mono tracking-tight text-text tabular-nums whitespace-nowrap",
+      color: "teal",
+      route: ROUTES.BRANCHES || "/branches",
     },
     {
       id: "staff",
@@ -41,8 +46,8 @@ export const WorkspaceKpiGrid = ({ kpis, isLoading = false }) => {
       value: `${totalStaff} ${totalStaff === 1 ? "Member" : "Members"}`,
       subtitle: "Assigned staff team",
       icon: Users,
-      color: "info",
-      valueClassName: "text-base sm:text-lg font-bold font-mono tracking-tight text-text tabular-nums whitespace-nowrap",
+      color: "blue",
+      route: ROUTES.USERS || "/workspace/users",
     },
     {
       id: "roles",
@@ -51,7 +56,7 @@ export const WorkspaceKpiGrid = ({ kpis, isLoading = false }) => {
       subtitle: "RBAC security roles",
       icon: ShieldCheck,
       color: "warning",
-      valueClassName: "text-base sm:text-lg font-bold font-mono tracking-tight text-text tabular-nums whitespace-nowrap",
+      route: ROUTES.ROLES || "/workspace/roles",
     },
     {
       id: "plan-tier",
@@ -59,37 +64,36 @@ export const WorkspaceKpiGrid = ({ kpis, isLoading = false }) => {
       value: kpis?.planName || "Enterprise Plan",
       subtitle: `${kpis?.planTier || "PRO"} Tier active`,
       icon: Layers,
-      color: "purple",
-      valueClassName: "text-sm sm:text-base font-bold font-mono tracking-tight text-text truncate whitespace-nowrap",
+      color: "primary",
+      route: ROUTES.SUBSCRIPTIONS || "/workspace/subscription",
     },
     {
       id: "plan-validity",
       title: "Plan Validity",
       value: `${kpis?.daysLeft ?? 365} Days`,
-      subtitle: `Valid till ${kpis?.validTill || "Continuous"}`,
+      subtitle: `Till ${kpis?.validTill || "Continuous"}`,
       icon: Sparkles,
       color: "success",
-      valueClassName: "text-base sm:text-lg font-bold font-mono tracking-tight text-emerald-700 dark:text-emerald-400 tabular-nums whitespace-nowrap",
+      route: ROUTES.SUBSCRIPTIONS || "/workspace/subscription",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3.5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-3.5">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
           <UIStatCard
             key={card.id}
             title={card.title}
-            prefix={card.prefix}
             value={card.value}
             subtitle={card.subtitle}
-            icon={<Icon className="size-5" />}
+            icon={<Icon />}
             color={card.color}
-            valueClassName={card.valueClassName}
+            density="compact"
+            variant="interactive"
             isLoading={isLoading}
-            variant="default"
-            className="p-3.5 sm:p-4 rounded-xl border border-border bg-surface shadow-2xs hover:border-border/80 transition-all"
+            onClick={() => card.route && navigate(card.route)}
           />
         );
       })}

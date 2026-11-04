@@ -70,7 +70,7 @@ export const BranchNearExpiryCard = ({ items = [], className, isLoading = false 
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left border-collapse text-[11px]">
               <thead>
                 <tr className="border-b border-border/60 text-text-muted font-medium">
@@ -98,12 +98,12 @@ export const BranchNearExpiryCard = ({ items = [], className, isLoading = false 
                       </td>
                       <td className="py-2 px-2 text-center whitespace-nowrap">
                         <UIBadge
-                          color={isExpired ? "danger" : "warning"}
+                          color={isExpired ? "error" : "warning"}
                           size="xs"
                           variant="soft"
-                        >
-                          {isExpired ? "Expired" : `${item.daysLeft}d left`}
-                        </UIBadge>
+                          label={isExpired ? "Expired" : `${item.daysLeft}d left`}
+                          className="shrink-0"
+                        />
                       </td>
                       <td className="py-2 px-2 text-right font-mono font-medium text-text tabular-nums">
                         {item.stock}

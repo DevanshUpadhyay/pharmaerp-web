@@ -16,12 +16,13 @@ import { UIConfirmDialog } from "@/components/ui";
 import {
   SIDEBAR_NAV_GROUPS,
   SidebarItem,
-  SidebarCompanySelector,
+  SidebarLevelIndicator,
   SidebarUserProfile,
   SidebarScrollArea,
-  filterNavByWorkMode,
+  filterNavByPipeline,
 } from "../components/sidebar";
 import { filterNavByPermission } from "../components/sidebar/filterNavByPermission";
+import { useNavigationPipeline } from "@/contexts/NavigationPipelineContext";
 
 const AppMobileSidebar = ({ open, onClose }) => {
   const navigate = useNavigate();
@@ -34,12 +35,13 @@ const AppMobileSidebar = ({ open, onClose }) => {
   const { isSetupComplete, companyCompleted, branchCompleted } = useSetupStatus();
   const { can, canAny, isOwner } = usePermission();
   const { workMode } = useWorkMode();
+  const { currentLevel } = useNavigationPipeline();
 
-  // Filter nav groups by active workMode first, then by permissions, owner status, and setup completion
+  // Filter nav groups by active pipeline level and workMode first, then by permissions
   const visibleNavGroups = useMemo(() => {
-    const modeFiltered = filterNavByWorkMode(SIDEBAR_NAV_GROUPS, workMode);
+    const pipelineFiltered = filterNavByPipeline(SIDEBAR_NAV_GROUPS, currentLevel, workMode);
     return filterNavByPermission(
-      modeFiltered,
+      pipelineFiltered,
       can,
       canAny,
       isOwner,
@@ -52,6 +54,7 @@ const AppMobileSidebar = ({ open, onClose }) => {
       },
     );
   }, [
+    currentLevel,
     workMode,
     can,
     canAny,
@@ -146,10 +149,11 @@ const AppMobileSidebar = ({ open, onClose }) => {
             )}
           </div>
         ) : (
-          <SidebarCompanySelector
+          <SidebarLevelIndicator
             collapsed={false}
-            onClose={onClose}
+            onToggleCollapse={onClose}
             showClose={true}
+            onClose={onClose}
           />
         )}
 

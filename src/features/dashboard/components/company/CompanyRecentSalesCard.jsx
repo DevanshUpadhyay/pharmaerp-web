@@ -80,7 +80,7 @@ export const CompanyRecentSalesCard = ({ sales = [], className, isLoading = fals
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border/60 text-text-muted font-medium">
@@ -113,9 +113,7 @@ export const CompanyRecentSalesCard = ({ sales = [], className, isLoading = fals
                       ₹ {(Number(item.amount) || 0).toLocaleString("en-IN")}
                     </td>
                     <td className="py-2 px-2 text-center whitespace-nowrap">
-                      <UIBadge color={getPaymentColor(item.payment)} size="xs" variant="soft">
-                        {item.payment}
-                      </UIBadge>
+                      <UIBadge color={getPaymentColor(item.payment)} size="xs" variant="soft" label={item.payment} className="shrink-0" />
                     </td>
                   </tr>
                 ))}

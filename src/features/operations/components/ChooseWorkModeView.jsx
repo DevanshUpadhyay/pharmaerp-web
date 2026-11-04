@@ -1,387 +1,196 @@
+// src/features/operations/components/ChooseWorkModeView.jsx
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  BarChart3,
-  LayoutGrid,
-  Layers,
-  Building2,
-  Store,
-  ChevronRight,
-  CheckCircle2,
-  ArrowRight,
-  ShoppingCart,
-  Package,
-  Boxes,
-  Users,
-  Truck,
-  IndianRupee,
-  FileCheck2,
-  Calculator,
-  Settings,
-  Eye,
-  Zap,
-} from "lucide-react";
+import { Eye, Zap, BarChart3, ArrowRight, LayoutGrid } from "lucide-react";
 
-import { ROUTES } from "@/constants";
 import { useWorkMode, WORK_MODES } from "@/contexts";
-import useAuth from "@/features/auth/hooks/useAuth";
-import { UIButton, UIBadge } from "@/components/ui";
-import PharmacyStorefrontIllustration from "@/components/PharmacyStorefrontIllustration";
+import {
+  useNavigationPipeline,
+  getPipelineDefaultRoute,
+  PIPELINE_LEVELS,
+} from "@/contexts/NavigationPipelineContext";
 
-export const ChooseWorkModeView = ({ onSelectMode, isModal = false, showHeader = false }) => {
+export const ChooseWorkModeView = ({ onSelectMode, isModal = false }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { setWorkMode } = useWorkMode();
+  const pipeline = useNavigationPipeline();
+  const currentLevel = pipeline?.currentLevel || PIPELINE_LEVELS.WORKSPACE;
 
   const handleSelect = (mode) => {
+    const isOp = mode === WORK_MODES.OPERATION;
+    const modeName = isOp ? "Operation Mode" : "View Mode";
+    const modeType = isOp ? "mode-operation" : "mode-view";
+
+    // Trigger centered loading transition card
+    if (pipeline?.triggerTransition) {
+      pipeline.triggerTransition({
+        type: modeType,
+        title: `Entering ${modeName}`,
+        fromName: "Work Mode",
+        toName: modeName,
+        duration: 750,
+      });
+    }
+
+    if (pipeline?.setLevel) {
+      pipeline.setLevel(currentLevel);
+    }
+
     setWorkMode(mode, true);
+    const targetRoute = getPipelineDefaultRoute(currentLevel, mode);
+    navigate(targetRoute, { replace: true });
+
     if (onSelectMode) {
       onSelectMode(mode);
-    } else {
-      if (mode === WORK_MODES.VIEW) {
-        navigate(ROUTES.DASHBOARD, { replace: true });
-      } else {
-        navigate(ROUTES.SALES, { replace: true });
-      }
     }
   };
 
-  const userInitials = user?.fullName
-    ? user.fullName
-        .split(" ")
-        .map((n) => n[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "DU";
-
-  const userRole = user?.role?.name || user?.role || "Super Admin";
-
-  const operationalModules = [
-    { label: "Sales & Billing", icon: ShoppingCart },
-    { label: "Purchase", icon: Package },
-    { label: "Inventory", icon: Boxes },
-    { label: "Customers", icon: Users },
-    { label: "Suppliers", icon: Truck },
-    { label: "Payments", icon: IndianRupee },
-    { label: "GST & Compliance", icon: FileCheck2 },
-    { label: "Accounting", icon: Calculator },
-    { label: "Reports", icon: BarChart3 },
-    { label: "Settings", icon: Settings },
-  ];
-
   return (
     <div
-      className={`relative flex min-h-screen w-full flex-col items-center justify-between overflow-x-hidden bg-bg px-4 sm:px-6 lg:px-8 py-6 selection:bg-primary-soft selection:text-primary ${
-        isModal ? "min-h-auto py-2" : ""
+      className={`relative flex w-full flex-1 flex-col items-center justify-center p-4 sm:p-6 select-none ${
+        isModal ? "py-2" : "min-h-full"
       }`}
     >
-      {/* Background ambient lighting blobs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-32 -left-32 size-96 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute top-1/4 -right-32 size-96 rounded-full bg-purple-500/10 blur-3xl" />
-        <div className="absolute -bottom-32 left-1/3 size-96 rounded-full bg-primary/10 blur-3xl" />
-      </div>
+      {/* ── Page Title ─────────────────────────────────────────────────── */}
+      <h1 className="text-2xl sm:text-[26px] font-extrabold tracking-tight text-text text-center mb-6 sm:mb-8">
+        Choose how you want to work
+      </h1>
 
-      {/* ── Top Bar / Header (Only when standalone) ──────────────────── */}
-      {showHeader && (
-        <header className="relative z-10 flex w-full max-w-6xl items-center justify-between pb-4">
-          {/* Brand Logo & Subtitle */}
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7.5V16.5L12 22L22 16.5V7.5L12 2ZM13 7V11H17V13H13V17H11V13H7V11H11V7H13Z" />
+      {/* ── Two Compact Gatekeeper Cards ───────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 w-full max-w-3xl items-stretch justify-center mt-6">
+        {/* ═══════════ CARD 1: VIEW MODE ═══════════ */}
+        <div className="w-full bg-surface rounded-[28px] border border-border shadow-[var(--app-shadow-xl)] p-6 sm:p-7 text-center flex flex-col justify-between space-y-4.5 animate-in fade-in zoom-in-95 duration-200 transition-all hover:shadow-[var(--app-shadow-2xl)] hover:border-border-strong">
+          {/* Top Illustration: Soft Emerald Cloud + BarChart3 + Eye Badge */}
+          <div className="space-y-4">
+            <div className="relative w-32 h-24 mx-auto flex items-center justify-center">
+              {/* Soft Emerald Cloud Background */}
+              <svg
+                viewBox="0 0 150 100"
+                className="absolute inset-0 w-full h-full text-emerald-500/10 dark:text-emerald-400/15"
+                fill="currentColor"
+              >
+                <path d="M 35 70 C 18 70 12 56 18 44 C 24 32 36 30 44 34 C 50 18 68 12 84 18 C 100 24 104 38 102 48 C 114 46 128 54 130 66 C 132 78 122 86 110 86 L 40 86 C 26 86 24 70 35 70 Z" />
               </svg>
+
+              {/* Center Emblem Box */}
+              <div className="relative z-10">
+                <div className="w-16 h-14 rounded-xl border-2 border-emerald-500/40 dark:border-emerald-400/50 bg-surface shadow-xs overflow-hidden flex flex-col items-center justify-center">
+                  <div className="bg-emerald-500 h-3.5 w-full flex items-center justify-around px-2 shrink-0" />
+                  <div className="flex-1 flex items-center justify-center">
+                    <BarChart3 className="size-6 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                </div>
+
+                {/* Overlapping Badge */}
+                <div className="absolute -bottom-1.5 -right-1.5 size-6 rounded-full bg-emerald-600 text-white flex items-center justify-center ring-2 ring-surface shadow-xs">
+                  <Eye className="size-3.5 stroke-[2.5]" />
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-base font-extrabold tracking-tight text-text leading-tight">
-                Pahuch <span className="text-primary font-bold">ERP</span>
+
+            {/* Title & Subtitle */}
+            <div className="space-y-1">
+              <h2 className="text-[20px] sm:text-[21px] font-bold text-text tracking-tight">
+                View Mode
+              </h2>
+              <p className="text-[12.5px] text-text-muted leading-relaxed max-w-[280px] mx-auto">
+                Review performance insights, executive dashboards, and
+                multi-level reports across your business.
+              </p>
+            </div>
+
+            {/* Info Callout Box */}
+            <div className="bg-surface-alt border border-border rounded-2xl p-3 flex items-start gap-2.5 text-left">
+              <div className="size-8 rounded-xl bg-surface text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs border border-border mt-0.5">
+                <Eye className="size-4 stroke-[2]" />
               </div>
-              <div className="text-[11px] font-medium text-text-muted leading-tight">
-                Pharmacy Management System
-              </div>
+              <p className="text-[12px] text-text leading-snug">
+                Pure visibility across workspace, company, and branch levels
+                without modifying operational data.
+              </p>
             </div>
           </div>
 
-          {/* User Profile Pill */}
-          {user && (
-            <div className="flex items-center gap-2.5 rounded-full border border-border bg-surface/80 backdrop-blur-md px-3 py-1.5 shadow-2xs">
-              <div className="flex size-7 items-center justify-center rounded-full bg-surface-alt border border-border text-xs font-bold text-text">
-                {userInitials}
-              </div>
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-bold text-text leading-tight">
-                  {user.fullName || "User"}
-                </span>
-                <span className="text-[10px] font-medium text-text-muted leading-tight capitalize">
-                  {typeof userRole === "string" ? userRole.replace(/[-_]/g, " ") : "Member"}
-                </span>
-              </div>
-            </div>
-          )}
-        </header>
-      )}
-
-      {/* ── Main Content Area ───────────────────────────────────────────── */}
-      <main className="relative z-10 flex w-full max-w-6xl flex-1 flex-col items-center justify-center py-4 sm:py-6">
-        {/* Welcome Back Pill */}
-        <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-          className="mb-3"
-        >
-          <UIBadge
-            variant="soft"
-            color="neutral"
-            size="md"
-            rounded="full"
-            className="border-border bg-surface/90 shadow-2xs font-medium text-xs px-3.5 py-1"
+          {/* Primary Action Button */}
+          <button
+            type="button"
+            onClick={() => handleSelect(WORK_MODES.VIEW)}
+            className="w-full mt-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-bold text-sm shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
           >
-            👋 Welcome Back
-          </UIBadge>
-        </motion.div>
-
-        {/* Headline & Subhead */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.05 }}
-          className="text-center max-w-2xl mb-8"
-        >
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-text leading-tight">
-            Choose how you want to{" "}
-            <span className="text-emerald-500 dark:text-emerald-400">work today</span>
-          </h1>
-          <p className="mt-2 text-sm text-text-muted leading-relaxed">
-            Access insights across your business or run day-to-day pharmacy operations.
-          </p>
-        </motion.div>
-
-        {/* ── The Two Cards: View Mode vs Operation Mode ─────────────────── */}
-        <div className="grid w-full grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
-          {/* ═══════════ CARD 1: VIEW MODE (INSIGHTS) ═══════════ */}
-          <motion.div
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: 0.1 }}
-            className="group relative flex flex-col justify-between rounded-2xl border-2 border-emerald-500/30 hover:border-emerald-500/70 bg-surface/85 backdrop-blur-md p-6 sm:p-7 shadow-lg shadow-emerald-500/5 hover:shadow-emerald-500/15 transition-all duration-300"
-          >
-            {/* Top Row: Icon, Title & Badge */}
-            <div>
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="flex size-13 items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 shadow-inner group-hover:scale-105 transition-transform duration-200">
-                    <BarChart3 className="size-6 text-emerald-500" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold tracking-tight text-text">
-                      View Mode
-                    </h2>
-                    <p className="text-xs text-text-muted mt-0.5 line-clamp-2">
-                      Monitor performance and get a consolidated view of your business across workspace, company, and branches.
-                    </p>
-                  </div>
-                </div>
-
-                <UIBadge
-                  variant="soft"
-                  color="success"
-                  size="sm"
-                  rounded="full"
-                  className="shrink-0 flex items-center gap-1.5 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
-                >
-                  <Eye className="size-3" />
-                  <span>Insights & Monitoring</span>
-                </UIBadge>
-              </div>
-
-              {/* Hierarchy Stepper Box: Workspace -> Company -> Branch */}
-              <div className="my-5 rounded-xl border border-border bg-surface-alt/60 p-4">
-                <div className="grid grid-cols-3 items-center text-center gap-2">
-                  {/* Step 1 */}
-                  <div className="flex flex-col items-center">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-surface border border-border text-text shadow-2xs mb-1.5">
-                      <Layers className="size-4 text-emerald-500" />
-                    </div>
-                    <span className="text-xs font-bold text-text truncate max-w-full">
-                      Workspace Level
-                    </span>
-                    <span className="text-[10px] text-text-muted truncate max-w-full">
-                      Overall business view
-                    </span>
-                  </div>
-
-                  {/* Arrow 1 */}
-                  <div className="flex justify-center -mt-3">
-                    <ChevronRight className="size-4 text-text-muted/60" />
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className="flex flex-col items-center">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-surface border border-border text-text shadow-2xs mb-1.5">
-                      <Building2 className="size-4 text-emerald-500" />
-                    </div>
-                    <span className="text-xs font-bold text-text truncate max-w-full">
-                      Company Level
-                    </span>
-                    <span className="text-[10px] text-text-muted truncate max-w-full">
-                      Select & view company
-                    </span>
-                  </div>
-
-                  {/* Arrow 2 */}
-                  <div className="flex justify-center -mt-3">
-                    <ChevronRight className="size-4 text-text-muted/60" />
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="flex flex-col items-center">
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-surface border border-border text-text shadow-2xs mb-1.5">
-                      <Store className="size-4 text-emerald-500" />
-                    </div>
-                    <span className="text-xs font-bold text-text truncate max-w-full">
-                      Branch Level
-                    </span>
-                    <span className="text-[10px] text-text-muted truncate max-w-full">
-                      Select & view branch
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pillars / Bullet List */}
-              <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs font-medium text-text-muted py-2">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                  <span>Multi-level Dashboards</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                  <span>Consolidated Reports</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                  <span>Performance Insights</span>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <div className="mt-6 pt-2">
-              <UIButton
-                variant="primary"
-                size="lg"
-                endIcon={<ArrowRight className="size-4" />}
-                onClick={() => handleSelect(WORK_MODES.VIEW)}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md shadow-emerald-600/25 border-emerald-500/40 rounded-xl"
-              >
-                Continue in View Mode
-              </UIButton>
-            </div>
-          </motion.div>
-
-          {/* ═══════════ CARD 2: OPERATION MODE (DAY-TO-DAY) ═══════════ */}
-          <motion.div
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: 0.1 }}
-            className="group relative flex flex-col justify-between rounded-2xl border-2 border-purple-500/30 hover:border-purple-500/70 bg-surface/85 backdrop-blur-md p-6 sm:p-7 shadow-lg shadow-purple-500/5 hover:shadow-purple-500/15 transition-all duration-300"
-          >
-            {/* Top Row: Icon, Title & Badge */}
-            <div>
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="flex size-13 items-center justify-center rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-500 shadow-inner group-hover:scale-105 transition-transform duration-200">
-                    <LayoutGrid className="size-6 text-purple-500" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold tracking-tight text-text">
-                      Operation Mode
-                    </h2>
-                    <p className="text-xs text-text-muted mt-0.5 line-clamp-2">
-                      Run daily pharmacy operations like sales, purchase, inventory, billing, and more.
-                    </p>
-                  </div>
-                </div>
-
-                <UIBadge
-                  variant="soft"
-                  color="purple"
-                  size="sm"
-                  rounded="full"
-                  className="shrink-0 flex items-center gap-1.5 border-purple-500/30 text-purple-600 dark:text-purple-400 bg-purple-500/10"
-                >
-                  <Zap className="size-3" />
-                  <span>Day-to-Day Operations</span>
-                </UIBadge>
-              </div>
-
-              {/* 10-Module Interactive Matrix */}
-              <div className="my-5 rounded-xl border border-border bg-surface-alt/60 p-3">
-                <div className="grid grid-cols-5 gap-2">
-                  {operationalModules.map((item, idx) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <div
-                        key={idx}
-                        className="flex flex-col items-center justify-center rounded-lg border border-border/80 bg-surface/80 p-2 text-center shadow-2xs group/tile hover:border-purple-500/40 hover:bg-surface transition-all"
-                      >
-                        <div className="flex size-7 items-center justify-center rounded-md bg-purple-500/10 text-purple-500 mb-1 group-hover/tile:scale-110 transition-transform">
-                          <IconComponent className="size-3.5" />
-                        </div>
-                        <span className="text-[10px] font-semibold text-text truncate max-w-full leading-tight">
-                          {item.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Pillars / Bullet List */}
-              <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs font-medium text-text-muted py-2">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="size-4 text-purple-500 shrink-0" />
-                  <span>Complete ERP Operations</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="size-4 text-purple-500 shrink-0" />
-                  <span>Real-time Inventory</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="size-4 text-purple-500 shrink-0" />
-                  <span>Billing & GST Ready</span>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <div className="mt-6 pt-2">
-              <UIButton
-                variant="primary"
-                size="lg"
-                endIcon={<ArrowRight className="size-4" />}
-                onClick={() => handleSelect(WORK_MODES.OPERATION)}
-                className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-md shadow-purple-600/25 border-purple-500/40 rounded-xl"
-              >
-                Continue in Operation Mode
-              </UIButton>
-            </div>
-          </motion.div>
+            <Eye className="size-4 stroke-[2]" />
+            <span>Open View Mode</span>
+            <ArrowRight className="size-4 ml-0.5 opacity-80" />
+          </button>
         </div>
-      </main>
 
-      {/* ── Footer Storefront Illustration ─────────────────────────────── */}
-      {!isModal && (
-        <footer className="relative z-10 w-full max-w-4xl pt-4 pb-2">
-          <PharmacyStorefrontIllustration />
-        </footer>
-      )}
+        {/* ═══════════ CARD 2: OPERATION MODE ═══════════ */}
+        <div className="w-full bg-surface rounded-[28px] border border-border shadow-[var(--app-shadow-xl)] p-6 sm:p-7 text-center flex flex-col justify-between space-y-4.5 animate-in fade-in zoom-in-95 duration-200 transition-all hover:shadow-[var(--app-shadow-2xl)] hover:border-border-strong">
+          {/* Top Illustration: Soft Purple Cloud + LayoutGrid + Zap Badge */}
+          <div className="space-y-4">
+            <div className="relative w-32 h-24 mx-auto flex items-center justify-center">
+              {/* Soft Purple Cloud Background */}
+              <svg
+                viewBox="0 0 150 100"
+                className="absolute inset-0 w-full h-full text-purple-500/10 dark:text-purple-400/15"
+                fill="currentColor"
+              >
+                <path d="M 35 70 C 18 70 12 56 18 44 C 24 32 36 30 44 34 C 50 18 68 12 84 18 C 100 24 104 38 102 48 C 114 46 128 54 130 66 C 132 78 122 86 110 86 L 40 86 C 26 86 24 70 35 70 Z" />
+              </svg>
+
+              {/* Center Emblem Box */}
+              <div className="relative z-10">
+                <div className="w-16 h-14 rounded-xl border-2 border-purple-500/40 dark:border-purple-400/50 bg-surface shadow-xs overflow-hidden flex flex-col items-center justify-center">
+                  <div className="bg-purple-600 h-3.5 w-full flex items-center justify-around px-2 shrink-0" />
+                  <div className="flex-1 flex items-center justify-center">
+                    <LayoutGrid className="size-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                </div>
+
+                {/* Overlapping Badge */}
+                <div className="absolute -bottom-1.5 -right-1.5 size-6 rounded-full bg-purple-600 text-white flex items-center justify-center ring-2 ring-surface shadow-xs">
+                  <Zap className="size-3.5 fill-current" />
+                </div>
+              </div>
+            </div>
+
+            {/* Title & Subtitle */}
+            <div className="space-y-1">
+              <h2 className="text-[20px] sm:text-[21px] font-bold text-text tracking-tight">
+                Operation Mode
+              </h2>
+              <p className="text-[12.5px] text-text-muted leading-relaxed max-w-[280px] mx-auto">
+                Execute daily counter sales, cashier shifts, purchase bills,
+                inventory, and party ledgers.
+              </p>
+            </div>
+
+            {/* Info Callout Box */}
+            <div className="bg-surface-alt border border-border rounded-2xl p-3 flex items-start gap-2.5 text-left">
+              <div className="size-8 rounded-xl bg-surface text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs border border-border mt-0.5">
+                <Zap className="size-4 stroke-[2]" />
+              </div>
+              <p className="text-[12px] text-text leading-snug">
+                Fast-paced daily workflow for billing operators, cashiers, and
+                store managers.
+              </p>
+            </div>
+          </div>
+
+          {/* Primary Action Button */}
+          <button
+            type="button"
+            onClick={() => handleSelect(WORK_MODES.OPERATION)}
+            className="w-full mt-2 py-3 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 active:scale-[0.99] text-white font-bold text-sm shadow-md shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+          >
+            <Zap className="size-4 stroke-[2]" />
+            <span>Open Operation Mode</span>
+            <ArrowRight className="size-4 ml-0.5 opacity-80" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default ChooseWorkModeView;
-

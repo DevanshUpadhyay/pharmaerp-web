@@ -73,7 +73,7 @@ export const WorkspaceRolesCard = ({ roles = [], isLoading = false, className })
             className="py-8"
           />
         ) : (
-          <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[460px] overflow-y-auto no-scrollbar">
             {roles.map((r) => (
               <div
                 key={r.id}
@@ -89,12 +89,10 @@ export const WorkspaceRolesCard = ({ roles = [], isLoading = false, className })
                       variant="soft"
                       color={r.isSystem ? "neutral" : "primary"}
                       size="xs"
-                    >
-                      {r.isSystem ? "System Role" : "Custom Role"}
-                    </UIBadge>
-                    <UIBadge variant="outline" color="neutral" size="xs">
-                      {r.code}
-                    </UIBadge>
+                      label={r.isSystem ? "System Role" : "Custom Role"}
+                      className="shrink-0"
+                    />
+                    <UIBadge variant="outline" color="neutral" size="xs" label={r.code} className="shrink-0" />
                   </div>
 
                   <p className="text-xs text-text-muted line-clamp-1">

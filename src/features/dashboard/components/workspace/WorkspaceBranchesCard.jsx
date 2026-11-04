@@ -81,7 +81,7 @@ export const WorkspaceBranchesCard = ({ branches = [], isLoading = false, classN
             className="py-8"
           />
         ) : (
-          <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[460px] overflow-y-auto no-scrollbar">
             {branches.map((b) => (
               <div
                 key={b.id}
@@ -93,19 +93,15 @@ export const WorkspaceBranchesCard = ({ branches = [], isLoading = false, classN
                     <span className="text-sm font-bold text-text truncate">
                       {b.name}
                     </span>
-                    <UIBadge variant="outline" color="neutral" size="xs">
-                      {b.code}
-                    </UIBadge>
-                    <UIBadge variant="soft" color="purple" size="xs">
-                      {b.companyName}
-                    </UIBadge>
+                    <UIBadge variant="outline" color="neutral" size="xs" label={b.code} className="shrink-0" />
+                    <UIBadge variant="soft" color="purple" size="xs" label={b.companyName} className="shrink-0" />
                     <UIBadge
                       variant="soft"
                       color={b.status === "ACTIVE" ? "success" : "neutral"}
                       size="xs"
-                    >
-                      {b.status}
-                    </UIBadge>
+                      label={b.status}
+                      className="shrink-0"
+                    />
                   </div>
 
                   {/* Branch metadata */}

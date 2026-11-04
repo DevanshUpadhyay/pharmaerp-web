@@ -84,7 +84,7 @@ export const BranchRecentSalesCard = ({ sales = [], className, isLoading = false
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left border-collapse text-[11px]">
               <thead>
                 <tr className="border-b border-border/60 text-text-muted font-medium">
@@ -117,9 +117,9 @@ export const BranchRecentSalesCard = ({ sales = [], className, isLoading = false
                         color={getPaymentColor(item.payment)}
                         size="xs"
                         variant="soft"
-                      >
-                        {item.payment}
-                      </UIBadge>
+                        label={item.payment}
+                        className="shrink-0"
+                      />
                     </td>
                   </tr>
                 ))}

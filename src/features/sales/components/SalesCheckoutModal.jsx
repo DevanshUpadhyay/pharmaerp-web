@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Banknote,
   QrCode,
-  CreditCard,
   Wallet,
   CheckCircle2,
   AlertCircle,
@@ -118,7 +117,6 @@ const PAYMENT_TYPE_OPTIONS = [
   { value: "Credit", label: "Credit (Pay Later)", icon: <Receipt className="size-4 text-rose-600" /> },
   { value: "Advance", label: "Advance Deposit", icon: <Wallet className="size-4 text-amber-600" /> },
   { value: "CreditNote", label: "Credit Note", icon: <Receipt className="size-4 text-indigo-600" /> },
-  { value: "Card", label: "Card", icon: <CreditCard className="size-4 text-blue-600" /> },
 ];
 
 export const SalesCheckoutModal = ({
@@ -699,7 +697,7 @@ export const SalesCheckoutModal = ({
 
     if (isWalkIn) {
       const hasDisallowed = payments.some((p) =>
-        ["Credit", "Advance", "CreditNote", "Card"].includes(p.paymentType)
+        ["Credit", "Advance", "CreditNote"].includes(p.paymentType)
       );
       if (hasDisallowed) {
         setErrorMessage(

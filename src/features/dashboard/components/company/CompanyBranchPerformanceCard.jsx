@@ -5,9 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { UICard, UIEmptyState, UISkeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/constants";
+import { useNavigationPipeline } from "@/contexts/NavigationPipelineContext";
 
 export const CompanyBranchPerformanceCard = ({ branches = [], className, isLoading = false }) => {
   const navigate = useNavigate();
+  const { enterBranch } = useNavigationPipeline();
 
   if (isLoading) {
     return (
@@ -74,6 +76,7 @@ export const CompanyBranchPerformanceCard = ({ branches = [], className, isLoadi
                   <th className="py-2 px-2 text-right">Sales</th>
                   <th className="py-2 px-2 text-right">Est. Profit</th>
                   <th className="py-2 px-2 text-right">Growth</th>
+                  <th className="py-2 px-2 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -85,14 +88,14 @@ export const CompanyBranchPerformanceCard = ({ branches = [], className, isLoadi
                   return (
                     <tr
                       key={item.id || item.name}
-                      onClick={() => navigate(ROUTES.BRANCH_DETAILS ? ROUTES.BRANCH_DETAILS.replace(":branchId", item.id) : `/branches/${item.id}`)}
-                      className="hover:bg-surface-alt/40 transition-colors cursor-pointer"
+                      onClick={() => enterBranch({ _id: item.id, name: item.name })}
+                      className="hover:bg-surface-alt/40 transition-colors cursor-pointer group"
                     >
                       <td className="py-2 px-1.5 text-center font-mono text-text-muted">
                         {idx + 1}
                       </td>
                       <td className="py-2 px-2 font-semibold text-text truncate max-w-[130px]">
-                        <span className="block truncate">{item.name}</span>
+                        <span className="block truncate group-hover:text-primary transition-colors">{item.name}</span>
                         {item.code && (
                           <span className="block text-[10px] font-mono text-text-muted font-normal">
                             {item.code}
@@ -122,6 +125,19 @@ export const CompanyBranchPerformanceCard = ({ branches = [], className, isLoadi
                             0%
                           </span>
                         )}
+                      </td>
+                      <td className="py-2 px-2 text-right">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            enterBranch({ _id: item.id, name: item.name });
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold text-[10px] transition-colors"
+                        >
+                          <span>Enter</span>
+                          <ArrowRight className="size-2.5" />
+                        </button>
                       </td>
                     </tr>
                   );

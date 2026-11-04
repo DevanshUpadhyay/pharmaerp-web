@@ -70,12 +70,17 @@ const LoginPage = () => {
       const hasSelected = localStorage.getItem(WORK_MODE_STORAGE_KEYS.MODE_SELECTED) === "true";
       const currentMode = localStorage.getItem(WORK_MODE_STORAGE_KEYS.WORK_MODE);
 
+      // On login, pipeline elevator starts fresh at Workspace floor
+      try {
+        localStorage.setItem("pahuch_pipeline_level", "workspace");
+      } catch {}
+
       if (!hasSelected) {
         navigate(ROUTES.CHOOSE_MODE, { replace: true });
       } else if (currentMode === WORK_MODES.VIEW) {
-        navigate(ROUTES.DASHBOARD, { replace: true });
+        navigate(ROUTES.WORKSPACE_DASHBOARD, { replace: true });
       } else {
-        navigate(ROUTES.SALES, { replace: true });
+        navigate(ROUTES.COMPANIES, { replace: true });
       }
     } catch {
       // Error handled in auth state

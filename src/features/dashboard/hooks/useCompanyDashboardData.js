@@ -7,13 +7,20 @@ import dashboardService from "../services/dashboardService";
 export const useCompanyDashboardData = (timeframe = "This Month", dateRange = null) => {
   const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace);
   const currentCompany = useSelector((state) => state.company?.currentCompany);
+  const user = useSelector((state) => state.user?.user);
 
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const workspaceId = currentWorkspace?._id || currentWorkspace?.id;
-  const companyId = currentCompany?._id || currentCompany?.id;
+  const workspaceId =
+    currentWorkspace?._id ||
+    currentWorkspace?.id ||
+    user?.activeContext?.workspaceId;
+  const companyId =
+    currentCompany?._id ||
+    currentCompany?.id ||
+    user?.activeContext?.companyId;
 
   const normalizedTimeframe = String(timeframe || "THIS_MONTH")
     .toUpperCase()

@@ -32,6 +32,8 @@ import {
 import { cn } from "@/lib/utils";
 import useBranch from "@/features/branch/hooks/useBranch";
 import useUser from "@/features/user/hooks/useUser";
+import { BranchFilterSelect, BranchBadge } from "@/components/shared";
+import { useBranchFilter } from "@/hooks";
 import workspaceProductService from "@/features/workspace-products/services/workspaceProductService";
 
 /**
@@ -211,9 +213,12 @@ const PAGE_LIMIT = 25;
 
 export const StockMetricsDesktopPage = () => {
   const tableContainerRef = useRef(null);
+  const { isCompanyLevel, selectedBranchId, setSelectedBranchId, queryBranchId } = useBranchFilter();
   const { activeBranchId: userBranchId, activeCompanyId } = useUser();
   const { currentBranch } = useBranch();
-  const activeBranchId = currentBranch?._id || currentBranch?.id || userBranchId;
+  const resolvedFacility = isCompanyLevel
+    ? queryBranchId
+    : (currentBranch?._id || currentBranch?.id || userBranchId);
 
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState("");
@@ -304,9 +309,9 @@ export const StockMetricsDesktopPage = () => {
           companyId: activeCompanyId,
           filters: { inStockOnly: true },
         };
-        // Always scoped exclusively to current branch
-        if (activeBranchId) {
-          payload.filters.facility = activeBranchId;
+        // Scoped to facility if selected or branch level
+        if (resolvedFacility) {
+          payload.filters.facility = resolvedFacility;
         }
         if (lowStockFilter) {
           payload.filters.lowStock = true;
@@ -333,7 +338,7 @@ export const StockMetricsDesktopPage = () => {
         setIsLoading(false);
       }
     },
-    [activeCompanyId, activeBranchId, lowStockFilter, debouncedSearch, flattenBatchList]
+    [activeCompanyId, resolvedFacility, lowStockFilter, debouncedSearch, flattenBatchList]
   );
 
   // Load More (Infinite Scroll)
@@ -348,8 +353,8 @@ export const StockMetricsDesktopPage = () => {
         companyId: activeCompanyId,
         filters: { inStockOnly: true },
       };
-      if (activeBranchId) {
-        payload.filters.facility = activeBranchId;
+      if (resolvedFacility) {
+        payload.filters.facility = resolvedFacility;
       }
       if (lowStockFilter) {
         payload.filters.lowStock = true;
@@ -386,7 +391,7 @@ export const StockMetricsDesktopPage = () => {
     hasMore,
     currentPage,
     activeCompanyId,
-    activeBranchId,
+    resolvedFacility,
     lowStockFilter,
     debouncedSearch,
     totalCount,
@@ -665,6 +670,14 @@ export const StockMetricsDesktopPage = () => {
             className="w-full"
           />
         </div>
+
+        {/* Branch Filter (Company Level Only) */}
+        <BranchFilterSelect
+          value={selectedBranchId}
+          onChange={setSelectedBranchId}
+          size="md"
+          className="w-[180px] sm:w-[200px]"
+        />
 
         {/* Expiry Segmented Clickable Tabs */}
         <div className="flex items-center p-0.5 rounded-xl bg-surface-alt border border-border/80 gap-1 select-none overflow-x-auto">

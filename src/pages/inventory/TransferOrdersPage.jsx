@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import transferOrderService from "../../features/transfer-order/services/transferOrderService";
 import useBranch from "../../features/branch/hooks/useBranch";
+import { BranchFilterSelect, BranchBadge } from "@/components/shared";
+import { useBranchFilter } from "@/hooks";
 import {
   UIButton,
   UISelect,
@@ -62,6 +64,7 @@ const STATUS_OPTIONS = [
 const TransferOrdersPage = () => {
   const navigate = useNavigate();
   const tableContainerRef = useRef(null);
+  const { isCompanyLevel, selectedBranchId, setSelectedBranchId, queryBranchId } = useBranchFilter();
   const { branches, getCompanyBranches, currentBranch } = useBranch();
 
   // Core Data & Infinite Scroll states
@@ -114,6 +117,7 @@ const TransferOrdersPage = () => {
       if (filters.status !== "all") params.status = filters.status;
       if (filters.sourceBranchId !== "all") params.sourceBranchId = filters.sourceBranchId;
       if (filters.destinationBranchId !== "all") params.destinationBranchId = filters.destinationBranchId;
+      if (queryBranchId) params.branchId = queryBranchId;
 
       const res = await transferOrderService.getTransferOrders(params);
       const data = res?.data?.data || {};
@@ -130,7 +134,7 @@ const TransferOrdersPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [filters]);
+  }, [filters, queryBranchId]);
 
   useEffect(() => {
     fetchInitialOrders();
@@ -150,6 +154,7 @@ const TransferOrdersPage = () => {
       if (filters.status !== "all") params.status = filters.status;
       if (filters.sourceBranchId !== "all") params.sourceBranchId = filters.sourceBranchId;
       if (filters.destinationBranchId !== "all") params.destinationBranchId = filters.destinationBranchId;
+      if (queryBranchId) params.branchId = queryBranchId;
 
       const res = await transferOrderService.getTransferOrders(params);
       const data = res?.data?.data || {};
@@ -174,7 +179,7 @@ const TransferOrdersPage = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [currentPage, hasMore, isLoading, isLoadingMore, filters, totalOrders]);
+  }, [currentPage, hasMore, isLoading, isLoadingMore, filters, queryBranchId, totalOrders]);
 
   // Receive transfer order
   const handleReceive = async (id) => {
@@ -376,6 +381,14 @@ const TransferOrdersPage = () => {
 
       {/* ── 2. Streamlined Single-Row Filter Toolbar ─────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2 shrink-0">
+        {/* Branch Filter (Company Level Only) */}
+        <BranchFilterSelect
+          value={selectedBranchId}
+          onChange={setSelectedBranchId}
+          size="md"
+          className="w-[170px] sm:w-[200px]"
+        />
+
         {/* Status Dropdown */}
         <div className="w-[150px] sm:w-[170px]">
           <UISelect

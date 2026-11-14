@@ -19,6 +19,7 @@ import {
   AppMenu,
 } from "@/components";
 import { formatDate } from "@/utils";
+import { BranchFilterSelect, BranchBadge } from "@/components/shared";
 
 const CashExchangesMobilePage = ({
   cashExchanges = [],
@@ -36,6 +37,9 @@ const CashExchangesMobilePage = ({
   handleViewDetails,
   handleCreateNew,
   handleRefresh,
+  isCompanyLevel = false,
+  selectedBranchId = "all",
+  setSelectedBranchId,
 }) => {
   const hasFilteredExchanges = cashExchanges.length > 0;
   const shouldRenderPagination = hasFilteredExchanges && totalExchanges > pageSize;
@@ -80,7 +84,15 @@ const CashExchangesMobilePage = ({
         )}
 
         {/* Mobile Search */}
-        <div className="px-4 py-3 bg-bg">
+        <div className="px-4 py-3 bg-bg space-y-2">
+          {isCompanyLevel && (
+            <BranchFilterSelect
+              value={selectedBranchId}
+              onChange={setSelectedBranchId}
+              size="sm"
+              className="w-full"
+            />
+          )}
           <AppInput
             placeholder="Search exchanges..."
             value={searchParams.search}
@@ -137,9 +149,14 @@ const CashExchangesMobilePage = ({
                 {/* Header: Num, Status, Action */}
                 <div className="flex items-start justify-between px-4 py-3 border-b border-border bg-surface/50">
                   <div>
-                    <AppText size="sm" weight={700} sx={{ fontFamily: "monospace" }}>
-                      {row.exchangeNumber}
-                    </AppText>
+                    <div className="flex items-center gap-1.5">
+                      <AppText size="sm" weight={700} sx={{ fontFamily: "monospace" }}>
+                        {row.exchangeNumber}
+                      </AppText>
+                      {row.branchId && (
+                        <BranchBadge branch={row.branchId} />
+                      )}
+                    </div>
                     <AppText size="xs" sx={{ color: "var(--color-text-muted)" }}>
                       {formatDate(row.exchangeDate)}
                     </AppText>

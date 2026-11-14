@@ -40,6 +40,11 @@ export const setupInterceptors = (apiClient, store) => {
       if (store) {
         const state = store.getState();
 
+        let currentLevel = null;
+        try {
+          currentLevel = localStorage.getItem("pahuch_pipeline_level") || null;
+        } catch {}
+
         const workspaceId =
           state.workspace?.currentWorkspace?._id ||
           state.workspace?.currentWorkspace?.id;
@@ -52,13 +57,17 @@ export const setupInterceptors = (apiClient, store) => {
           } catch {}
         }
 
-        let branchId =
-          state.branch?.currentBranch?._id ||
-          state.branch?.currentBranch?.id;
-        if (!branchId) {
-          try {
-            branchId = localStorage.getItem("pahuch_active_branch_id") || null;
-          } catch {}
+        // Only attach branch ID automatically if active pipeline level is branch (or uninitialized)
+        let branchId = null;
+        if (!currentLevel || currentLevel === "branch") {
+          branchId =
+            state.branch?.currentBranch?._id ||
+            state.branch?.currentBranch?.id;
+          if (!branchId) {
+            try {
+              branchId = localStorage.getItem("pahuch_active_branch_id") || null;
+            } catch {}
+          }
         }
 
         if (workspaceId) {
@@ -69,7 +78,7 @@ export const setupInterceptors = (apiClient, store) => {
           config.headers["x-company-id"] = companyId;
         }
 
-        if (branchId) {
+        if (branchId && !config.headers["x-branch-id"]) {
           config.headers["x-branch-id"] = branchId;
         }
       }

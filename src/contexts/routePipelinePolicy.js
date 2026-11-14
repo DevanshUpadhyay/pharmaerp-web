@@ -226,7 +226,7 @@ export const ROUTE_POLICY_RULES = [
   {
     id: "branch-reports-hub",
     match: (p) => p === "/reports" || p.startsWith("/reports/"),
-    levels: [PIPELINE_LEVELS.BRANCH],
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: [WORK_MODES.VIEW],
   },
   {
@@ -236,54 +236,62 @@ export const ROUTE_POLICY_RULES = [
       p.startsWith("/inventory/stock-metrics/") ||
       p === "/stock-metrics" ||
       p.startsWith("/stock-metrics/"),
-    levels: [PIPELINE_LEVELS.BRANCH],
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: BOTH_MODES,
   },
   {
     id: "branch-inventory-ops",
     match: (p) => p === "/inventory" || p.startsWith("/inventory/"),
-    levels: [PIPELINE_LEVELS.BRANCH],
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
+    modes: [WORK_MODES.OPERATION],
+  },
+  {
+    id: "branch-credit-notes",
+    match: (p) =>
+      p === "/sales/credit-notes" || p.startsWith("/sales/credit-notes/"),
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: [WORK_MODES.OPERATION],
   },
   {
     id: "branch-sales-pos",
     match: (p) =>
-      p === "/sales" ||
-      p.startsWith("/sales/") ||
-      p === "/sale" ||
-      p.startsWith("/sale/"),
+      !p.startsWith("/sales/credit-notes") &&
+      (p === "/sales" ||
+        p.startsWith("/sales/") ||
+        p === "/sale" ||
+        p.startsWith("/sale/")),
     levels: [PIPELINE_LEVELS.BRANCH],
     modes: [WORK_MODES.OPERATION],
   },
   {
     id: "branch-billing",
     match: (p) => p === "/billing" || p.startsWith("/billing/"),
-    levels: [PIPELINE_LEVELS.BRANCH],
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: [WORK_MODES.OPERATION],
   },
   {
     id: "branch-sales-returns",
     match: (p) => p === "/sales-returns" || p.startsWith("/sales-returns/"),
-    levels: [PIPELINE_LEVELS.BRANCH],
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: [WORK_MODES.OPERATION],
   },
   {
     id: "branch-purchases",
     match: (p) => p === "/purchases" || p.startsWith("/purchases/"),
-    levels: [PIPELINE_LEVELS.BRANCH],
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: [WORK_MODES.OPERATION],
   },
   {
     id: "branch-workspace-products",
     match: (p) =>
       p === "/workspace-products" || p.startsWith("/workspace-products/"),
-    levels: [PIPELINE_LEVELS.BRANCH],
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: [WORK_MODES.OPERATION],
   },
   {
     id: "branch-operations",
     match: (p) => p === "/operations" || p.startsWith("/operations/"),
-    levels: [PIPELINE_LEVELS.BRANCH],
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: [WORK_MODES.OPERATION],
   },
   {
@@ -298,8 +306,10 @@ export const ROUTE_POLICY_RULES = [
       p === "/finance/treasury/cash-transactions" ||
       p.startsWith("/finance/treasury/cash-transactions/") ||
       p === "/finance/treasury/cash-exchanges" ||
-      p.startsWith("/finance/treasury/cash-exchanges/"),
-    levels: [PIPELINE_LEVELS.BRANCH],
+      p.startsWith("/finance/treasury/cash-exchanges/") ||
+      p === "/finance/treasury/bank-deposit-slips" ||
+      p.startsWith("/finance/treasury/bank-deposit-slips/"),
+    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: [WORK_MODES.OPERATION],
   },
   {
@@ -382,7 +392,6 @@ export const ROUTE_POLICY_RULES = [
       p.startsWith("/finance/treasury/bank-transactions") ||
       p.startsWith("/finance/treasury/fund-transfers") ||
       p.startsWith("/finance/treasury/cheque-management") ||
-      p.startsWith("/finance/treasury/bank-deposit-slips") ||
       p.startsWith("/finance/treasury/cash-in-transit"),
     levels: [PIPELINE_LEVELS.COMPANY],
     modes: [WORK_MODES.OPERATION],

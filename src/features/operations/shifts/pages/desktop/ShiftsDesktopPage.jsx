@@ -1,6 +1,7 @@
 // src/features/operations/shifts/pages/desktop/ShiftsDesktopPage.jsx
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Play,
@@ -34,6 +35,7 @@ import {
   CloseShiftDialog,
 } from "../../components";
 import CloseBusinessDayDialog from "@/features/operations/business-days/components/CloseBusinessDayDialog";
+import { BranchFilterSelect } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
 const STATUS_SELECT_OPTIONS = [
@@ -73,6 +75,11 @@ export const ShiftsDesktopPage = ({
   handleRefresh,
   clearMessage,
 
+  // Branch filter state (Company Level Only)
+  isCompanyLevel,
+  selectedBranchId,
+  setSelectedBranchId,
+
   // Shift specific actions & dialog controls
   openBusinessDay,
   isCreateOpen,
@@ -84,6 +91,7 @@ export const ShiftsDesktopPage = ({
   isCloseBusinessDayOpen,
   setIsCloseBusinessDayOpen,
 }) => {
+  const navigate = useNavigate();
   const tableContainerRef = useRef(null);
   const cardContainerRef = useRef(null);
 
@@ -265,6 +273,14 @@ export const ShiftsDesktopPage = ({
             className="w-full"
           />
         </div>
+
+        {/* Branch Filter (Company Level Only) */}
+        <BranchFilterSelect
+          value={selectedBranchId}
+          onChange={setSelectedBranchId}
+          size="md"
+          className="w-[180px] sm:w-[200px]"
+        />
 
         {/* Date Picker */}
         <div className="w-[145px] sm:w-[160px]">
@@ -547,7 +563,8 @@ export const ShiftsDesktopPage = ({
         shift={closeShift}
         onClose={() => setCloseShift?.(null)}
         onSuccess={handleRefresh}
-        onOpenCloseBusinessDay={() => setIsCloseBusinessDayOpen?.(true)}
+        onOpenNewShift={() => setIsCreateOpen?.(true)}
+        onCreateDayClosing={() => navigate("/operations/business-days")}
       />
 
       <CloseBusinessDayDialog

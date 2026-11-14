@@ -438,7 +438,6 @@ export const router = createBrowserRouter([
                   ...guardRouteList(bankAccountRoutes, "bank-account"),
                   ...guardRouteList(fundTransferRoutes, "fund-transfer"),
                   ...guardRouteList(chequeRoutes, "cheque"),
-                  ...guardRouteList(bankDepositSlipRoutes, "bank-deposit-slip"),
                   ...bankTransactionRoutes.map((route) => ({
                     ...route,
                     element: (
@@ -499,7 +498,105 @@ export const router = createBrowserRouter([
                 ],
               },
 
-              // ── Branch Level Routes (Floor 3 — Requires active branch selection) ──
+              // ── Shared Company & Branch Operational & Analytics Modules ──
+              {
+                element: (
+                  <PipelineLevelGuard
+                    allowedLevels={[
+                      PIPELINE_LEVELS.COMPANY,
+                      PIPELINE_LEVELS.BRANCH,
+                    ]}
+                  />
+                ),
+                children: [
+                  // Reports Hub (Company & Branch View)
+                  {
+                    path: ROUTES.REPORTS_HUB,
+                    element: (
+                      <PermissionGuard permission="report:view">
+                        <ReportsHubPage />
+                      </PermissionGuard>
+                    ),
+                  },
+                  {
+                    path: "/reports/:category/:subReport",
+                    element: (
+                      <PermissionGuard permission="report:view">
+                        <ReportsHubPage />
+                      </PermissionGuard>
+                    ),
+                  },
+                  {
+                    path: "/reports/:reportKey",
+                    element: (
+                      <PermissionGuard permission="report:view">
+                        <ReportsHubPage />
+                      </PermissionGuard>
+                    ),
+                  },
+
+                  // Branch Cash & Counter Payments
+                  ...guardRouteList(branchCashRoutes, "cash-account"),
+                  ...guardRouteList(bankDepositSlipRoutes, "bank-deposit-slip"),
+                  ...guardRouteList(cashExchangeRoutes, "cash-exchange"),
+                  ...guardRouteList(paymentQrRoutes, "payment-qr"),
+                  ...cashTransactionRoutes.map((route) => ({
+                    ...route,
+                    element: (
+                      <PermissionGuard permission="cash-transaction:view">
+                        {route.element}
+                      </PermissionGuard>
+                    ),
+                  })),
+
+                  // Inventory & Stock
+                  {
+                    path: "/inventory",
+                    element: <Navigate to={ROUTES.STOCK_METRICS} replace />,
+                  },
+                  {
+                    path: "/inventory/transfer-orders",
+                    element: <TransferOrdersPage />,
+                  },
+                  {
+                    path: "/inventory/transfer-orders/create",
+                    element: <CreateTransferOrderPage />,
+                  },
+                  {
+                    path: "/inventory/transfer-orders/:id/edit",
+                    element: <CreateTransferOrderPage />,
+                  },
+                  ...guardRouteList(workspaceProductRoutes, "product"),
+
+                  // Marketplace
+                  ...guardRouteList(
+                    marketplaceStoreRoutes,
+                    "marketplace-store"
+                  ),
+                  ...guardRouteList(
+                    marketplaceProductRoutes,
+                    "marketplace-product"
+                  ),
+
+                  // Invoicing, Returns, Credit Notes & Purchases
+                  ...guardRouteList(billingRoutes, "bill"),
+                  ...guardRouteList(salesReturnRoutes, "bill"),
+                  ...guardRouteList(
+                    salesRoutes.filter(
+                      (r) =>
+                        r.path === ROUTES.CREDIT_NOTES ||
+                        r.path === "/sales/credit-notes"
+                    ),
+                    "bill"
+                  ),
+                  ...guardRouteList(purchasesRoutes, "purchase"),
+
+                  // Shifts & Closings
+                  ...operationsRoutes,
+                ],
+              },
+
+              // ── Branch Level Only Routes (Floor 3 — Requires active branch selection) ──
               {
                 element: <ActiveBranchGuard />,
                 children: [
@@ -510,82 +607,15 @@ export const router = createBrowserRouter([
                       />
                     ),
                     children: [
-                      // Reports Hub (Branch View)
-                      {
-                        path: ROUTES.REPORTS_HUB,
-                        element: (
-                          <PermissionGuard permission="report:view">
-                            <ReportsHubPage />
-                          </PermissionGuard>
-                        ),
-                      },
-                      {
-                        path: "/reports/:category/:subReport",
-                        element: (
-                          <PermissionGuard permission="report:view">
-                            <ReportsHubPage />
-                          </PermissionGuard>
-                        ),
-                      },
-                      {
-                        path: "/reports/:reportKey",
-                        element: (
-                          <PermissionGuard permission="report:view">
-                            <ReportsHubPage />
-                          </PermissionGuard>
-                        ),
-                      },
-
-                      // Branch Cash & Counter Payments
-                      ...guardRouteList(branchCashRoutes, "cash-account"),
-                      ...guardRouteList(cashExchangeRoutes, "cash-exchange"),
-                      ...guardRouteList(paymentQrRoutes, "payment-qr"),
-                      ...cashTransactionRoutes.map((route) => ({
-                        ...route,
-                        element: (
-                          <PermissionGuard permission="cash-transaction:view">
-                            {route.element}
-                          </PermissionGuard>
-                        ),
-                      })),
-
-                      // Branch Inventory & Stock
-                      {
-                        path: "/inventory",
-                        element: <Navigate to={ROUTES.STOCK_METRICS} replace />,
-                      },
-                      {
-                        path: "/inventory/transfer-orders",
-                        element: <TransferOrdersPage />,
-                      },
-                      {
-                        path: "/inventory/transfer-orders/create",
-                        element: <CreateTransferOrderPage />,
-                      },
-                      {
-                        path: "/inventory/transfer-orders/:id/edit",
-                        element: <CreateTransferOrderPage />,
-                      },
-                      ...guardRouteList(workspaceProductRoutes, "product"),
-
-                      // Marketplace
+                      // Sales POS Counter (Strictly requires active branch till/session)
                       ...guardRouteList(
-                        marketplaceStoreRoutes,
-                        "marketplace-store"
+                        salesRoutes.filter(
+                          (r) =>
+                            r.path !== ROUTES.CREDIT_NOTES &&
+                            r.path !== "/sales/credit-notes"
+                        ),
+                        "pos"
                       ),
-                      ...guardRouteList(
-                        marketplaceProductRoutes,
-                        "marketplace-product"
-                      ),
-
-                      // Sales & POS, Invoicing & Purchases
-                      ...guardRouteList(salesRoutes, "pos"),
-                      ...guardRouteList(billingRoutes, "bill"),
-                      ...guardRouteList(salesReturnRoutes, "bill"),
-                      ...guardRouteList(purchasesRoutes, "purchase"),
-
-                      // Shifts & Closings
-                      ...operationsRoutes,
                     ],
                   },
                 ],

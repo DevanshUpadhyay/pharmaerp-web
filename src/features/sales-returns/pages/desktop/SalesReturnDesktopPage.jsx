@@ -32,6 +32,8 @@ import {
 } from "@/components/ui";
 import useBranch from "@/features/branch/hooks/useBranch";
 import useWorkspace from "@/features/workspace/hooks/useWorkspace";
+import { BranchFilterSelect, BranchBadge } from "@/components/shared";
+import { useBranchFilter } from "@/hooks";
 import salesReturnService from "../../services/salesReturnService";
 import SalesReturnDetailsDrawer from "../../components/SalesReturnDetailsDrawer";
 import CreateSalesReturnModal from "../../components/CreateSalesReturnModal";
@@ -84,6 +86,7 @@ const REFUND_TYPE_OPTIONS = [
 export const SalesReturnDesktopPage = () => {
   const { currentBranch } = useBranch();
   const { currentCompany } = useWorkspace();
+  const { isCompanyLevel, selectedBranchId, setSelectedBranchId, queryBranchId } = useBranchFilter();
 
   const [returns, setReturns] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -110,7 +113,7 @@ export const SalesReturnDesktopPage = () => {
   // Reset page to 1 whenever any filter changes
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, dateRange, refundType, billingMode, currentBranch]);
+  }, [debouncedSearch, dateRange, refundType, billingMode, currentBranch, queryBranchId]);
 
   // Selected for Details Drawer
   const [selectedReturn, setSelectedReturn] = useState(null);
@@ -129,10 +132,14 @@ export const SalesReturnDesktopPage = () => {
     setError(null);
 
     try {
+      const activeBranchId = isCompanyLevel
+        ? queryBranchId
+        : (currentBranch?._id || currentBranch?.id || undefined);
+
       const params = {
         page,
         limit,
-        branchId: currentBranch?._id || currentBranch?.id || undefined,
+        branchId: activeBranchId,
         search: debouncedSearch || undefined,
         returnType: refundType !== "all" ? refundType : undefined,
         billingMode: billingMode !== "all" ? billingMode : undefined,
@@ -174,7 +181,7 @@ export const SalesReturnDesktopPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentBranch, debouncedSearch, dateRange, refundType, billingMode, page]);
+  }, [currentBranch, isCompanyLevel, queryBranchId, debouncedSearch, dateRange, refundType, billingMode, page]);
 
   useEffect(() => {
     fetchReturns();
@@ -339,6 +346,13 @@ export const SalesReturnDesktopPage = () => {
             )}
           </div>
 
+          <BranchFilterSelect
+            value={selectedBranchId}
+            onChange={setSelectedBranchId}
+            size="sm"
+            className="w-44 text-xs h-8"
+          />
+
           <UISelect
             value={dateRange}
             onChange={(val) => setDateRange(val?.target ? val.target.value : val)}
@@ -390,6 +404,11 @@ export const SalesReturnDesktopPage = () => {
                 <UITableHead className="py-2.5 px-3 text-[10.5px] uppercase font-bold text-text-muted">
                   Return Memo No
                 </UITableHead>
+                {isCompanyLevel && (
+                  <UITableHead className="py-2.5 px-3 text-[10.5px] uppercase font-bold text-text-muted">
+                    Branch
+                  </UITableHead>
+                )}
                 <UITableHead className="py-2.5 px-3 text-[10.5px] uppercase font-bold text-text-muted">
                   Original Invoice
                 </UITableHead>
@@ -416,10 +435,10 @@ export const SalesReturnDesktopPage = () => {
 
             <UITableBody>
               {isLoading ? (
-                <UITableLoading colSpan={9} text="Loading sales return memos..." />
+                <UITableLoading colSpan={isCompanyLevel ? 10 : 9} text="Loading sales return memos..." />
               ) : returns.length === 0 ? (
                 <UITableEmpty
-                  colSpan={9}
+                  colSpan={isCompanyLevel ? 10 : 9}
                   title="No sales return records found"
                   description="When items are returned, credit memos and refund transactions appear here."
                 />
@@ -466,6 +485,13 @@ export const SalesReturnDesktopPage = () => {
                         </div>
                         <div className="text-[10px] text-text-muted">{item.billingMode || "B2C"}</div>
                       </UITableCell>
+
+                      {/* Branch Badge (Only at Company Level) */}
+                      {isCompanyLevel && (
+                        <UITableCell className="py-2.5 px-3 whitespace-nowrap">
+                          <BranchBadge branch={item.branchId} />
+                        </UITableCell>
+                      )}
 
                       {/* Original Invoice */}
                       <UITableCell className="py-2.5 px-3 font-mono text-xs font-semibold text-primary">

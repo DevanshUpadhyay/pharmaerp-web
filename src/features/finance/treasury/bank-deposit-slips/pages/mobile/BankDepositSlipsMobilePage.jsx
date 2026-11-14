@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FiPlus, FiSearch, FiChevronRight, FiFilter } from "react-icons/fi";
 import dayjs from "dayjs";
 import { AppText, AppEmptyState } from "@/components";
+import { BranchFilterSelect, BranchBadge } from "@/components/shared";
 import { ConfirmDepositModal, CancelSlipModal } from "../../components/BankDepositSlipActionModals";
 
 const getStatusColor = (status) => {
@@ -34,6 +35,9 @@ const BankDepositSlipsMobilePage = ({
   handleCancelSlip,
   handleViewDetails,
   handleCreateNew,
+  isCompanyLevel = false,
+  selectedBranchId = "all",
+  setSelectedBranchId,
 }) => {
   const [selectedSlip, setSelectedSlip] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -68,6 +72,18 @@ const BankDepositSlipsMobilePage = ({
             <FiPlus size={20} />
           </button>
         </div>
+
+        {/* Company Level Branch Filter */}
+        {isCompanyLevel && (
+          <div className="mb-3">
+            <BranchFilterSelect
+              value={selectedBranchId}
+              onChange={setSelectedBranchId}
+              placeholder="All Branches"
+              className="w-full"
+            />
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -147,6 +163,11 @@ const BankDepositSlipsMobilePage = ({
                   <AppText variant="subtitle2" className="font-bold text-text">
                     {slip.slipNumber}
                   </AppText>
+                  {isCompanyLevel && (
+                    <div className="mt-1">
+                      <BranchBadge branch={slip.branchId} />
+                    </div>
+                  )}
                   <AppText variant="body2" className="text-[12px] text-text-muted mt-0.5">
                     {dayjs(slip.slipDate).format("DD MMM YYYY")}
                   </AppText>

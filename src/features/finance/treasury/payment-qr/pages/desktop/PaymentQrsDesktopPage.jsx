@@ -43,6 +43,7 @@ import {
   uiToast,
 } from "@/components/ui";
 import { usePermission } from "@/hooks";
+import { BranchFilterSelect, BranchBadge } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
 const PROVIDER_OPTIONS = [
@@ -82,6 +83,9 @@ export const PaymentQrsDesktopPage = ({
   handleSetPrimary,
   clearError,
   clearMessage,
+  isCompanyLevel = false,
+  selectedBranchId = "all",
+  setSelectedBranchId,
 }) => {
   const { can } = usePermission();
   const tableContainerRef = useRef(null);
@@ -237,9 +241,21 @@ export const PaymentQrsDesktopPage = ({
       </div>
 
       {/* ── 2. Streamlined Single-Row Filter Toolbar ─────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2 shrink-0">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-3.5 shrink-0">
+        {/* Branch Filter (Company Level Only) */}
+        {isCompanyLevel && (
+          <div className="w-[190px] sm:w-[210px] shrink-0">
+            <BranchFilterSelect
+              value={selectedBranchId}
+              onChange={setSelectedBranchId}
+              size="md"
+              className="w-full"
+            />
+          </div>
+        )}
+
         {/* Search Input */}
-        <div className="w-[220px] sm:w-[260px] lg:w-[300px]">
+        <div className="w-[220px] sm:w-[260px] lg:w-[300px] shrink-0">
           <UIInput
             type="text"
             value={filters.search || ""}
@@ -339,6 +355,9 @@ export const PaymentQrsDesktopPage = ({
             >
               <UITableRow className="border-b border-border text-[11px] font-semibold text-text-muted uppercase tracking-wider bg-surface-alt/70 h-10">
                 <UITableHead sticky className="min-w-[220px]">Standee & Label</UITableHead>
+                {isCompanyLevel && (
+                  <UITableHead sticky className="min-w-[140px]">Branch</UITableHead>
+                )}
                 <UITableHead sticky className="min-w-[210px]">UPI Address</UITableHead>
                 <UITableHead sticky align="center" className="min-w-[130px]">Provider</UITableHead>
                 <UITableHead sticky className="min-w-[190px]">Linked Bank Account</UITableHead>
@@ -350,10 +369,10 @@ export const PaymentQrsDesktopPage = ({
 
             <UITableBody>
               {isLoading ? (
-                <UITableLoading colSpan={7} rows={8} />
+                <UITableLoading colSpan={isCompanyLevel ? 8 : 7} rows={8} />
               ) : displayedQrs.length === 0 ? (
                 <UITableEmpty
-                  colSpan={7}
+                  colSpan={isCompanyLevel ? 8 : 7}
                   title="No payment QR codes found"
                   description={
                     isFiltered
@@ -420,6 +439,13 @@ export const PaymentQrsDesktopPage = ({
                           </div>
                         </div>
                       </UITableCell>
+
+                      {/* Branch (Company Level) */}
+                      {isCompanyLevel && (
+                        <UITableCell className="py-2.5">
+                          <BranchBadge branch={qr.branchId} />
+                        </UITableCell>
+                      )}
 
                       {/* 2. UPI ID with Copy */}
                       <UITableCell className="py-2">

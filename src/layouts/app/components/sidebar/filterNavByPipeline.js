@@ -10,13 +10,24 @@ import { getSafeWorkMode } from "@/contexts/WorkModeContext";
 import { PIPELINE_LEVELS } from "@/contexts/NavigationPipelineContext";
 
 /**
+ * Checks whether an item/group level configuration matches the active level
+ */
+const matchesLevel = (targetLevelConfig, activeLevel) => {
+  if (!targetLevelConfig || targetLevelConfig === "all") return true;
+  if (Array.isArray(targetLevelConfig)) {
+    return targetLevelConfig.includes(activeLevel);
+  }
+  return targetLevelConfig === activeLevel;
+};
+
+/**
  * Filter a single item by level and workMode
  */
 const filterItemByPipeline = (item, activeLevel, activeMode) => {
   if (!item) return null;
 
-  // 1. Level Check: Item level must match activeLevel or be "all"
-  if (item.level && item.level !== "all" && item.level !== activeLevel) {
+  // 1. Level Check: Item level must match activeLevel or be "all" / array containing activeLevel
+  if (!matchesLevel(item.level, activeLevel)) {
     return null;
   }
 
@@ -91,11 +102,7 @@ export const filterNavByPipeline = (
       if (!group) return false;
 
       // Group level check
-      if (
-        group.level &&
-        group.level !== "all" &&
-        group.level !== activeLevel
-      ) {
+      if (!matchesLevel(group.level, activeLevel)) {
         return false;
       }
 

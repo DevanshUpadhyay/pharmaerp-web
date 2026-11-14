@@ -1,4 +1,4 @@
-﻿// src/features/billing/pages/desktop/BillingDesktopPage.jsx
+// src/features/billing/pages/desktop/BillingDesktopPage.jsx
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
@@ -40,6 +40,8 @@ import invoiceService from "@/features/sales/services/invoiceService";
 import usePaymentQr from "@/features/finance/treasury/payment-qr/hooks/usePaymentQr";
 import { BillingInvoiceDetailsDrawer } from "../../components/BillingInvoiceDetailsDrawer";
 import BillingInvoiceFilterModal from "../../components/BillingInvoiceFilterModal";
+import { BranchFilterSelect, BranchBadge } from "@/components/shared";
+import { useBranchFilter } from "@/hooks";
 import { HeldBillsModal } from "@/features/sales/components";
 import { useHoldBills } from "@/features/sales/hooks/useHoldBills";
 
@@ -115,6 +117,7 @@ export const BillingDesktopPage = () => {
   const navigate = useNavigate();
   const { currentWorkspace } = useWorkspace();
   const { currentBranch } = useBranch();
+  const { isCompanyLevel, selectedBranchId, setSelectedBranchId, queryBranchId } = useBranchFilter();
 
   // ── Hold Bill System ──
   const {
@@ -432,7 +435,9 @@ export const BillingDesktopPage = () => {
       createdAt: s.createdAt || null,
       updatedAt: s.updatedAt || null,
       branchId: s.branchId || null,
-      branchName: s.branchName || "Main Branch",
+      branch: typeof s.branchId === "object" ? s.branchId : null,
+      branchName: s.branchName || (typeof s.branchId === "object" ? s.branchId?.name : null) || "",
+      branchCode: s.branchCode || (typeof s.branchId === "object" ? s.branchId?.branchCode : null) || "",
       invoiceNo: s.invoiceNo || `RET-INV-${Math.floor(1000 + Math.random() * 9000)}`,
       customerId: s.customerId?._id || s.customerId || null,
       customerObj: cust._id ? cust : (typeof s.customerId === "object" ? s.customerId : null),
@@ -486,6 +491,7 @@ export const BillingDesktopPage = () => {
       const params = {
         page: 1,
         limit: PAGE_LIMIT,
+        branchId: queryBranchId,
         search: debouncedSearch || undefined,
         status: selectedStatus !== "all" ? selectedStatus : undefined,
         paymentMethod: selectedPaymentType !== "all" ? selectedPaymentType : undefined,
@@ -587,6 +593,7 @@ export const BillingDesktopPage = () => {
     fromInvoice,
     toInvoice,
     buildDateParams,
+    queryBranchId,
   ]);
 
   // Load next batch via Infinite Scroll
@@ -602,6 +609,7 @@ export const BillingDesktopPage = () => {
       const params = {
         page: nextPage,
         limit: PAGE_LIMIT,
+        branchId: queryBranchId,
         search: debouncedSearch || undefined,
         status: selectedStatus !== "all" ? selectedStatus : undefined,
         paymentMethod: selectedPaymentType !== "all" ? selectedPaymentType : undefined,
@@ -653,6 +661,7 @@ export const BillingDesktopPage = () => {
     toInvoice,
     buildDateParams,
     totalInvoices,
+    queryBranchId,
   ]);
 
   // Trigger re-fetch on filter changes
@@ -1463,6 +1472,14 @@ export const BillingDesktopPage = () => {
           />
         </div>
 
+        {/* Branch Filter (Only renders at Company Level) */}
+        <BranchFilterSelect
+          value={selectedBranchId}
+          onChange={setSelectedBranchId}
+          size="md"
+          className="w-[180px] sm:w-[200px]"
+        />
+
         {/* Date Range Selector */}
         <div className="w-[150px] sm:w-[160px]">
           <UISelect
@@ -1600,6 +1617,9 @@ export const BillingDesktopPage = () => {
                 >
                   Invoice No
                 </UITableHead>
+                {isCompanyLevel && (
+                  <UITableHead sticky className="min-w-[140px]">Branch</UITableHead>
+                )}
                 <UITableHead sticky className="min-w-[220px]">Customer / Patient</UITableHead>
                 <UITableHead
                   sticky
@@ -1627,10 +1647,10 @@ export const BillingDesktopPage = () => {
 
             <UITableBody>
               {isLoading ? (
-                <UITableLoading columns={6} rows={6} />
+                <UITableLoading columns={isCompanyLevel ? 7 : 6} rows={6} />
               ) : invoices.length === 0 ? (
                 <UITableEmpty
-                  colSpan={6}
+                  colSpan={isCompanyLevel ? 7 : 6}
                   title="No invoices found"
                   description={
                     debouncedSearch || selectedPaymentType !== "all" || selectedStatus !== "all"
@@ -1696,6 +1716,17 @@ export const BillingDesktopPage = () => {
                           </span>
                         </div>
                       </UITableCell>
+
+                      {/* Branch Badge (Only at Company Level) */}
+                      {isCompanyLevel && (
+                        <UITableCell className="whitespace-nowrap">
+                          <BranchBadge
+                            branch={inv.branch}
+                            branchName={inv.branchName}
+                            branchCode={inv.branchCode}
+                          />
+                        </UITableCell>
+                      )}
 
                       {/* Customer / Patient */}
                       <UITableCell>

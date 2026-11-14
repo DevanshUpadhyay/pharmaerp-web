@@ -37,6 +37,7 @@ import {
   ViewBusinessDayDialog,
   CloseBusinessDayDialog,
 } from "../../components";
+import { BranchFilterSelect, BranchBadge } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
 const formatDate = (val) => {
@@ -96,6 +97,11 @@ export const BusinessDaysDesktopPage = ({
   clearMessage,
 
   hasBusinessDays = false,
+
+  // Branch filter state (Company Level Only)
+  isCompanyLevel = false,
+  selectedBranchId = "all",
+  setSelectedBranchId,
 
   // Dialog controls
   openBusinessDay,
@@ -246,9 +252,21 @@ export const BusinessDaysDesktopPage = ({
       </div>
 
       {/* ── 2. Streamlined Single-Row Filter Toolbar ─────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2 shrink-0">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-3.5 shrink-0">
+        {/* Branch Filter (Company Level Only) */}
+        {isCompanyLevel && (
+          <div className="w-[190px] sm:w-[210px] shrink-0">
+            <BranchFilterSelect
+              value={selectedBranchId}
+              onChange={setSelectedBranchId}
+              size="md"
+              className="w-full"
+            />
+          </div>
+        )}
+
         {/* Search Input */}
-        <div className="w-[200px] sm:w-[240px] lg:w-[280px]">
+        <div className="w-[220px] sm:w-[260px] lg:w-[290px] shrink-0">
           <UIInput
             type="text"
             value={filters.search || ""}
@@ -468,7 +486,11 @@ export const BusinessDaysDesktopPage = ({
 
                       {/* Branch */}
                       <UITableCell className="text-text font-medium truncate">
-                        {branchName}
+                        {bd.branchId ? (
+                          <BranchBadge branch={bd.branchId} />
+                        ) : (
+                          branchName
+                        )}
                       </UITableCell>
 
                       {/* Status */}

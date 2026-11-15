@@ -3,6 +3,7 @@ import useCompany from "@/features/company/hooks/useCompany";
 import { useWorkMode, WORK_MODES } from "@/contexts/WorkModeContext";
 import {
   useNavigationPipeline,
+  PIPELINE_LEVELS,
   reconcilePipelineLevel,
   getPipelineDefaultRoute,
 } from "@/contexts/NavigationPipelineContext";
@@ -21,6 +22,11 @@ export const ActiveCompanyGuard = ({ children }) => {
         <PremiumAppLoader key="loader" message="Verifying company access..." />
       </AnimatePresence>
     );
+  }
+
+  // If active pipeline level is workspace, pass through without forcing single active company
+  if (currentLevel === PIPELINE_LEVELS.WORKSPACE || currentLevel === "workspace") {
+    return children || <Outlet />;
   }
 
   if (!currentCompany) {

@@ -140,16 +140,8 @@ const SidebarItem = ({
       }
 
       if (hasChildren) {
-        if (onExpand) {
-          onExpand();
-        }
         setIsOpen(true);
-        requestAnimationFrame(() => {
-          itemRef.current?.scrollIntoView({
-            behavior: "instant",
-            block: "nearest",
-          });
-        });
+        onItemClick?.(e);
       } else {
         onItemClick?.(e);
       }
@@ -168,16 +160,7 @@ const SidebarItem = ({
             onClick={(e) => {
               setTooltipPos(null);
               if (hasChildren) {
-                if (onExpand) {
-                  onExpand();
-                }
                 setIsOpen(true);
-                requestAnimationFrame(() => {
-                  itemRef.current?.scrollIntoView({
-                    behavior: "instant",
-                    block: "nearest",
-                  });
-                });
               }
               onItemClick?.(e);
             }}
@@ -187,7 +170,7 @@ const SidebarItem = ({
                 ? location.pathname === item.path.split("?")[0] && location.search === `?${item.path.split("?")[1]}`
                 : location.pathname === item.path;
               return cn(
-                "flex size-9 items-center justify-center rounded-[8px] transition-colors duration-150 relative",
+                "flex size-9 items-center justify-center rounded-[8px] transition-colors duration-150 relative cursor-pointer",
                 isItemActive
                   ? "bg-primary/10 text-primary"
                   : "text-text hover:bg-surface-hover"

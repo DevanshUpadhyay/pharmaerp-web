@@ -33,26 +33,64 @@ const AppDesktopLayout = () => {
   } = useMargShortcuts();
 
 
-  const isFixedViewportPage =
-    location.pathname.startsWith("/sales") ||
-    location.pathname.startsWith("/sale") ||
-    location.pathname.startsWith("/billing") ||
-    location.pathname.startsWith("/parties/customers") ||
-    location.pathname.startsWith("/customers") ||
-    location.pathname.startsWith("/parties/suppliers") ||
-    location.pathname.startsWith("/suppliers") ||
-    location.pathname.startsWith("/doctors") ||
-    (location.pathname === "/purchases") ||
-    location.pathname.startsWith("/inventory/transfer-orders") ||
-    location.pathname.startsWith("/inventory/stock-metrics") ||
-    location.pathname.startsWith("/stock-metrics") ||
-    location.pathname === "/workspace-products" ||
-    location.pathname.startsWith("/operations/business-days") ||
-    location.pathname.startsWith("/operations/shifts") ||
-    (location.pathname === "/companies" || location.pathname === "/companies/") ||
-    (location.pathname === "/branches" || location.pathname === "/branches/") ||
+  const isReportsPage =
     location.pathname.startsWith("/reports") ||
-    location.pathname.startsWith("/finance");
+    location.pathname.startsWith("/finance/reports");
+
+  const isMemberInviteOrInvitation =
+    location.pathname.startsWith("/members/invite") ||
+    location.pathname.startsWith("/members/invitations") ||
+    location.pathname.includes("/invite") ||
+    location.pathname.includes("/invitations");
+
+  const isRoleFormPage =
+    location.pathname.includes("/roles-permissions/create") ||
+    (location.pathname.includes("/roles-permissions/") &&
+      location.pathname.endsWith("/edit"));
+
+  const isStarterOrHubPage =
+    location.pathname === "/workspace-operations" ||
+    location.pathname.startsWith("/workspace-operations") ||
+    location.pathname === "/company/operations" ||
+    location.pathname.startsWith("/company/operations") ||
+    location.pathname === "/branch/operations" ||
+    location.pathname.startsWith("/branch/operations") ||
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname === "/company-operations" ||
+    location.pathname.startsWith("/company-operations") ||
+    location.pathname === "/branch-operations" ||
+    location.pathname.startsWith("/branch-operations");
+
+  const isFixedViewportPage =
+    !isReportsPage &&
+    !isMemberInviteOrInvitation &&
+    !isRoleFormPage &&
+    !isStarterOrHubPage &&
+    (location.pathname.startsWith("/sales") ||
+      location.pathname.startsWith("/sale") ||
+      location.pathname.startsWith("/billing") ||
+      location.pathname.startsWith("/sales-returns") ||
+      location.pathname.startsWith("/parties/customers") ||
+      location.pathname.startsWith("/customers") ||
+      location.pathname.startsWith("/parties/suppliers") ||
+      location.pathname.startsWith("/suppliers") ||
+      location.pathname.startsWith("/doctors") ||
+      location.pathname === "/purchases" ||
+      location.pathname.startsWith("/inventory/transfer-orders") ||
+      location.pathname.startsWith("/inventory/stock-metrics") ||
+      location.pathname.startsWith("/stock-metrics") ||
+      location.pathname === "/workspace-products" ||
+      location.pathname.startsWith("/operations/business-days") ||
+      location.pathname.startsWith("/operations/shifts") ||
+      location.pathname === "/companies" ||
+      location.pathname === "/companies/" ||
+      location.pathname === "/branches" ||
+      location.pathname === "/branches/" ||
+      location.pathname.startsWith("/workspace/members") ||
+      location.pathname.startsWith("/members") ||
+      location.pathname.startsWith("/roles-permissions") ||
+      location.pathname.startsWith("/access-control") ||
+      location.pathname.startsWith("/finance"));
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH;
 
   return (

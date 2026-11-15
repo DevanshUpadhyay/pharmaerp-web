@@ -28,9 +28,11 @@ import {
   UITableEmpty,
   UITableLoading,
   UIInfiniteScroll,
+  UITableScrollArea,
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import useBranch from "@/features/branch/hooks/useBranch";
+import useCompany from "@/features/company/hooks/useCompany";
 import useUser from "@/features/user/hooks/useUser";
 import { BranchFilterSelect, BranchBadge } from "@/components/shared";
 import { useBranchFilter } from "@/hooks";
@@ -213,9 +215,11 @@ const PAGE_LIMIT = 25;
 
 export const StockMetricsDesktopPage = () => {
   const tableContainerRef = useRef(null);
-  const { isCompanyLevel, selectedBranchId, setSelectedBranchId, queryBranchId } = useBranchFilter();
+  const { isCompanyLevel, selectedBranchId, setSelectedBranchId, queryBranchId } = useBranchFilter("all");
   const { activeBranchId: userBranchId, activeCompanyId } = useUser();
+  const { currentCompany } = useCompany();
   const { currentBranch } = useBranch();
+  const effectiveCompanyId = currentCompany?._id || currentCompany?.id || activeCompanyId;
   const resolvedFacility = isCompanyLevel
     ? queryBranchId
     : (currentBranch?._id || currentBranch?.id || userBranchId);
@@ -306,7 +310,7 @@ export const StockMetricsDesktopPage = () => {
         const payload = {
           page: 1,
           limit: PAGE_LIMIT,
-          companyId: activeCompanyId,
+          companyId: effectiveCompanyId,
           filters: { inStockOnly: true },
         };
         // Scoped to facility if selected or branch level
@@ -338,7 +342,7 @@ export const StockMetricsDesktopPage = () => {
         setIsLoading(false);
       }
     },
-    [activeCompanyId, resolvedFacility, lowStockFilter, debouncedSearch, flattenBatchList]
+    [effectiveCompanyId, resolvedFacility, lowStockFilter, debouncedSearch, flattenBatchList]
   );
 
   // Load More (Infinite Scroll)
@@ -791,11 +795,8 @@ export const StockMetricsDesktopPage = () => {
       </div>
 
       {/* ── 3. Constrained-Height Table with Sticky Header & Infinite Scroll ────── */}
-      <div className="flex-1 min-h-0 rounded-2xl border border-border bg-surface shadow-2xs overflow-hidden flex flex-col">
-        <div
-          ref={tableContainerRef}
-          className="relative overflow-y-auto overflow-x-auto flex-1 min-h-0"
-        >
+      <div className="flex-1 min-h-0 rounded-2xl border border-border bg-surface shadow-2xs overflow-hidden flex flex-col relative">
+        <UITableScrollArea containerRef={tableContainerRef}>
           <UITable
             stickyHeader
             containerClassName="static overflow-visible rounded-none border-0 shadow-none bg-transparent isolate-auto"
@@ -940,7 +941,7 @@ export const StockMetricsDesktopPage = () => {
               isLoading={isLoadingMore}
             />
           )}
-        </div>
+        </UITableScrollArea>
       </div>
     </div>
   );

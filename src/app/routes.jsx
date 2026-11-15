@@ -24,14 +24,16 @@ import { PIPELINE_LEVELS, WORK_MODES } from "@/contexts/routePipelinePolicy";
 import authRoutes from "@/features/auth/routes/authRoutes";
 import userRoutes from "@/features/user/routes/userRoutes";
 
-import { AcceptInvitationPage } from "@/features/workspace/pages";
+import { AcceptInvitationPage, WorkspaceOperationsStarterPage } from "@/features/workspace/pages";
 import { RouteErrorBoundary } from "@/components/shared/RouteErrorBoundary";
 import workspaceRoutes from "@/features/workspace/routes/workspaceRoutes";
 import setupRoutes from "@/features/setup/routes/setupRoutes";
 import dashboardRoutes from "@/features/dashboard/routes/dashboardRoutes";
 
 import { createCompanyRoutes, existingCompanyRoutes } from "@/features/company/routes/companyRoutes";
+import { CompanyOperationsStarterPage } from "@/features/company/pages";
 import branchRoutes from "@/features/branch/routes/branchRoutes";
+import { BranchOperationsStarterPage } from "@/features/branch/pages";
 import accessControlRoutes from "@/features/access-control/routes/accessControlRoutes";
 import catalogRoutes from "@/features/catalog/routes/catalogRoutes";
 import subscriptionRoutes from "@/features/subscription/routes/subscriptionRoutes";
@@ -44,6 +46,7 @@ import HomePage from "@/pages/HomePage";
 import UIShowcasePage from "@/pages/UIShowcasePage";
 
 import { LandingPage } from "@/features/landing";
+import StockMetricsPage from "@/features/stock-metrics/pages/StockMetricsPage";
 import TransferOrdersPage from "@/pages/inventory/TransferOrdersPage";
 import CreateTransferOrderPage from "@/pages/inventory/CreateTransferOrderPage";
 import hsnMasterRoutes from "@/features/hsn-master/routes/hsnMasterRoutes";
@@ -87,6 +90,8 @@ import purchasesRoutes from "@/features/purchases/routes/purchasesRoutes";
 import helpCenterRoutes from "@/features/help-center/routes/helpCenterRoutes";
 import operationsRoutes from "@/features/operations/routes/operationsRoutes";
 import ChooseWorkModePage from "@/features/operations/pages/ChooseWorkModePage";
+import { BranchOperationsHubPage } from "@/features/branch-operations";
+import { CompanyOperationsHubPage } from "@/features/company-operations";
 import NotFoundPage from "@/pages/NotFoundPage";
 
 /**
@@ -258,7 +263,10 @@ export const router = createBrowserRouter([
           {
             element: (
               <PipelineLevelGuard
-                allowedLevels={[PIPELINE_LEVELS.COMPANY]}
+                allowedLevels={[
+                  PIPELINE_LEVELS.WORKSPACE,
+                  PIPELINE_LEVELS.COMPANY,
+                ]}
                 allowDuringOnboarding
               />
             ),
@@ -326,6 +334,37 @@ export const router = createBrowserRouter([
               <PipelineLevelGuard allowedLevels={[PIPELINE_LEVELS.WORKSPACE]} />
             ),
             children: [
+              // Workspace Operations Starter (Default Landing in Operation Mode)
+              {
+                path: ROUTES.WORKSPACE_OPERATIONS_STARTER,
+                element: (
+                  <PipelineLevelGuard
+                    allowedLevels={[PIPELINE_LEVELS.WORKSPACE]}
+                    allowedModes={[WORK_MODES.OPERATION]}
+                  >
+                    <WorkspaceOperationsStarterPage />
+                  </PipelineLevelGuard>
+                ),
+              },
+
+              // Company Operations Hub (Workspace Multi-Company Portal)
+              {
+                path: ROUTES.COMPANY_OPERATIONS_HUB,
+                element: (
+                  <PermissionGuard
+                    permissions={[
+                      "company:view",
+                      "branch:view",
+                      "customer:view",
+                      "supplier:view",
+                      "account:view",
+                    ]}
+                  >
+                    <CompanyOperationsHubPage />
+                  </PermissionGuard>
+                ),
+              },
+
               // Organization & Members
               ...guardRouteList(workspaceRoutes, "workspace", {
                 [ROUTES.WORKSPACE_MEMBERS]: "workspace-member:view",
@@ -346,6 +385,9 @@ export const router = createBrowserRouter([
                   </PermissionGuard>
                 ),
               })),
+
+              // Custom Products (Workspace Product Master)
+              ...guardRouteList(workspaceProductRoutes, "product"),
             ],
           },
 
@@ -356,9 +398,45 @@ export const router = createBrowserRouter([
               // ── Company Level Routes (Floor 2) ──
               {
                 element: (
-                  <PipelineLevelGuard allowedLevels={[PIPELINE_LEVELS.COMPANY]} />
+                  <PipelineLevelGuard
+                    allowedLevels={[
+                      PIPELINE_LEVELS.WORKSPACE,
+                      PIPELINE_LEVELS.COMPANY,
+                    ]}
+                  />
                 ),
                 children: [
+                  // Company Operations Starter (Default Landing in Operation Mode)
+                  {
+                    path: ROUTES.COMPANY_OPERATIONS_STARTER,
+                    element: (
+                      <PipelineLevelGuard
+                        allowedLevels={[PIPELINE_LEVELS.COMPANY]}
+                        allowedModes={[WORK_MODES.OPERATION]}
+                      >
+                        <CompanyOperationsStarterPage />
+                      </PipelineLevelGuard>
+                    ),
+                  },
+
+                  // Branch Operations Hub (Company Multi-Branch Portal)
+                  {
+                    path: ROUTES.BRANCH_OPERATIONS_HUB,
+                    element: (
+                      <PermissionGuard
+                        permissions={[
+                          "bill:view",
+                          "sale:view",
+                          "purchase:view",
+                          "branch:view",
+                          "cash-account:view",
+                        ]}
+                      >
+                        <BranchOperationsHubPage />
+                      </PermissionGuard>
+                    ),
+                  },
+
                   // Parties
                   ...guardRouteList(customerRoutes, "customer"),
                   ...guardRouteList(supplierRoutes, "supplier"),
@@ -503,6 +581,7 @@ export const router = createBrowserRouter([
                 element: (
                   <PipelineLevelGuard
                     allowedLevels={[
+                      PIPELINE_LEVELS.WORKSPACE,
                       PIPELINE_LEVELS.COMPANY,
                       PIPELINE_LEVELS.BRANCH,
                     ]}
@@ -552,7 +631,25 @@ export const router = createBrowserRouter([
                   // Inventory & Stock
                   {
                     path: "/inventory",
-                    element: <Navigate to={ROUTES.STOCK_METRICS} replace />,
+                    element: <Navigate to="/inventory/stock-metrics" replace />,
+                  },
+                  {
+                    path: "/inventory/stock-metrics",
+                    element: (
+                      <PermissionGuard
+                        permissions={[
+                          "stock:view",
+                          "product:view",
+                          "inventory:view",
+                        ]}
+                      >
+                        <StockMetricsPage />
+                      </PermissionGuard>
+                    ),
+                  },
+                  {
+                    path: "/stock-metrics",
+                    element: <Navigate to="/inventory/stock-metrics" replace />,
                   },
                   {
                     path: "/inventory/transfer-orders",
@@ -566,7 +663,6 @@ export const router = createBrowserRouter([
                     path: "/inventory/transfer-orders/:id/edit",
                     element: <CreateTransferOrderPage />,
                   },
-                  ...guardRouteList(workspaceProductRoutes, "product"),
 
                   // Marketplace
                   ...guardRouteList(
@@ -607,6 +703,19 @@ export const router = createBrowserRouter([
                       />
                     ),
                     children: [
+                      // Branch Operations Starter (Default Landing in Operation Mode)
+                      {
+                        path: ROUTES.BRANCH_OPERATIONS_STARTER,
+                        element: (
+                          <PipelineLevelGuard
+                            allowedLevels={[PIPELINE_LEVELS.BRANCH]}
+                            allowedModes={[WORK_MODES.OPERATION]}
+                          >
+                            <BranchOperationsStarterPage />
+                          </PipelineLevelGuard>
+                        ),
+                      },
+
                       // Sales POS Counter (Strictly requires active branch till/session)
                       ...guardRouteList(
                         salesRoutes.filter(

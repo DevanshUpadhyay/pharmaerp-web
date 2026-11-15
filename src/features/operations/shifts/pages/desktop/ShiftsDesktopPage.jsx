@@ -11,8 +11,6 @@ import {
   RotateCcw,
   Download,
   Search,
-  Table2,
-  LayoutGrid,
   Clock,
   RefreshCw,
 } from "lucide-react";
@@ -25,11 +23,11 @@ import {
   UIAlert,
   UIInfiniteScroll,
   UITableLoading,
+  UITableScrollArea,
 } from "@/components/ui";
 
 import {
   ShiftTableView,
-  ShiftCard,
   CreateShiftDialog,
   ViewShiftDialog,
   CloseShiftDialog,
@@ -61,8 +59,6 @@ export const ShiftsDesktopPage = ({
   filters = {},
   sortBy = "desc",
   onSortChange,
-  viewMode = "table",
-  onViewModeChange,
 
   isLoading,
   hasError,
@@ -93,7 +89,6 @@ export const ShiftsDesktopPage = ({
 }) => {
   const navigate = useNavigate();
   const tableContainerRef = useRef(null);
-  const cardContainerRef = useRef(null);
 
   // Client-side Infinite Scroll state
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH);
@@ -105,7 +100,6 @@ export const ShiftsDesktopPage = ({
   const cancelledCount = activeDataset.filter((s) => s.status === "cancelled").length;
 
   const hasOpenShift = openCount > 0;
-  const isTableView = viewMode !== "card" && viewMode !== "grid";
 
   // Reset infinite scroll batch when dataset or filters change
   useEffect(() => {
@@ -332,32 +326,6 @@ export const ShiftsDesktopPage = ({
 
         {/* Right-Aligned Action Cluster */}
         <div className="flex items-center gap-1.5 ml-auto">
-          {/* Table / Card View Toggle */}
-          <div className="flex items-center bg-surface-alt p-0.5 rounded-xl border border-border">
-            <button
-              type="button"
-              onClick={() => onViewModeChange?.("table")}
-              className={cn(
-                "p-1.5 rounded-lg transition-colors cursor-pointer",
-                isTableView ? "bg-surface text-primary shadow-2xs" : "text-text-muted hover:text-text"
-              )}
-              title="Table view"
-            >
-              <Table2 className="size-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onViewModeChange?.("card")}
-              className={cn(
-                "p-1.5 rounded-lg transition-colors cursor-pointer",
-                !isTableView ? "bg-surface text-primary shadow-2xs" : "text-text-muted hover:text-text"
-              )}
-              title="Card view"
-            >
-              <LayoutGrid className="size-4" />
-            </button>
-          </div>
-
           {/* Refresh Button */}
           <UIButton
             type="button"
@@ -402,53 +370,32 @@ export const ShiftsDesktopPage = ({
         </div>
       </div>
 
-      {/* ── 3. Main Data View (Table with Sticky Header or Card Grid) ────────── */}
+      {/* ── 3. Main Data View (Table with Sticky Header) ────────── */}
       {isLoading && shifts.length === 0 ? (
-        isTableView ? (
-          <div className="flex-1 min-h-0 rounded-2xl border border-border bg-surface shadow-2xs overflow-hidden flex flex-col">
-            <div className="relative overflow-y-auto overflow-x-auto flex-1 min-h-0">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-surface-alt/40 text-[13px] font-semibold text-text select-none">
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap">Shift Name</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap">Date & Time</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap">Cashier</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Opening Float</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Cash Sales</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Deposits</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Withdrawals</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Expected Cash</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Actual Cash</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-center">Status</th>
-                    <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/40">
-                  <UITableLoading rows={8} columns={11} />
-                </tbody>
-              </table>
-            </div>
+        <div className="flex-1 min-h-0 rounded-2xl border border-border bg-surface shadow-2xs overflow-hidden flex flex-col">
+          <div className="relative overflow-y-auto overflow-x-auto flex-1 min-h-0">
+            <table className="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border bg-surface-alt/40 text-[13px] font-semibold text-text select-none">
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap">Shift Name</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap">Date & Time</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap">Cashier</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Opening Float</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Cash Sales</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Deposits</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Withdrawals</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Expected Cash</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Actual Cash</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-center">Status</th>
+                  <th className="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                <UITableLoading rows={8} columns={11} />
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <div className="flex-1 min-h-0 overflow-y-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-surface rounded-2xl border border-border p-4 space-y-3 animate-pulse shadow-2xs">
-                <div className="flex justify-between items-center">
-                  <div className="h-4 bg-surface-alt rounded w-24" />
-                  <div className="h-5 bg-surface-alt rounded-full w-16" />
-                </div>
-                <div className="space-y-2 py-2">
-                  <div className="h-3.5 bg-surface-alt rounded w-3/4" />
-                  <div className="h-3.5 bg-surface-alt rounded w-1/2" />
-                </div>
-                <div className="pt-2 border-t border-border/60 flex justify-between">
-                  <div className="h-3 bg-surface-alt rounded w-20" />
-                  <div className="h-3 bg-surface-alt rounded w-20" />
-                </div>
-              </div>
-            ))}
-          </div>
-        )
+        </div>
       ) : shifts.length === 0 ? (
         <div className="flex-1 min-h-0 bg-surface rounded-2xl border border-border p-8 shadow-2xs flex items-center justify-center">
           <UIEmptyState
@@ -479,13 +426,10 @@ export const ShiftsDesktopPage = ({
             variant="inline"
           />
         </div>
-      ) : isTableView ? (
-        /* Table View */
-        <div className="flex-1 min-h-0 rounded-2xl border border-border bg-surface shadow-2xs overflow-hidden flex flex-col">
-          <div
-            ref={tableContainerRef}
-            className="relative overflow-y-auto overflow-x-auto flex-1 min-h-0 divide-y divide-border/60"
-          >
+      ) : (
+        /* Table View Only */
+        <div className="flex-1 min-h-0 rounded-2xl border border-border bg-surface shadow-2xs overflow-hidden flex flex-col relative">
+          <UITableScrollArea containerRef={tableContainerRef} className="divide-y divide-border/60">
             <ShiftTableView
               shifts={visibleShifts}
               onView={setViewShift}
@@ -507,40 +451,7 @@ export const ShiftsDesktopPage = ({
                 ) : null
               }
             />
-          </div>
-        </div>
-      ) : (
-        /* Card View */
-        <div
-          ref={cardContainerRef}
-          className="relative overflow-y-auto flex-1 min-h-0 space-y-4"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {visibleShifts.map((shift) => (
-              <ShiftCard
-                key={shift._id}
-                shift={shift}
-                onView={setViewShift}
-                onCloseShift={setCloseShift}
-              />
-            ))}
-          </div>
-
-          {/* Infinite Scroll Trigger */}
-          <UIInfiniteScroll
-            onLoadMore={handleLoadMore}
-            hasMore={hasMore}
-            isLoading={false}
-            rootRef={cardContainerRef}
-            rootMargin="160px"
-            endMessage={
-              !hasMore && shifts.length > 0 ? (
-                <span className="font-mono text-[11px] text-text-muted select-none">
-                  ✓ All {shifts.length} matching shifts loaded
-                </span>
-              ) : null
-            }
-          />
+          </UITableScrollArea>
         </div>
       )}
 

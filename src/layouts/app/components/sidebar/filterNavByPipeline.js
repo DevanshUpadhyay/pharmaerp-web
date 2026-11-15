@@ -4,7 +4,7 @@
 // 1. activeLevel: 'workspace' | 'company' | 'branch'
 // 2. workMode: 'operation' | 'view' | null
 
-import { Settings, HelpCircle } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { ROUTES } from "@/constants";
 import { getSafeWorkMode } from "@/contexts/WorkModeContext";
 import { PIPELINE_LEVELS } from "@/contexts/NavigationPipelineContext";
@@ -70,21 +70,13 @@ export const filterNavByPipeline = (
   const activeMode = getSafeWorkMode(workMode);
   const activeLevel = currentLevel || PIPELINE_LEVELS.WORKSPACE;
 
-  // In Choose Mode (null): Strictly return ONLY Settings and Help & Support
+  // In Choose Mode (null): Strictly return ONLY Help & Support
   if (!activeMode) {
     return [
       {
         id: "general",
         label: "General",
         items: [
-          {
-            id: "settings",
-            label: "Settings",
-            path: ROUTES.SETTINGS,
-            icon: Settings,
-            collapsedRail: true,
-            keywords: ["settings", "preferences", "account"],
-          },
           {
             id: "help",
             label: "Help & Support",

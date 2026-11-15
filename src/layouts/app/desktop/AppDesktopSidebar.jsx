@@ -10,6 +10,7 @@ import { useSetupStatus } from "@/features/setup/hooks/useSetupStatus";
 import { usePermission } from "@/hooks";
 import { useWorkMode } from "@/contexts";
 import { UIConfirmDialog } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 import {
   SIDEBAR_NAV_GROUPS,
@@ -168,6 +169,35 @@ const AppDesktopSidebar = ({
     }
   };
 
+  /**
+   * When the sidebar drawer is closed/collapsed, clicking any non-interactive empty space
+   * in the sidebar opens/expands the drawer. Clicking an icon/menu item/button performs
+   * its own action and does NOT expand the drawer.
+   */
+  const handleSidebarClick = (e) => {
+    if (!collapsed) return;
+
+    // Check if the user clicked an interactive icon, button, link, or menu item
+    const interactive = e.target.closest(
+      "button, a, [role='button'], input, select, textarea, [data-sidebar-item]"
+    );
+
+    // If an icon or menu item or control was clicked:
+    if (interactive) {
+      // If it's explicitly marked to expand the sidebar (like the top level indicator icon or arrow button):
+      if (
+        interactive.dataset.sidebarExpand === "true" ||
+        interactive.closest("[data-sidebar-expand='true']")
+      ) {
+        handleSidebarExpand();
+      }
+      return;
+    }
+
+    // User clicked empty space anywhere in the sidebar -> open the drawer
+    handleSidebarExpand();
+  };
+
   const currentWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH;
 
   return (
@@ -176,9 +206,13 @@ const AppDesktopSidebar = ({
       style={{ width: currentWidth }}
     >
       <aside
+        onClick={handleSidebarClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="fixed left-0 top-0 z-30 h-[100dvh] border-r border-border bg-surface shadow-xs transition-[width] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden flex flex-col justify-between"
+        className={cn(
+          "fixed left-0 top-0 z-30 h-[100dvh] border-r border-border bg-surface shadow-xs transition-[width] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden flex flex-col justify-between",
+          collapsed && "cursor-ew-resize select-none"
+        )}
         style={{ width: currentWidth }}
       >
         {/* ── TOP: Brand Header (Choose Mode) OR Company & Branch Selector ───────────────────── */}

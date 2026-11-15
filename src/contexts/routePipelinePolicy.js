@@ -60,12 +60,12 @@ export const getPipelineDefaultRoute = (level, workMode, workAccess = null) => {
 
   switch (safeLevel) {
     case PIPELINE_LEVELS.WORKSPACE:
-      return isOp ? "/companies" : "/dashboard/workspace";
+      return isOp ? "/workspace-operations" : "/dashboard/workspace";
     case PIPELINE_LEVELS.COMPANY:
-      return isOp ? "/branches" : "/dashboard/company";
+      return isOp ? "/company/operations" : "/dashboard/company";
     case PIPELINE_LEVELS.BRANCH:
     default:
-      return isOp ? "/sales" : "/dashboard/branch";
+      return isOp ? "/branch/operations" : "/dashboard/branch";
   }
 };
 
@@ -156,6 +156,13 @@ export const ROUTE_POLICY_RULES = [
 
   // ── 1. Workspace Level Routes (Floor 1) ──────────────────────────────────
   {
+    id: "workspace-operations-starter",
+    match: (p) =>
+      p === "/workspace-operations" || p.startsWith("/workspace-operations/"),
+    levels: [PIPELINE_LEVELS.WORKSPACE],
+    modes: [WORK_MODES.OPERATION],
+  },
+  {
     id: "workspace-dashboard",
     match: (p) => p === "/dashboard/workspace",
     levels: [PIPELINE_LEVELS.WORKSPACE],
@@ -215,8 +222,29 @@ export const ROUTE_POLICY_RULES = [
     levels: [PIPELINE_LEVELS.WORKSPACE],
     modes: BOTH_MODES,
   },
+  {
+    id: "workspace-products",
+    match: (p) =>
+      p === "/workspace-products" || p.startsWith("/workspace-products/"),
+    levels: [PIPELINE_LEVELS.WORKSPACE],
+    modes: BOTH_MODES,
+  },
+  {
+    id: "workspace-company-operations-hub",
+    match: (p) =>
+      p === "/company-operations" || p.startsWith("/company-operations/"),
+    levels: [PIPELINE_LEVELS.WORKSPACE],
+    modes: BOTH_MODES,
+  },
 
   // ── 2. Branch Level Routes (Floor 3) — BEFORE Company /finance ───────────
+  {
+    id: "branch-operations-starter",
+    match: (p) =>
+      p === "/branch/operations" || p.startsWith("/branch/operations/"),
+    levels: [PIPELINE_LEVELS.BRANCH],
+    modes: [WORK_MODES.OPERATION],
+  },
   {
     id: "branch-dashboard",
     match: (p) => p === "/dashboard/branch",
@@ -226,8 +254,8 @@ export const ROUTE_POLICY_RULES = [
   {
     id: "branch-reports-hub",
     match: (p) => p === "/reports" || p.startsWith("/reports/"),
-    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
-    modes: [WORK_MODES.VIEW],
+    levels: [PIPELINE_LEVELS.WORKSPACE, PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
+    modes: BOTH_MODES,
   },
   {
     id: "branch-stock-metrics",
@@ -236,7 +264,7 @@ export const ROUTE_POLICY_RULES = [
       p.startsWith("/inventory/stock-metrics/") ||
       p === "/stock-metrics" ||
       p.startsWith("/stock-metrics/"),
-    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
+    levels: [PIPELINE_LEVELS.WORKSPACE, PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
     modes: BOTH_MODES,
   },
   {
@@ -282,13 +310,6 @@ export const ROUTE_POLICY_RULES = [
     modes: [WORK_MODES.OPERATION],
   },
   {
-    id: "branch-workspace-products",
-    match: (p) =>
-      p === "/workspace-products" || p.startsWith("/workspace-products/"),
-    levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
-    modes: [WORK_MODES.OPERATION],
-  },
-  {
     id: "branch-operations",
     match: (p) => p === "/operations" || p.startsWith("/operations/"),
     levels: [PIPELINE_LEVELS.COMPANY, PIPELINE_LEVELS.BRANCH],
@@ -321,6 +342,20 @@ export const ROUTE_POLICY_RULES = [
 
   // ── 3. Company Level Routes (Floor 2) ────────────────────────────────────
   {
+    id: "company-operations-starter",
+    match: (p) =>
+      p === "/company/operations" || p.startsWith("/company/operations/"),
+    levels: [PIPELINE_LEVELS.COMPANY],
+    modes: [WORK_MODES.OPERATION],
+  },
+  {
+    id: "company-branch-operations-hub",
+    match: (p) =>
+      p === "/branch-operations" || p.startsWith("/branch-operations/"),
+    levels: [PIPELINE_LEVELS.COMPANY],
+    modes: BOTH_MODES,
+  },
+  {
     id: "company-dashboard",
     match: (p) => p === "/dashboard/company",
     levels: [PIPELINE_LEVELS.COMPANY],
@@ -338,7 +373,7 @@ export const ROUTE_POLICY_RULES = [
   {
     id: "branches-read",
     match: (p) => p === "/branches" || p.startsWith("/branches/"),
-    levels: [PIPELINE_LEVELS.COMPANY],
+    levels: [PIPELINE_LEVELS.WORKSPACE, PIPELINE_LEVELS.COMPANY],
     modes: BOTH_MODES,
     allowDuringCompanySetup: true,
   },
@@ -351,13 +386,13 @@ export const ROUTE_POLICY_RULES = [
       p.startsWith("/customers/") ||
       p === "/suppliers" ||
       p.startsWith("/suppliers/"),
-    levels: [PIPELINE_LEVELS.COMPANY],
+    levels: [PIPELINE_LEVELS.WORKSPACE, PIPELINE_LEVELS.COMPANY],
     modes: BOTH_MODES,
   },
   {
     id: "company-doctors",
     match: (p) => p === "/doctors" || p.startsWith("/doctors/"),
-    levels: [PIPELINE_LEVELS.COMPANY],
+    levels: [PIPELINE_LEVELS.WORKSPACE, PIPELINE_LEVELS.COMPANY],
     modes: BOTH_MODES,
   },
   {
@@ -370,8 +405,8 @@ export const ROUTE_POLICY_RULES = [
       p.startsWith("/finance/ledger/") ||
       p === "/finance/account-balances" ||
       p.startsWith("/finance/account-balances/"),
-    levels: [PIPELINE_LEVELS.COMPANY],
-    modes: [WORK_MODES.VIEW],
+    levels: [PIPELINE_LEVELS.WORKSPACE, PIPELINE_LEVELS.COMPANY],
+    modes: BOTH_MODES,
   },
   {
     id: "company-bank-accounts",
@@ -380,7 +415,7 @@ export const ROUTE_POLICY_RULES = [
       p.startsWith("/finance/treasury/bank-accounts/") ||
       p === "/bank-accounts" ||
       p.startsWith("/bank-accounts/"),
-    levels: [PIPELINE_LEVELS.COMPANY],
+    levels: [PIPELINE_LEVELS.WORKSPACE, PIPELINE_LEVELS.COMPANY],
     modes: BOTH_MODES,
   },
   {
@@ -393,13 +428,13 @@ export const ROUTE_POLICY_RULES = [
       p.startsWith("/finance/treasury/fund-transfers") ||
       p.startsWith("/finance/treasury/cheque-management") ||
       p.startsWith("/finance/treasury/cash-in-transit"),
-    levels: [PIPELINE_LEVELS.COMPANY],
-    modes: [WORK_MODES.OPERATION],
+    levels: [PIPELINE_LEVELS.WORKSPACE, PIPELINE_LEVELS.COMPANY],
+    modes: BOTH_MODES,
   },
   {
     id: "company-finance-hub",
     match: (p) => p === "/finance" || p === "/finance/treasury",
-    levels: [PIPELINE_LEVELS.COMPANY],
+    levels: [PIPELINE_LEVELS.WORKSPACE, PIPELINE_LEVELS.COMPANY],
     modes: BOTH_MODES,
   },
 

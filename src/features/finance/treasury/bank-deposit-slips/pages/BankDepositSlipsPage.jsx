@@ -186,6 +186,7 @@ const BankDepositSlipsPage = () => {
     handleCreateNew,
     handleRefresh,
     isCompanyLevel,
+    canCreateSlip: !isCompanyLevel,
     selectedBranchId,
     setSelectedBranchId,
   };

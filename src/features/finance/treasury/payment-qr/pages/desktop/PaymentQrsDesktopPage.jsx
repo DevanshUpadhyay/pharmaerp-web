@@ -77,6 +77,7 @@ export const PaymentQrsDesktopPage = ({
   handleClearFilters,
   handleRefresh,
   handleCreateQr,
+  canCreateQr = true,
   handleEditQr,
   handleViewDetails,
   handleDeleteQr,
@@ -323,18 +324,20 @@ export const PaymentQrsDesktopPage = ({
             />
           </UIButton>
 
-          <PermissionGate permission="payment-qr:create">
-            <UIButton
-              type="button"
-              variant="primary"
-              size="md"
-              startIcon={<Plus className="size-3.5" />}
-              onClick={handleCreateQr}
-              className="h-10 px-3.5 text-xs font-semibold shadow-xs"
-            >
-              Add QR Code
-            </UIButton>
-          </PermissionGate>
+          {canCreateQr && (
+            <PermissionGate permission="payment-qr:create">
+              <UIButton
+                type="button"
+                variant="primary"
+                size="md"
+                startIcon={<Plus className="size-3.5" />}
+                onClick={handleCreateQr}
+                className="h-10 px-3.5 text-xs font-semibold shadow-xs"
+              >
+                Add QR Code
+              </UIButton>
+            </PermissionGate>
+          )}
         </div>
       </div>
 
@@ -388,7 +391,7 @@ export const PaymentQrsDesktopPage = ({
                       >
                         Clear Filters
                       </UIButton>
-                    ) : (
+                    ) : canCreateQr ? (
                       <PermissionGate permission="payment-qr:create">
                         <UIButton
                           variant="primary"
@@ -399,7 +402,7 @@ export const PaymentQrsDesktopPage = ({
                           Add First QR Code
                         </UIButton>
                       </PermissionGate>
-                    )
+                    ) : null
                   }
                 />
               ) : (

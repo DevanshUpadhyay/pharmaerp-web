@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Lock,
   CheckCircle2,
+  UserPlus,
 } from "lucide-react";
 
 import { ROUTES } from "@/constants";
@@ -32,6 +33,9 @@ export const BranchOperationsStarterMobilePage = ({
   tillCashBalance = 0,
   todaySalesAmount = 0,
   todayInvoicesCount = 0,
+  onOpenCreateShift,
+  onOpenCloseShift,
+  onOpenCustomerModal,
 }) => {
   const navigate = useNavigate();
   const isShiftClosing = activeShift && activeShift.status === "closing";
@@ -112,12 +116,24 @@ export const BranchOperationsStarterMobilePage = ({
         </div>
         <button
           type="button"
-          onClick={() => navigate("/operations/shifts")}
-          className="h-7 px-3 rounded-lg bg-surface-alt hover:bg-surface-hover border border-border text-[11px] font-semibold text-text"
+          onClick={isShiftOpen ? onOpenCloseShift : onOpenCreateShift}
+          className="h-7 px-3 rounded-lg bg-surface-alt hover:bg-surface-hover border border-border text-[11px] font-semibold text-text active:scale-[0.98]"
         >
-          {isShiftOpen ? "Manage" : "Start"}
+          {isShiftOpen ? "Close" : "Start"}
         </button>
       </div>
+
+      {/* ── Quick Patient / Customer Action (Dialog) ──────────── */}
+      {onOpenCustomerModal && (
+        <button
+          type="button"
+          onClick={onOpenCustomerModal}
+          className="w-full h-8 px-3 rounded-lg bg-surface border border-border text-xs font-medium text-text flex items-center justify-center gap-1.5 active:scale-[0.98]"
+        >
+          <UserPlus className="size-3.5 text-text-muted" />
+          <span>New Customer Registration</span>
+        </button>
+      )}
 
       {/* ── 2. 2x2 Counter Stats Grid ─────────────────────────── */}
       <div className="grid grid-cols-2 gap-2">

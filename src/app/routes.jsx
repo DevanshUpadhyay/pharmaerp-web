@@ -32,7 +32,7 @@ import dashboardRoutes from "@/features/dashboard/routes/dashboardRoutes";
 
 import { createCompanyRoutes, existingCompanyRoutes } from "@/features/company/routes/companyRoutes";
 import { CompanyOperationsStarterPage } from "@/features/company/pages";
-import branchRoutes from "@/features/branch/routes/branchRoutes";
+import { createBranchRoutes, existingBranchRoutes } from "@/features/branch/routes/branchRoutes";
 import { BranchOperationsStarterPage } from "@/features/branch/pages";
 import accessControlRoutes from "@/features/access-control/routes/accessControlRoutes";
 import catalogRoutes from "@/features/catalog/routes/catalogRoutes";
@@ -247,6 +247,25 @@ export const router = createBrowserRouter([
         ),
       })),
 
+      // ── Step 2 & Company Branch Creation (Requires active company selection) ──
+      {
+        element: <ActiveCompanyGuard />,
+        children: [
+          ...guardRouteList(createBranchRoutes, "branch").map((route) => ({
+            ...route,
+            element: (
+              <PipelineLevelGuard
+                allowedLevels={[PIPELINE_LEVELS.COMPANY]}
+                allowedModes={[WORK_MODES.OPERATION]}
+                allowDuringOnboarding
+              >
+                {route.element}
+              </PipelineLevelGuard>
+            ),
+          })),
+        ],
+      },
+
       // ── Guarded by CompanyRequiredGuard (Requires Step 1 Company to be created) ──
       {
         element: <CompanyRequiredGuard />,
@@ -270,7 +289,7 @@ export const router = createBrowserRouter([
                 allowDuringOnboarding
               />
             ),
-            children: guardRouteList(branchRoutes, "branch"),
+            children: guardRouteList(existingBranchRoutes, "branch"),
           },
         ],
       },
@@ -403,6 +422,7 @@ export const router = createBrowserRouter([
                       PIPELINE_LEVELS.WORKSPACE,
                       PIPELINE_LEVELS.COMPANY,
                     ]}
+                    allowDuringOnboarding
                   />
                 ),
                 children: [
@@ -413,6 +433,7 @@ export const router = createBrowserRouter([
                       <PipelineLevelGuard
                         allowedLevels={[PIPELINE_LEVELS.COMPANY]}
                         allowedModes={[WORK_MODES.OPERATION]}
+                        allowDuringOnboarding
                       >
                         <CompanyOperationsStarterPage />
                       </PipelineLevelGuard>

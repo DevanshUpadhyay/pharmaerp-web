@@ -301,6 +301,7 @@ const PaymentQrsPage = () => {
     clearMessage,
     currentBranch,
     isCompanyLevel,
+    canCreateQr: !isCompanyLevel,
     selectedBranchId,
     setSelectedBranchId,
   };

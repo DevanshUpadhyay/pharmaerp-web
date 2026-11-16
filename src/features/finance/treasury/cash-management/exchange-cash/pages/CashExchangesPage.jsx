@@ -179,6 +179,7 @@ const CashExchangesPage = () => {
     handleCreateNew,
     handleRefresh,
     isCompanyLevel,
+    canCreateExchange: !isCompanyLevel,
     selectedBranchId,
     setSelectedBranchId,
   };

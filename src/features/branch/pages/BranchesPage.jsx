@@ -409,9 +409,10 @@ const BranchesPage = () => {
   }, []);
 
   const handleRequestDeleteBranch = useCallback((branch) => {
+    if (mappedBranches.length <= 1) return;
     setSelectedBranch(branch || null);
     setIsDeleteModalOpen(true);
-  }, []);
+  }, [mappedBranches.length]);
 
   const handleCloseDeleteModal = useCallback(() => {
     if (isDeleting) return;
@@ -475,6 +476,9 @@ const BranchesPage = () => {
     filteredBranchesCount: filteredAndSortedBranches.length,
     hasBranches: mappedBranches.length > 0,
     hasFilteredBranches: filteredAndSortedBranches.length > 0,
+    isWorkspaceLevel,
+    canCreateBranch: !isWorkspaceLevel,
+    canDeleteBranch: mappedBranches.length > 1,
 
     handleFilterChange,
     handleSearchChange,

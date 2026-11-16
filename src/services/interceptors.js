@@ -48,16 +48,20 @@ export const setupInterceptors = (apiClient, store) => {
         const workspaceId =
           state.workspace?.currentWorkspace?._id ||
           state.workspace?.currentWorkspace?.id;
-        // Only attach company ID automatically if active pipeline level is company or branch
+        // Attach company ID automatically if active pipeline level is company/branch OR if request targets branch creation/operations
         let companyId = null;
-        if (!currentLevel || currentLevel !== "workspace") {
+        if (!currentLevel || currentLevel !== "workspace" || config.url?.includes("/branches")) {
           companyId =
+            config.headers["x-company-id"] ||
             state.company?.currentCompany?._id ||
             state.company?.currentCompany?.id;
           if (!companyId) {
             try {
               companyId = localStorage.getItem("pahuch_active_company_id") || null;
             } catch {}
+          }
+          if (!companyId && state.company?.companies?.length > 0) {
+            companyId = state.company.companies[0]._id || state.company.companies[0].id;
           }
         }
 

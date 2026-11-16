@@ -553,8 +553,8 @@ export const BranchCashPage = () => {
             Refresh
           </UIButton>
 
-          {/* Initialize Cash button: Only show when NOT initialized and not all branches */}
-          {!isInitialized && !isAllBranches && (
+          {/* Initialize Cash button: Only show when NOT initialized and at Branch level (branch context) */}
+          {!isInitialized && !isCompanyLevel && (
             <UIButton
               type="button"
               size="sm"
@@ -566,8 +566,8 @@ export const BranchCashPage = () => {
             </UIButton>
           )}
 
-          {/* Deposit & Withdraw Buttons: Only shown when initialized and shift is active */}
-          {isInitialized && isShiftActive && !isAllBranches && (
+          {/* Deposit & Withdraw Buttons: Only shown when initialized, at Branch level, and shift is active */}
+          {isInitialized && isShiftActive && !isCompanyLevel && (
             <>
               <UIButton
                 type="button"
@@ -879,14 +879,20 @@ export const BranchCashPage = () => {
               </p>
             </div>
 
-            <UIButton
-              type="button"
-              onClick={() => setIsInitModalOpen(true)}
-              startIcon={<Coins className="size-4" />}
-              className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer"
-            >
-              Initialize Branch Cash
-            </UIButton>
+            {!isCompanyLevel ? (
+              <UIButton
+                type="button"
+                onClick={() => setIsInitModalOpen(true)}
+                startIcon={<Coins className="size-4" />}
+                className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer"
+              >
+                Initialize Branch Cash
+              </UIButton>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-semibold">
+                <span>Switch to Branch mode to initialize opening vault cash for this branch</span>
+              </div>
+            )}
           </div>
 
           {/* 4 Bottom Benefit Feature Cards */}
@@ -999,8 +1005,8 @@ export const BranchCashPage = () => {
               </div>
             </div>
 
-            {/* Actions: Only show when shift is active and a single branch is selected */}
-            {isShiftActive && !isAllBranches && (
+            {/* Actions: Only show when shift is active and at Branch level */}
+            {isShiftActive && !isCompanyLevel && (
               <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-border/60 mt-3">
                 <UIButton
                   type="button"

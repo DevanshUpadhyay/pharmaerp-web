@@ -78,6 +78,7 @@ export const BankDepositSlipsDesktopPage = ({
   handleCancelSlip,
   handleViewDetails,
   handleCreateNew,
+  canCreateSlip = true,
   handleRefresh,
   isCompanyLevel = false,
   selectedBranchId = "all",
@@ -336,18 +337,20 @@ export const BankDepositSlipsDesktopPage = ({
             />
           </UIButton>
 
-          <PermissionGate permission="bank-deposit-slip:create">
-            <UIButton
-              type="button"
-              variant="primary"
-              size="md"
-              startIcon={<Plus className="size-3.5" />}
-              onClick={handleCreateNew}
-              className="h-10 px-3.5 text-xs font-semibold shadow-xs"
-            >
-              Create Deposit Slip
-            </UIButton>
-          </PermissionGate>
+          {canCreateSlip && (
+            <PermissionGate permission="bank-deposit-slip:create">
+              <UIButton
+                type="button"
+                variant="primary"
+                size="md"
+                startIcon={<Plus className="size-3.5" />}
+                onClick={handleCreateNew}
+                className="h-10 px-3.5 text-xs font-semibold shadow-xs"
+              >
+                Create Deposit Slip
+              </UIButton>
+            </PermissionGate>
+          )}
         </div>
       </div>
 
@@ -401,7 +404,7 @@ export const BankDepositSlipsDesktopPage = ({
                       >
                         Clear Filters
                       </UIButton>
-                    ) : (
+                    ) : canCreateSlip ? (
                       <PermissionGate permission="bank-deposit-slip:create">
                         <UIButton
                           variant="primary"
@@ -412,7 +415,7 @@ export const BankDepositSlipsDesktopPage = ({
                           Create First Deposit Slip
                         </UIButton>
                       </PermissionGate>
-                    )
+                    ) : null
                   }
                 />
               ) : (

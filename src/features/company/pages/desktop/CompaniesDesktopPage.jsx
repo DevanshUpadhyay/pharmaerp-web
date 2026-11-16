@@ -1,7 +1,6 @@
 // src/features/company/pages/desktop/CompaniesDesktopPage.jsx
 
-import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import {
   Building2,
   CheckCircle2,
@@ -15,14 +14,10 @@ import {
   MapPin,
   Mail,
   Phone,
-  Users,
-  GitBranch,
-  Settings,
   Edit3,
   Trash2,
   MoreVertical,
   Eye,
-  Check,
 } from "lucide-react";
 
 import {
@@ -50,7 +45,6 @@ import {
 } from "@/components/ui";
 import useCompany from "@/features/company/hooks/useCompany";
 import { cn } from "@/lib/utils";
-import { CompanyEmployeesDrawer } from "../../components";
 
 const PAGE_LIMIT = 20;
 
@@ -81,34 +75,36 @@ export const CompaniesDesktopPage = ({
   handleFilterChange,
   handleSearchChange,
   handleClearFilters,
+  canCreateCompany = true,
+  canDeleteCompany = true,
 
   handleRefresh,
   handleCreateCompany,
   handleViewCompany,
   handleEditCompany,
-  handleOpenSettings,
-  handleViewEmployees,
   handleDeleteCompany,
-
-  selectedCompanyForEmployees,
-  isEmployeeDrawerOpen,
-  handleCloseEmployeesDrawer,
 }) => {
-  const navigate = useNavigate();
   const tableContainerRef = useRef(null);
-  const { currentCompany, setCurrentCompany } = useCompany();
+  const { currentCompany } = useCompany();
 
   // Infinite Scroll state - incremental client-side batches
   const [visibleCount, setVisibleCount] = useState(PAGE_LIMIT);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Reset visible count and scroll to top on filter change
-  useEffect(() => {
+  // Sync visible count during render when filters change
+  const currentFilterKey = `${filters.search || ""}-${filters.status || ""}-${filters.type || ""}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(currentFilterKey);
+  if (prevFilterKey !== currentFilterKey) {
+    setPrevFilterKey(currentFilterKey);
     setVisibleCount(PAGE_LIMIT);
+  }
+
+  // Scroll to top on filter change
+  useEffect(() => {
     if (tableContainerRef.current) {
       tableContainerRef.current.scrollTop = 0;
     }
-  }, [filters.search, filters.status, filters.type]);
+  }, [currentFilterKey]);
 
   const displayedCompanies = useMemo(() => {
     return (companies || []).slice(0, visibleCount);
@@ -138,19 +134,6 @@ export const CompaniesDesktopPage = ({
     navigator.clipboard.writeText(text);
     uiToast.success(`${label} Copied`, `"${text}" copied to clipboard.`);
   }, []);
-
-  const handleSwitchCompany = useCallback(
-    (company) => {
-      if (!company?._id) return;
-      if (currentCompany?._id === company._id) return;
-      setCurrentCompany(company);
-      uiToast.success(
-        "Active Company Switched",
-        `Now operating under "${company.displayName || company.name}".`
-      );
-    },
-    [currentCompany?._id, setCurrentCompany]
-  );
 
   // 4 Top Stat Cards
   const statCards = useMemo(() => {
@@ -317,18 +300,20 @@ export const CompaniesDesktopPage = ({
             />
           </UIButton>
 
-          <PermissionGate permission="company:create">
-            <UIButton
-              type="button"
-              variant="primary"
-              size="md"
-              startIcon={<Plus className="size-4" />}
-              onClick={handleCreateCompany}
-              className="h-10 px-3.5 text-xs font-semibold shadow-xs"
-            >
-              Add Company
-            </UIButton>
-          </PermissionGate>
+          {canCreateCompany && (
+            <PermissionGate permission="company:create">
+              <UIButton
+                type="button"
+                variant="primary"
+                size="md"
+                startIcon={<Plus className="size-4" />}
+                onClick={handleCreateCompany}
+                className="h-10 px-3.5 text-xs font-semibold shadow-xs"
+              >
+                Add Company
+              </UIButton>
+            </PermissionGate>
+          )}
         </div>
       </div>
 
@@ -346,13 +331,13 @@ export const CompaniesDesktopPage = ({
               className="sticky top-0 z-20 bg-surface-alt/95 backdrop-blur-xs select-none shadow-xs"
             >
               <UITableRow className="border-b border-border text-[11px] font-semibold text-text uppercase tracking-wider bg-surface-alt">
-                <UITableHead sticky className="min-w-[240px]">Company Entity &amp; Code</UITableHead>
+                <UITableHead sticky className="min-w-[280px]">Company Entity &amp; Code</UITableHead>
                 <UITableHead sticky className="min-w-[130px]">Business Type</UITableHead>
                 <UITableHead sticky className="min-w-[170px]">GSTIN &amp; PAN</UITableHead>
-                <UITableHead sticky className="min-w-[180px]">Contact Info</UITableHead>
-                <UITableHead sticky className="min-w-[180px]">Registered Location</UITableHead>
-                <UITableHead sticky align="center" className="min-w-[100px]">Status</UITableHead>
-                <UITableHead sticky align="right" className="min-w-[140px]">Actions</UITableHead>
+                <UITableHead sticky className="min-w-[200px]">Contact Info</UITableHead>
+                <UITableHead sticky className="min-w-[210px]">Registered Location</UITableHead>
+                <UITableHead sticky align="center" className="min-w-[90px]">Status</UITableHead>
+                <UITableHead sticky align="right" className="w-14 min-w-[56px] text-right">Actions</UITableHead>
               </UITableRow>
             </UITableHeader>
 
@@ -407,8 +392,9 @@ export const CompaniesDesktopPage = ({
                   return (
                     <UITableRow
                       key={company._id}
+                      onClick={() => handleViewCompany?.(company)}
                       className={cn(
-                        "hover:bg-surface-alt/50 transition-colors",
+                        "hover:bg-surface-alt/50 transition-colors cursor-pointer",
                         isCurrent && "bg-primary/[0.03]"
                       )}
                     >
@@ -465,7 +451,10 @@ export const CompaniesDesktopPage = ({
                               </span>
                               <button
                                 type="button"
-                                onClick={() => handleCopy(gstin, "GSTIN")}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopy(gstin, "GSTIN");
+                                }}
                                 className="p-0.5 text-text-muted hover:text-text cursor-pointer"
                                 title="Copy GSTIN"
                               >
@@ -486,10 +475,10 @@ export const CompaniesDesktopPage = ({
                       </UITableCell>
 
                       {/* Contact Info */}
-                      <UITableCell className="py-2.5 px-3">
+                      <UITableCell className="py-2.5 px-3 min-w-[200px]">
                         <div className="space-y-0.5 text-xs">
                           {email !== "-" && (
-                            <div className="flex items-center gap-1.5 text-text truncate max-w-[160px]" title={email}>
+                            <div className="flex items-center gap-1.5 text-text truncate max-w-[190px]" title={email}>
                               <Mail className="size-3 text-text-muted shrink-0" />
                               <span className="truncate">{email}</span>
                             </div>
@@ -507,8 +496,8 @@ export const CompaniesDesktopPage = ({
                       </UITableCell>
 
                       {/* Registered Location */}
-                      <UITableCell className="py-2.5 px-3">
-                        <div className="flex items-center gap-1.5 text-xs text-text-muted max-w-[160px] truncate" title={location}>
+                      <UITableCell className="py-2.5 px-3 min-w-[210px]">
+                        <div className="flex items-center gap-1.5 text-xs text-text-muted max-w-[200px] truncate" title={location}>
                           <MapPin className="size-3 text-text-muted shrink-0" />
                           <span className="truncate">{location}</span>
                         </div>
@@ -526,25 +515,12 @@ export const CompaniesDesktopPage = ({
                       </UITableCell>
 
                       {/* Actions */}
-                      <UITableCell align="right" className="py-2.5 px-3">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {!isCurrent ? (
-                            <UIButton
-                              type="button"
-                              variant="outline"
-                              size="xs"
-                              onClick={() => handleSwitchCompany(company)}
-                              className="h-7 px-2 text-[11px] font-semibold hover:border-primary hover:text-primary cursor-pointer shadow-2xs"
-                              title="Set as active workspace operating company"
-                            >
-                              Switch
-                            </UIButton>
-                          ) : (
-                            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                              Active
-                            </span>
-                          )}
-
+                      <UITableCell
+                        align="right"
+                        className="py-2.5 px-3 w-14 min-w-[56px]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-end">
                           {/* Overflow Menu */}
                           <UIDropdown>
                             <UIDropdownTrigger asChild>
@@ -559,34 +535,30 @@ export const CompaniesDesktopPage = ({
                               </UIButton>
                             </UIDropdownTrigger>
                             <UIDropdownMenu align="end" className="w-44">
-                              <UIDropdownItem onClick={() => handleViewCompany?.(company)}>
-                                <Eye className="size-3.5 mr-2" />
-                                View Profile
-                              </UIDropdownItem>
-                              <UIDropdownItem onClick={() => handleEditCompany?.(company)}>
-                                <Edit3 className="size-3.5 mr-2" />
-                                Edit Details
-                              </UIDropdownItem>
-                              <UIDropdownItem onClick={() => handleOpenSettings?.(company)}>
-                                <Settings className="size-3.5 mr-2" />
-                                Company Settings
-                              </UIDropdownItem>
-                              <UIDropdownItem onClick={() => handleViewEmployees?.(company)}>
-                                <Users className="size-3.5 mr-2" />
-                                Staff Access
-                              </UIDropdownItem>
-                              <UIDropdownItem onClick={() => navigate("/branches")}>
-                                <GitBranch className="size-3.5 mr-2" />
-                                View Branches
-                              </UIDropdownItem>
-                              <UIDropdownDivider />
                               <UIDropdownItem
-                                onClick={() => handleDeleteCompany?.(company)}
-                                className="text-destructive focus:bg-destructive/10"
+                                icon={<Eye className="size-4" />}
+                                onClick={() => handleViewCompany?.(company)}
                               >
-                                <Trash2 className="size-3.5 mr-2" />
-                                Delete Company
+                                View Company
                               </UIDropdownItem>
+                              <UIDropdownItem
+                                icon={<Edit3 className="size-4" />}
+                                onClick={() => handleEditCompany?.(company)}
+                              >
+                                Edit Company
+                              </UIDropdownItem>
+                              {canDeleteCompany && (
+                                <>
+                                  <UIDropdownDivider />
+                                  <UIDropdownItem
+                                    destructive
+                                    icon={<Trash2 className="size-4" />}
+                                    onClick={() => handleDeleteCompany?.(company)}
+                                  >
+                                    Delete Company
+                                  </UIDropdownItem>
+                                </>
+                              )}
                             </UIDropdownMenu>
                           </UIDropdown>
                         </div>
@@ -607,13 +579,6 @@ export const CompaniesDesktopPage = ({
           />
         </UITableScrollArea>
       </div>
-
-      {/* ── Slide-over Company Employees & Access Drawer ── */}
-      <CompanyEmployeesDrawer
-        isOpen={isEmployeeDrawerOpen}
-        onClose={handleCloseEmployeesDrawer}
-        company={selectedCompanyForEmployees}
-      />
     </div>
   );
 };

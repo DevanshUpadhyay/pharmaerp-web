@@ -66,6 +66,7 @@ export const CashExchangesDesktopPage = ({
   handleSearchChange,
   handleViewDetails,
   handleCreateNew,
+  canCreateExchange = true,
   handleRefresh,
   isCompanyLevel = false,
   selectedBranchId = "all",
@@ -340,18 +341,20 @@ export const CashExchangesDesktopPage = ({
         </UIButton>
 
         {/* Primary Action Button: New Cash Exchange Modal */}
-        <PermissionGate permission="cash-exchange:create">
-          <UIButton
-            type="button"
-            variant="primary"
-            size="md"
-            startIcon={<Plus className="size-4" />}
-            onClick={handleCreateNew}
-            className="h-10 px-4 font-bold shadow-xs shrink-0 cursor-pointer"
-          >
-            New Cash Exchange
-          </UIButton>
-        </PermissionGate>
+        {canCreateExchange && (
+          <PermissionGate permission="cash-exchange:create">
+            <UIButton
+              type="button"
+              variant="primary"
+              size="md"
+              startIcon={<Plus className="size-4" />}
+              onClick={handleCreateNew}
+              className="h-10 px-4 font-bold shadow-xs shrink-0 cursor-pointer"
+            >
+              New Cash Exchange
+            </UIButton>
+          </PermissionGate>
+        )}
       </div>
 
       {/* ── 3. Constrained-Height Table with Sticky Header & Infinite Scroll ── */}
@@ -414,7 +417,7 @@ export const CashExchangesDesktopPage = ({
                       >
                         Clear Filters
                       </UIButton>
-                    ) : (
+                    ) : canCreateExchange ? (
                       <PermissionGate permission="cash-exchange:create">
                         <UIButton
                           variant="primary"
@@ -425,7 +428,7 @@ export const CashExchangesDesktopPage = ({
                           Record First Cash Exchange
                         </UIButton>
                       </PermissionGate>
-                    )
+                    ) : null
                   }
                 />
               ) : (

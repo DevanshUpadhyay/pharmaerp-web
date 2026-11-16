@@ -14,6 +14,8 @@ import {
   selectAllBranchCash,
 } from "@/features/finance/treasury/cash-management/branch-cash/store/branchCashSelector";
 import invoiceService from "@/features/sales/services/invoiceService";
+import { CreateShiftDialog, CloseShiftDialog } from "@/features/operations/shifts/components";
+import CustomerDialog from "@/features/parties/customers/components/CustomerDialog";
 
 import BranchOperationsStarterDesktopPage from "./desktop/BranchOperationsStarterDesktopPage";
 import BranchOperationsStarterMobilePage from "./mobile/BranchOperationsStarterMobilePage";
@@ -113,6 +115,11 @@ export const BranchOperationsStarterPage = () => {
     isLoaded: false,
   });
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
+
+  // Operational dialog states
+  const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
+  const [isCloseShiftOpen, setIsCloseShiftOpen] = useState(false);
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
 
   // Fetch real today's sales & bill count from API (for manual refresh)
   const fetchTodaySalesStats = useCallback(async (bId) => {
@@ -371,12 +378,50 @@ export const BranchOperationsStarterPage = () => {
     salesSummary,
     isLoading: isLoadingSummary,
     onRefresh: handleRefresh,
+    onOpenCreateShift: () => setIsCreateShiftOpen(true),
+    onOpenCloseShift: () => setIsCloseShiftOpen(true),
+    onOpenCustomerModal: () => setIsCustomerModalOpen(true),
   };
 
-  return isMobile ? (
-    <BranchOperationsStarterMobilePage {...pageProps} />
-  ) : (
-    <BranchOperationsStarterDesktopPage {...pageProps} />
+  return (
+    <>
+      {isMobile ? (
+        <BranchOperationsStarterMobilePage {...pageProps} />
+      ) : (
+        <BranchOperationsStarterDesktopPage {...pageProps} />
+      )}
+
+      <CreateShiftDialog
+        isOpen={isCreateShiftOpen}
+        onClose={() => {
+          setIsCreateShiftOpen(false);
+          refetchShift();
+          handleRefresh();
+        }}
+      />
+
+      {activeShift && (
+        <CloseShiftDialog
+          isOpen={isCloseShiftOpen}
+          shift={activeShift}
+          onClose={() => {
+            setIsCloseShiftOpen(false);
+            refetchShift();
+            handleRefresh();
+          }}
+        />
+      )}
+
+      <CustomerDialog
+        isOpen={isCustomerModalOpen}
+        onClose={() => setIsCustomerModalOpen(false)}
+        mode="create"
+        customerData={null}
+        onSuccess={() => {
+          handleRefresh();
+        }}
+      />
+    </>
   );
 };
 

@@ -35,6 +35,7 @@ const BankDepositSlipsMobilePage = ({
   handleCancelSlip,
   handleViewDetails,
   handleCreateNew,
+  canCreateSlip = true,
   isCompanyLevel = false,
   selectedBranchId = "all",
   setSelectedBranchId,
@@ -65,12 +66,14 @@ const BankDepositSlipsMobilePage = ({
           <AppText variant="h6" className="font-bold text-text">
             Deposit Slips
           </AppText>
-          <button
-            onClick={handleCreateNew}
-            className="w-8 h-8 flex items-center justify-center bg-primary text-white rounded-full shadow-md"
-          >
-            <FiPlus size={20} />
-          </button>
+          {canCreateSlip && (
+            <button
+              onClick={handleCreateNew}
+              className="w-8 h-8 flex items-center justify-center bg-primary text-white rounded-full shadow-md"
+            >
+              <FiPlus size={20} />
+            </button>
+          )}
         </div>
 
         {/* Company Level Branch Filter */}
@@ -147,8 +150,8 @@ const BankDepositSlipsMobilePage = ({
             <AppEmptyState
               title="No deposit slips"
               description="Create a new bank deposit slip."
-              actionLabel="Create Slip"
-              onAction={handleCreateNew}
+              actionLabel={canCreateSlip ? "Create Slip" : undefined}
+              onAction={canCreateSlip ? handleCreateNew : undefined}
             />
           </div>
         ) : (

@@ -29,6 +29,8 @@ export const CompanyOperationsStarterDesktopPage = ({
   bankAccountsCount = 0,
   isLoading = false,
   onRefresh,
+  onOpenCustomerModal,
+  onOpenSupplierModal,
 }) => {
   const navigate = useNavigate();
   const { enterBranch } = useNavigationPipeline();
@@ -36,6 +38,7 @@ export const CompanyOperationsStarterDesktopPage = ({
 
   const canCreateBranch = isOwner || can("branch:create");
   const canCreateCustomer = isOwner || can("customer:create");
+  const canCreateSupplier = isOwner || can("supplier:create");
 
   // Exactly 4 high-frequency operations for Company Level
   const CORE_OPERATIONS = useMemo(
@@ -221,11 +224,22 @@ export const CompanyOperationsStarterDesktopPage = ({
           {canCreateCustomer && (
             <button
               type="button"
-              onClick={() => navigate(ROUTES.CREATE_CUSTOMER)}
+              onClick={onOpenCustomerModal}
               className="h-8.5 px-3 rounded-lg bg-surface border border-border text-text hover:bg-surface-alt text-xs font-medium flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
             >
               <Users className="size-3.5 text-text-muted" />
               <span className="hidden sm:inline">Add Customer</span>
+            </button>
+          )}
+
+          {canCreateSupplier && (
+            <button
+              type="button"
+              onClick={onOpenSupplierModal}
+              className="h-8.5 px-3 rounded-lg bg-surface border border-border text-text hover:bg-surface-alt text-xs font-medium flex items-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
+            >
+              <Truck className="size-3.5 text-text-muted" />
+              <span className="hidden sm:inline">Add Supplier</span>
             </button>
           )}
 
@@ -336,18 +350,22 @@ export const CompanyOperationsStarterDesktopPage = ({
         </div>
 
         {branches.length === 0 ? (
-          <div className="p-4 rounded-lg bg-surface-alt/60 border border-border/60 text-center">
-            <p className="text-xs text-text-muted mb-2">No store branches configured yet for this company.</p>
-            {canCreateBranch && (
-              <button
-                type="button"
-                onClick={() => navigate(ROUTES.CREATE_BRANCH)}
-                className="h-7.5 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="size-3" />
-                <span>Create First Branch</span>
-              </button>
-            )}
+          <div className="p-5 rounded-xl bg-surface-alt/60 border border-dashed border-primary/30 text-center">
+            <div className="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
+              <Store className="size-5" />
+            </div>
+            <h4 className="text-xs font-bold text-text mb-0.5">No store branches configured yet for this company</h4>
+            <p className="text-[11px] text-text-muted max-w-md mx-auto mb-3">
+              Create your first physical pharmacy branch outlet or retail counter under this company to unlock counter billing, inventory management, and cashier registers.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.CREATE_BRANCH)}
+              className="h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-xs hover:bg-primary/90 transition-all"
+            >
+              <Plus className="size-3.5" />
+              <span>Create First Branch</span>
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">

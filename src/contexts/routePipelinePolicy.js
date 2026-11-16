@@ -347,6 +347,7 @@ export const ROUTE_POLICY_RULES = [
       p === "/company/operations" || p.startsWith("/company/operations/"),
     levels: [PIPELINE_LEVELS.COMPANY],
     modes: [WORK_MODES.OPERATION],
+    allowDuringCompanySetup: true,
   },
   {
     id: "company-branch-operations-hub",
@@ -354,12 +355,14 @@ export const ROUTE_POLICY_RULES = [
       p === "/branch-operations" || p.startsWith("/branch-operations/"),
     levels: [PIPELINE_LEVELS.COMPANY],
     modes: BOTH_MODES,
+    allowDuringCompanySetup: true,
   },
   {
     id: "company-dashboard",
     match: (p) => p === "/dashboard/company",
     levels: [PIPELINE_LEVELS.COMPANY],
     modes: [WORK_MODES.VIEW],
+    allowDuringCompanySetup: true,
   },
   {
     id: "branches-mutate",
@@ -581,6 +584,15 @@ export const isRouteAllowedForPipeline = (
 
   // During initial setup onboarding, allow setup-exempt routes cleanly
   if (!isSetupComplete) {
+    // Block creating a second company before initial branch setup is complete
+    if (path === "/companies/create" && companyCompleted) {
+      return {
+        allowed: false,
+        redirectTo: "/setup",
+        reason: "branch-setup-prerequisite-required",
+      };
+    }
+
     if (rule.allowDuringIncompleteSetup) {
       return { allowed: true, redirectTo: null, reason: null };
     }

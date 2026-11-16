@@ -1,7 +1,6 @@
 // src/features/branch/pages/desktop/BranchesDesktopPage.jsx
 
-import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import {
   GitBranch,
   Building2,
@@ -13,8 +12,6 @@ import {
   RotateCcw,
   Search,
   MapPin,
-  Users,
-  Settings,
   Edit3,
   Trash2,
   MoreVertical,
@@ -22,7 +19,6 @@ import {
   Store,
   Warehouse,
   Hospital,
-  Wallet,
 } from "lucide-react";
 
 import {
@@ -46,7 +42,6 @@ import {
   UIDropdownItem,
   UIDropdownDivider,
   PermissionGate,
-  uiToast,
 } from "@/components/ui";
 import { CompanyFilterSelect } from "@/components/shared";
 import useBranch from "@/features/branch/hooks/useBranch";
@@ -98,22 +93,21 @@ export const BranchesDesktopPage = ({
   handleFilterChange,
   handleSearchChange,
   handleClearFilters,
+  canCreateBranch = true,
+  canDeleteBranch = true,
 
   handleRefresh,
   handleCreateBranch,
   handleViewBranch,
   handleEditBranch,
-  handleOpenSettings,
-  handleViewEmployees,
   handleDeleteBranch,
 
   selectedBranchForEmployees,
   isEmployeeDrawerOpen,
   handleCloseEmployeesDrawer,
 }) => {
-  const navigate = useNavigate();
   const tableContainerRef = useRef(null);
-  const { currentBranch, setCurrentBranch } = useBranch();
+  const { currentBranch } = useBranch();
 
   // Infinite Scroll state - incremental client-side batches
   const [visibleCount, setVisibleCount] = useState(PAGE_LIMIT);
@@ -121,6 +115,7 @@ export const BranchesDesktopPage = ({
 
   // Reset visible count and scroll to top on filter change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(PAGE_LIMIT);
     if (tableContainerRef.current) {
       tableContainerRef.current.scrollTop = 0;
@@ -149,19 +144,6 @@ export const BranchesDesktopPage = ({
       (filters.status && filters.status !== "all") ||
       (filters.type && filters.type !== "all") ||
       (filters.company && filters.company !== "all")
-  );
-
-  const handleSwitchBranch = useCallback(
-    (branch) => {
-      if (!branch?._id) return;
-      if (currentBranch?._id === branch._id) return;
-      setCurrentBranch(branch);
-      uiToast.success(
-        "Active Branch Switched",
-        `Now operating under "${branch.displayName || branch.name}".`
-      );
-    },
-    [currentBranch?._id, setCurrentBranch]
   );
 
   // 4 Top Stat Cards
@@ -337,18 +319,20 @@ export const BranchesDesktopPage = ({
             />
           </UIButton>
 
-          <PermissionGate permission="branch:create">
-            <UIButton
-              type="button"
-              variant="primary"
-              size="md"
-              startIcon={<Plus className="size-4" />}
-              onClick={handleCreateBranch}
-              className="h-10 px-3.5 text-xs font-semibold shadow-xs"
-            >
-              Add Branch
-            </UIButton>
-          </PermissionGate>
+          {canCreateBranch && (
+            <PermissionGate permission="branch:create">
+              <UIButton
+                type="button"
+                variant="primary"
+                size="md"
+                startIcon={<Plus className="size-4" />}
+                onClick={handleCreateBranch}
+                className="h-10 px-3.5 text-xs font-semibold shadow-xs"
+              >
+                Add Branch
+              </UIButton>
+            </PermissionGate>
+          )}
         </div>
       </div>
 
@@ -366,13 +350,13 @@ export const BranchesDesktopPage = ({
               className="sticky top-0 z-20 bg-surface-alt/95 backdrop-blur-xs select-none shadow-xs"
             >
               <UITableRow className="border-b border-border text-[11px] font-semibold text-text uppercase tracking-wider bg-surface-alt">
-                <UITableHead sticky className="min-w-[240px]">Branch Outlet &amp; Code</UITableHead>
+                <UITableHead sticky className="min-w-[280px]">Branch Outlet &amp; Code</UITableHead>
                 <UITableHead sticky className="min-w-[150px]">Company Scope</UITableHead>
                 <UITableHead sticky className="min-w-[140px]">Branch Type</UITableHead>
-                <UITableHead sticky className="min-w-[160px]">Manager / Pharmacist</UITableHead>
-                <UITableHead sticky className="min-w-[180px]">Location &amp; City</UITableHead>
-                <UITableHead sticky align="center" className="min-w-[100px]">Status</UITableHead>
-                <UITableHead sticky align="right" className="min-w-[140px]">Actions</UITableHead>
+                <UITableHead sticky className="min-w-[170px]">Manager / Pharmacist</UITableHead>
+                <UITableHead sticky className="min-w-[210px]">Location &amp; City</UITableHead>
+                <UITableHead sticky align="center" className="min-w-[90px]">Status</UITableHead>
+                <UITableHead sticky align="right" className="w-14 min-w-[56px] text-right">Actions</UITableHead>
               </UITableRow>
             </UITableHeader>
 
@@ -393,7 +377,7 @@ export const BranchesDesktopPage = ({
                       <UIButton variant="outline" size="sm" onClick={handleClearFilters}>
                         Clear Filters
                       </UIButton>
-                    ) : (
+                    ) : canCreateBranch ? (
                       <PermissionGate permission="branch:create">
                         <UIButton
                           variant="primary"
@@ -404,7 +388,7 @@ export const BranchesDesktopPage = ({
                           Register First Branch
                         </UIButton>
                       </PermissionGate>
-                    )
+                    ) : null
                   }
                 />
               ) : (
@@ -427,8 +411,9 @@ export const BranchesDesktopPage = ({
                   return (
                     <UITableRow
                       key={branch._id}
+                      onClick={() => handleViewBranch?.(branch)}
                       className={cn(
-                        "hover:bg-surface-alt/50 transition-colors",
+                        "hover:bg-surface-alt/50 transition-colors cursor-pointer",
                         isCurrent && "bg-primary/[0.03]"
                       )}
                     >
@@ -459,7 +444,7 @@ export const BranchesDesktopPage = ({
                                 </span>
                               ) : (
                                 <span className="text-[10.5px] text-text-muted">
-                                  {branch.memberCount} Staff Assigned
+                                  {branch.memberCount ? `${branch.memberCount} Staff Assigned` : "Physical Dispensing Unit"}
                                 </span>
                               )}
                             </div>
@@ -497,7 +482,7 @@ export const BranchesDesktopPage = ({
 
                       {/* Location & City */}
                       <UITableCell className="py-2.5 px-3">
-                        <div className="flex items-center gap-1.5 text-xs text-text-muted max-w-[160px] truncate" title={location}>
+                        <div className="flex items-center gap-1.5 text-xs text-text-muted max-w-[200px] truncate" title={location}>
                           <MapPin className="size-3 text-text-muted shrink-0" />
                           <span className="truncate">{location}</span>
                         </div>
@@ -515,25 +500,12 @@ export const BranchesDesktopPage = ({
                       </UITableCell>
 
                       {/* Actions */}
-                      <UITableCell align="right" className="py-2.5 px-3">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {!isCurrent ? (
-                            <UIButton
-                              type="button"
-                              variant="outline"
-                              size="xs"
-                              onClick={() => handleSwitchBranch(branch)}
-                              className="h-7 px-2 text-[11px] font-semibold hover:border-primary hover:text-primary cursor-pointer shadow-2xs"
-                              title="Set as active store location"
-                            >
-                              Switch
-                            </UIButton>
-                          ) : (
-                            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                              Active
-                            </span>
-                          )}
-
+                      <UITableCell
+                        align="right"
+                        className="py-2.5 px-3 w-14 min-w-[56px]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-end">
                           {/* Overflow Menu */}
                           <UIDropdown>
                             <UIDropdownTrigger asChild>
@@ -548,34 +520,30 @@ export const BranchesDesktopPage = ({
                               </UIButton>
                             </UIDropdownTrigger>
                             <UIDropdownMenu align="end" className="w-44">
-                              <UIDropdownItem onClick={() => handleViewBranch?.(branch)}>
-                                <Eye className="size-3.5 mr-2" />
-                                View Details
+                              <UIDropdownItem
+                                icon={<Eye className="size-4" />}
+                                onClick={() => handleViewBranch?.(branch)}
+                              >
+                                View Branch
                               </UIDropdownItem>
-                              <UIDropdownItem onClick={() => handleEditBranch?.(branch)}>
-                                <Edit3 className="size-3.5 mr-2" />
+                              <UIDropdownItem
+                                icon={<Edit3 className="size-4" />}
+                                onClick={() => handleEditBranch?.(branch)}
+                              >
                                 Edit Branch
                               </UIDropdownItem>
-                              <UIDropdownItem onClick={() => handleOpenSettings?.(branch)}>
-                                <Settings className="size-3.5 mr-2" />
-                                Branch Settings
-                              </UIDropdownItem>
-                              <UIDropdownItem onClick={() => handleViewEmployees?.(branch)}>
-                                <Users className="size-3.5 mr-2" />
-                                Staff On Duty
-                              </UIDropdownItem>
-                              <UIDropdownItem onClick={() => navigate("/finance/treasury/branch-cash")}>
-                                <Wallet className="size-3.5 mr-2" />
-                                Branch Cash
-                              </UIDropdownItem>
-                              <UIDropdownDivider />
-                              <UIDropdownItem
-                                onClick={() => handleDeleteBranch?.(branch)}
-                                className="text-destructive focus:bg-destructive/10"
-                              >
-                                <Trash2 className="size-3.5 mr-2" />
-                                Delete Branch
-                              </UIDropdownItem>
+                              {canDeleteBranch && (
+                                <>
+                                  <UIDropdownDivider />
+                                  <UIDropdownItem
+                                    destructive
+                                    icon={<Trash2 className="size-4" />}
+                                    onClick={() => handleDeleteBranch?.(branch)}
+                                  >
+                                    Delete Branch
+                                  </UIDropdownItem>
+                                </>
+                              )}
                             </UIDropdownMenu>
                           </UIDropdown>
                         </div>

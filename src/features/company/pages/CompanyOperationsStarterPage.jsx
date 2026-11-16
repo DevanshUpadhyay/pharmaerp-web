@@ -8,6 +8,8 @@ import useBranch from "@/features/branch/hooks/useBranch";
 import customerService from "@/features/parties/customers/services/customerService";
 import supplierService from "@/features/parties/suppliers/services/supplierService";
 import bankAccountService from "@/features/finance/treasury/bank-management/bank-accounts/services/bankAccountService";
+import CustomerDialog from "@/features/parties/customers/components/CustomerDialog";
+import SupplierDialog from "@/features/parties/suppliers/components/SupplierDialog";
 
 import CompanyOperationsStarterDesktopPage from "./desktop/CompanyOperationsStarterDesktopPage";
 import CompanyOperationsStarterMobilePage from "./mobile/CompanyOperationsStarterMobilePage";
@@ -42,6 +44,10 @@ export const CompanyOperationsStarterPage = () => {
     isLoaded: false,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+  // Modal dialog states
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
 
   // Fallback to Redux state if available
   const reduxCustomersCount = useSelector(
@@ -132,12 +138,38 @@ export const CompanyOperationsStarterPage = () => {
     bankAccountsCount: realStats.isLoaded ? realStats.bankAccountsCount : reduxBankAccountsCount,
     isLoading: getCompanyBranchesStatus === "loading" || isLoadingStats,
     onRefresh: handleRefresh,
+    onOpenCustomerModal: () => setIsCustomerModalOpen(true),
+    onOpenSupplierModal: () => setIsSupplierModalOpen(true),
   };
 
-  return isMobile ? (
-    <CompanyOperationsStarterMobilePage {...pageProps} />
-  ) : (
-    <CompanyOperationsStarterDesktopPage {...pageProps} />
+  return (
+    <>
+      {isMobile ? (
+        <CompanyOperationsStarterMobilePage {...pageProps} />
+      ) : (
+        <CompanyOperationsStarterDesktopPage {...pageProps} />
+      )}
+
+      <CustomerDialog
+        isOpen={isCustomerModalOpen}
+        onClose={() => setIsCustomerModalOpen(false)}
+        mode="create"
+        customerData={null}
+        onSuccess={() => {
+          handleRefresh();
+        }}
+      />
+
+      <SupplierDialog
+        isOpen={isSupplierModalOpen}
+        onClose={() => setIsSupplierModalOpen(false)}
+        mode="create"
+        supplierData={null}
+        onSuccess={() => {
+          handleRefresh();
+        }}
+      />
+    </>
   );
 };
 

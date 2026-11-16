@@ -14,6 +14,7 @@ import {
   Lock,
   Store,
   User,
+  UserPlus,
   Zap,
 } from "lucide-react";
 
@@ -42,6 +43,9 @@ export const BranchOperationsStarterDesktopPage = ({
   salesSummary = {},
   isLoading = false,
   onRefresh,
+  onOpenCreateShift,
+  onOpenCloseShift,
+  onOpenCustomerModal,
 }) => {
   const navigate = useNavigate();
 
@@ -69,13 +73,17 @@ export const BranchOperationsStarterDesktopPage = ({
         navigate(ROUTES.PURCHASES);
       } else if (key === "s") {
         e.preventDefault();
-        navigate("/operations/shifts");
+        if (isShiftOpen) {
+          onOpenCloseShift?.();
+        } else {
+          onOpenCreateShift?.();
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [navigate]);
+  }, [navigate, isShiftOpen, onOpenCloseShift, onOpenCreateShift]);
 
   // Average bill amount calculation
   const avgBillAmount = useMemo(() => {
@@ -436,6 +444,18 @@ export const BranchOperationsStarterDesktopPage = ({
         </div>
 
         <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+          {onOpenCustomerModal && (
+            <button
+              type="button"
+              onClick={onOpenCustomerModal}
+              className="h-8 px-3 rounded-lg bg-surface-alt hover:bg-surface-hover border border-border text-xs font-medium text-text flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Quickly Register New Patient / Customer"
+            >
+              <UserPlus className="size-3.5 text-text-muted" />
+              <span>New Customer</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => navigate(ROUTES.BRANCH_CASH)}
@@ -447,10 +467,10 @@ export const BranchOperationsStarterDesktopPage = ({
 
           <button
             type="button"
-            onClick={() => navigate("/operations/shifts")}
+            onClick={isShiftOpen ? onOpenCloseShift : onOpenCreateShift}
             className="h-8 px-3.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
           >
-            <span>{isShiftOpen ? "Manage Shift / Close" : "Start Cashier Shift"}</span>
+            <span>{isShiftOpen ? "Close Shift" : "Start Cashier Shift"}</span>
             <kbd className="px-1.5 py-0.2 rounded bg-black/20 text-[10px] font-mono leading-none">
               Alt + S
             </kbd>

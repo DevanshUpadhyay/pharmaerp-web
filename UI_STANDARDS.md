@@ -112,9 +112,12 @@ In `src/layouts/app/desktop/AppDesktopLayout.jsx`, the `<main>` container applie
   - Member Invite Form (`/members/invite`)
   - Workspace Invitations List (`/members/invitations`)
   - Role Creation & Edit Forms (`/roles-permissions/create`, `/roles-permissions/:id/edit`)
+- **Profile & Detail View Pages** (Do NOT trap in `overflow-hidden`):
+  - Role Details View Page (`/roles-permissions/:roleId`)
+  - Staff / Member Details View Page (`/members/:memberId`, `/workspace/members/:memberId`)
 
 > [!IMPORTANT]
-> When adding subroutes (like `/invite` or `/create`), never use loose prefix matching in `AppDesktopLayout.jsx` without negative guards (e.g. `!isMemberInviteOrInvitation && !isRoleFormPage`). Trapping form pages in `overflow-hidden` prevents users from scrolling down to submit buttons.
+> When adding subroutes (like `/invite`, `/create`, `/edit`, or `:id` detail views), never use loose prefix matching in `AppDesktopLayout.jsx` without negative guards (e.g. `!isMemberInviteOrInvitation && !isRoleFormPage && !isRoleDetailsPage && !isMemberDetailsPage`). Trapping form or detail view pages in `overflow-hidden` prevents users from scrolling down to submit buttons and lower content sections.
 
 ---
 

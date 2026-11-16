@@ -516,12 +516,6 @@ export default function WorkspaceMembersDesktopPage({
                               >
                                 View Details
                               </UIDropdownItem>
-                              <UIDropdownItem
-                                icon={<Shield className="size-4 text-text-muted" />}
-                                onClick={() => handleManageAccess?.(member)}
-                              >
-                                Manage Access
-                              </UIDropdownItem>
                               {handleOpenResetPassword && (
                                 <UIDropdownItem
                                   icon={<Key className="size-4 text-text-muted" />}

@@ -67,6 +67,7 @@ const PaymentQrsMobilePage = ({
   handlePageSizeChange,
   handleRefresh,
   handleCreateQr,
+  canCreateQr = true,
   handleEditQr,
   handleViewDetails,
   handleDeleteQr,
@@ -131,15 +132,17 @@ const PaymentQrsMobilePage = ({
                 disabled={isLoading}
                 sx={refreshMobileBtnSx}
               />
-              <AppIconButton
-                icon={<FiPlus />}
-                variant="filled"
-                colorVariant="success"
-                size="small"
-                rounded="md"
-                onClick={handleCreateQr}
-                sx={createNewBtnSx}
-              />
+              {canCreateQr && (
+                <AppIconButton
+                  icon={<FiPlus />}
+                  variant="filled"
+                  colorVariant="success"
+                  size="small"
+                  rounded="md"
+                  onClick={handleCreateQr}
+                  sx={createNewBtnSx}
+                />
+              )}
             </AppStack>
           </AppStack>
         </AppBox>

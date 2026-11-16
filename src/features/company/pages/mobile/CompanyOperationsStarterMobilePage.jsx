@@ -20,6 +20,8 @@ export const CompanyOperationsStarterMobilePage = ({
   customersCount = 0,
   suppliersCount = 0,
   bankAccountsCount = 0,
+  onOpenCustomerModal,
+  onOpenSupplierModal,
 }) => {
   const navigate = useNavigate();
   const { enterBranch } = useNavigationPipeline();
@@ -27,6 +29,7 @@ export const CompanyOperationsStarterMobilePage = ({
 
   const canCreateBranch = isOwner || can("branch:create");
   const canCreateCustomer = isOwner || can("customer:create");
+  const canCreateSupplier = isOwner || can("supplier:create");
 
   // Exactly 4 high-frequency operations
   const CORE_OPERATIONS = [
@@ -117,11 +120,22 @@ export const CompanyOperationsStarterMobilePage = ({
         {canCreateCustomer && (
           <button
             type="button"
-            onClick={() => navigate(ROUTES.CREATE_CUSTOMER)}
+            onClick={onOpenCustomerModal}
             className="flex-1 h-9 px-3 rounded-lg bg-surface border border-border text-text text-xs font-medium flex items-center justify-center gap-1.5 active:scale-[0.98]"
           >
             <Users className="size-3.5 text-text-muted" />
             <span>Add Customer</span>
+          </button>
+        )}
+
+        {canCreateSupplier && (
+          <button
+            type="button"
+            onClick={onOpenSupplierModal}
+            className="flex-1 h-9 px-3 rounded-lg bg-surface border border-border text-text text-xs font-medium flex items-center justify-center gap-1.5 active:scale-[0.98]"
+          >
+            <Truck className="size-3.5 text-text-muted" />
+            <span>Add Supplier</span>
           </button>
         )}
       </div>
@@ -165,8 +179,8 @@ export const CompanyOperationsStarterMobilePage = ({
         })}
       </div>
 
-      {/* ── 4. Branches Jump List ─────────────────────────────── */}
-      {branches.length > 0 && (
+      {/* ── 4. Branches Jump List or Empty State ─────────────────────────────── */}
+      {branches.length > 0 ? (
         <div className="flex flex-col gap-2 pt-1">
           <div className="flex items-center justify-between px-0.5">
             <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
@@ -196,6 +210,18 @@ export const CompanyOperationsStarterMobilePage = ({
               </div>
             ))}
           </div>
+        </div>
+      ) : (
+        <div className="p-4 rounded-xl bg-surface border border-dashed border-primary/30 text-center space-y-2">
+          <p className="text-xs text-text-muted">No store branches configured yet for this company.</p>
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.CREATE_BRANCH)}
+            className="h-7.5 px-3 rounded-lg bg-primary text-white text-xs font-semibold inline-flex items-center gap-1.5"
+          >
+            <Plus className="size-3" />
+            <span>Create First Branch</span>
+          </button>
         </div>
       )}
     </div>

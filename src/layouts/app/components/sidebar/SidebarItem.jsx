@@ -54,8 +54,21 @@ const checkIsItemLocked = (item, setupInfo) => {
     return false;
   }
 
-  // Branches accessible in Step 2 if company exists
-  if (id === "branches" || path === ROUTES.BRANCHES || path.includes("/branches")) {
+  // Company Operations, Starter & Branches accessible in Step 2 once company exists
+  if (
+    id === "company-operations-starter" ||
+    id === "company-ops" ||
+    id === "company-branches" ||
+    id === "company-branches-view" ||
+    id === "company-branch-operations-hub" ||
+    id === "branches" ||
+    path === ROUTES.COMPANY_OPERATIONS_STARTER ||
+    path === ROUTES.BRANCH_OPERATIONS_HUB ||
+    path === ROUTES.BRANCHES ||
+    path.startsWith("/company/operations") ||
+    path.startsWith("/branch-operations") ||
+    path.includes("/branches")
+  ) {
     return !companyCompleted;
   }
 
